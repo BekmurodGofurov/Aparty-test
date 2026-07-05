@@ -1,0 +1,292 @@
+// Premium foundation layer for non-home marketplace/admin surfaces.
+// Keeps dark mode solid, predictable, and free of accidental transparency.
+
+:root {
+  --ui-page-bg: #0B0F19;
+  --ui-surface: #111827;
+  --ui-surface-2: #182235;
+  --ui-surface-3: #1F2937;
+  --ui-border: rgba(255, 255, 255, 0.08);
+  --ui-border-strong: rgba(56, 189, 248, 0.28);
+  --ui-shadow: 0 22px 70px rgba(0, 0, 0, 0.36);
+  --ui-shadow-soft: 0 12px 34px rgba(0, 0, 0, 0.22);
+  --ui-radius: 8px;
+}
+
+[data-theme="light"] {
+  --ui-page-bg: #FAFAF8;
+  --ui-surface: #FFFFFF;
+  --ui-surface-2: #F8FAFC;
+  --ui-surface-3: #F1F5F9;
+  --ui-border: rgba(15, 23, 42, 0.10);
+  --ui-border-strong: rgba(180, 83, 9, 0.28);
+  --ui-shadow: 0 22px 70px rgba(15, 23, 42, 0.10);
+  --ui-shadow-soft: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+body {
+  background:
+    linear-gradient(180deg, rgba(56, 189, 248, 0.07), transparent 360px),
+    var(--ui-page-bg);
+}
+
+.route-transition-wrapper {
+  isolation: isolate;
+}
+
+.aparty-global-wrapper {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--ui-page-bg);
+}
+
+.aparty-global-content {
+  position: relative;
+  z-index: 10;
+}
+
+.admin-dashboard,
+.admin-users,
+.admin-listings,
+.admin-revenue,
+.admin-complaints,
+.admin-profile,
+.admin-detail-page,
+.broker-dashboard,
+.broker-profile-page,
+.owner-dashboard,
+.owner-profile-page,
+.owner-create-page,
+.owner-edit-page,
+.makler-create-page,
+.makler-subscription,
+.search-page,
+.listing-page,
+.messages-page,
+.map-page {
+  background:
+    linear-gradient(180deg, rgba(56, 189, 248, 0.07), transparent 320px),
+    var(--ui-page-bg) !important;
+  color: var(--color-text);
+}
+
+.admin-dashboard,
+.admin-users,
+.admin-listings,
+.admin-revenue,
+.admin-complaints,
+.admin-profile,
+.admin-detail-page,
+.broker-dashboard,
+.owner-dashboard,
+.makler-subscription,
+.messages-page {
+  position: relative;
+}
+
+.admin-dashboard::before,
+.admin-users::before,
+.admin-listings::before,
+.admin-revenue::before,
+.admin-complaints::before,
+.broker-dashboard::before,
+.owner-dashboard::before,
+.makler-subscription::before,
+.messages-page::before {
+  content: "";
+  position: fixed;
+  inset: 68px 0 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--ui-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ui-border) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 70%);
+}
+
+.broker-profile-hero,
+.owner-profile-hero,
+.broker-panel,
+.owner-panel,
+.broker-stat-card,
+.owner-stat-card,
+.admin-dashboard .stat-card,
+.admin-dashboard .limit-card,
+.admin-dashboard .dashboard-loading,
+.admin-users .admin-panel,
+.admin-listings .admin-panel,
+.admin-revenue .revenue-card,
+.admin-complaints .complaints-panel,
+.property-intro,
+.booking-card,
+.overview-panel,
+.similar-section,
+.results-top,
+.filter-shell,
+.lux-filter-panel,
+.messages-shell,
+.conversation-list,
+.chat-panel,
+.chat-header,
+.chat-compose,
+.plan-card,
+.subscription-hero,
+.subscription-compare div,
+.liquid-card,
+.glass-card,
+.premium-glass-card,
+.listing-card-liquid,
+.premium-listing-card {
+  min-width: 0;
+  box-sizing: border-box;
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border) !important;
+  border-radius: var(--ui-radius) !important;
+  box-shadow: var(--ui-shadow-soft) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.broker-listing-card,
+.owner-listing-card,
+.owner-rental-card,
+.notification-menu,
+.account-menu,
+.lang-menu,
+.mobile-menu,
+.type-pill,
+.status-pill,
+.role-pill,
+.price-pill,
+tbody tr,
+table,
+thead {
+  min-width: 0;
+  box-sizing: border-box;
+  background-color: var(--ui-surface-2) !important;
+  border-color: var(--ui-border) !important;
+  backdrop-filter: none !important;
+}
+
+.admin-dashboard *,
+.admin-users *,
+.admin-listings *,
+.admin-revenue *,
+.admin-complaints *,
+.admin-profile *,
+.admin-detail-page *,
+.broker-dashboard *,
+.owner-dashboard * {
+  box-sizing: border-box;
+}
+
+.admin-dashboard h1,
+.admin-dashboard h2,
+.admin-users h1,
+.admin-users h2,
+.admin-listings h1,
+.admin-listings h2,
+.admin-revenue h1,
+.admin-revenue h2,
+.admin-complaints h1,
+.admin-complaints h2,
+.broker-dashboard h1,
+.broker-dashboard h2,
+.owner-dashboard h1,
+.owner-dashboard h2 {
+  overflow-wrap: anywhere;
+}
+
+button,
+.btn,
+.premium-btn,
+.broker-primary-btn,
+.owner-primary-btn,
+.btn-liquid-primary,
+.plan-card .btn-primary {
+  will-change: transform;
+  transition:
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    background 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+button:active,
+.btn:active,
+.premium-btn:active {
+  transform: translateY(0) scale(0.985);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(56, 189, 248, 0.32);
+  outline-offset: 3px;
+}
+
+input,
+select,
+textarea {
+  background: var(--ui-surface-2) !important;
+  border-color: var(--ui-border) !important;
+  border-radius: var(--ui-radius) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-border-strong) !important;
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.14) !important;
+}
+
+.skeleton,
+.skeleton-box,
+.skeleton-card,
+.conversation-skeletons span {
+  background:
+    linear-gradient(90deg, var(--ui-surface-2), var(--ui-surface-3), var(--ui-surface-2)) !important;
+  background-size: 220% 100% !important;
+  animation: skeletonShimmer 1.25s linear infinite !important;
+}
+
+.error-message,
+.error-alert-liquid {
+  background: #3B1118 !important;
+  color: #fecdd3 !important;
+  border: 1px solid rgba(248, 113, 113, 0.34) !important;
+  border-radius: var(--ui-radius) !important;
+}
+
+.success-message,
+.toast-success {
+  background: #0F2F24 !important;
+  color: #bbf7d0 !important;
+  border: 1px solid rgba(52, 211, 153, 0.34) !important;
+  border-radius: var(--ui-radius) !important;
+}
+
+.empty-state,
+.broker-empty-state,
+.owner-empty-state,
+.conversation-empty,
+.chat-empty-state {
+  background: var(--ui-surface) !important;
+  border: 1px solid var(--ui-border) !important;
+  border-radius: var(--ui-radius) !important;
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard,
+  .broker-dashboard,
+  .owner-dashboard,
+  .makler-subscription,
+  .messages-page {
+    padding-inline: 12px !important;
+  }
+}

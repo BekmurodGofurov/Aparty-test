@@ -1,0 +1,650 @@
+@use "./index" as *;
+@use "./premium-dashboard";
+@use "./premium-foundation";
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@500;600;700;800;900&display=swap');
+
+// ════════════════════════════════════════════════════════════════════════════
+// BASE RESET
+// ════════════════════════════════════════════════════════════════════════════
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: $font-body;
+  background:  var(--bg-base);
+  color:       var(--color-text);
+  line-height: $lh-normal;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing:  antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100dvh;
+  position:   relative;
+  overflow-x: hidden;
+  transition: background var(--transition-theme),
+              color var(--transition-theme);
+
+  // Global ambient glow — subtle aurora effect
+  &::before, &::after {
+    content: none;
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+    filter: none;
+    opacity: 0;
+  }
+
+  &::before {
+    width: 46vw; height: 40vw;
+    top: -15vh; right: -15vw;
+    background: radial-gradient(circle, var(--blob-primary) 0%, transparent 70%);
+  }
+
+  &::after {
+    width: 36vw; height: 36vw;
+    bottom: -15vh; left: -10vw;
+    background: radial-gradient(circle, var(--blob-secondary) 0%, transparent 70%);
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family:    $font-heading;
+  font-weight:    $fw-bold;
+  letter-spacing: $ls-tight;
+  line-height:    $lh-snug;
+  color:          var(--color-text);
+}
+
+p { line-height: $lh-normal; }
+
+a {
+  color:           inherit;
+  text-decoration: none;
+  transition:      color var(--transition-fast);
+}
+
+img { max-width: 100%; display: block; }
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size:   inherit;
+}
+
+button,
+.btn,
+.glass-card,
+.premium-listing-card,
+.listing-card-liquid,
+.panel-card,
+.booking-card,
+.overview-panel,
+.property-intro,
+.similar-section,
+.how-card,
+.advantage-card,
+.testimonial-card {
+  transition:
+    color var(--transition-theme),
+    background var(--transition-theme),
+    border-color var(--transition-theme),
+    box-shadow var(--transition-theme),
+    transform var(--transition-base);
+}
+
+.route-transition-wrapper {
+  color: var(--color-text);
+}
+
+.theme-surface {
+  color: var(--color-text);
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// INPUTS & FORM ELEMENTS — Premium feel
+// ════════════════════════════════════════════════════════════════════════════
+input, select, textarea {
+  width:         100%;
+  color:         var(--color-text);
+  background:    var(--bg-input);
+  border:        1px solid var(--glass-border);
+  border-radius: $radius-md;
+  padding:       0.8rem 1.25rem;
+  font-size:     0.95rem;
+  font-weight:   500;
+  outline:       none;
+  transition:    all var(--transition-base);
+
+  [data-theme="light"] & {
+    background: #FFFFFF;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 
+      inset 0 1px 2px rgba(0, 0, 0, 0.02),
+      0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  &::placeholder { color: var(--color-subtle); }
+
+  &:hover:not(:focus) { 
+    border-color: var(--glass-border-hover); 
+    [data-theme="light"] & { border-color: rgba(0, 0, 0, 0.15); background: #FDFDFD; }
+  }
+
+  &:focus {
+    border-color: var(--color-primary);
+    background:   var(--glass-bg-mid);
+    box-shadow:   0 0 0 4px var(--color-primary-glow);
+    transform:    translateY(-1px);
+
+    [data-theme="light"] & {
+      background: #FFFFFF;
+      border-color: var(--color-primary);
+      box-shadow:
+        0 4px 12px -2px rgba(245, 158, 11, 0.12),
+        0 0 0 4px var(--color-primary-glow);
+    }
+  }
+}
+
+select {
+  cursor:           pointer;
+  appearance:       none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:   no-repeat;
+  background-position: right 1rem center;
+  padding-right:       3rem;
+
+  option {
+    background: var(--bg-elevated);
+    color:      var(--color-text);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// BUTTON CLASSES (global utility)
+// ════════════════════════════════════════════════════════════════════════════
+.btn {
+  @include button-base;
+  padding: 0.75rem 1.75rem;
+  font-size: 0.95rem;
+
+  &-sm { padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: $radius-sm; }
+  &-lg { padding: 1rem 2.25rem; font-size: 1.05rem; }
+}
+
+.btn-primary { @include button-primary; }
+.btn-secondary { @include button-secondary; }
+.btn-ghost { @include button-ghost; }
+
+// ════════════════════════════════════════════════════════════════════════════
+// GLASS CARD — global utility
+// ════════════════════════════════════════════════════════════════════════════
+.glass-card {
+  @include glass-premium;
+}
+
+.glass-card-interactive {
+  @include glass-interactive;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// BADGE SYSTEM
+// ════════════════════════════════════════════════════════════════════════════
+.badge {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            0.35rem;
+  border-radius:  $radius-full;
+  padding:        0.25rem 0.75rem;
+  font-size:      0.72rem;
+  font-weight:    $fw-bold;
+  letter-spacing: $ls-wide;
+  text-transform: uppercase;
+  border:         1px solid transparent;
+  transition:     all var(--transition-fast);
+  white-space:    nowrap;
+
+  &-primary  { background: rgba(59,130,246,0.12);  color: var(--color-primary-light); border-color: rgba(59,130,246,0.22); }
+  &-success  { background: rgba(16,185,129,0.12);  color: var(--color-success);       border-color: rgba(16,185,129,0.22); }
+  &-amber    { background: rgba(245,158,11,0.12);  color: var(--color-amber);         border-color: rgba(245,158,11,0.22); }
+  &-premium  {
+    background:  rgba(245,158,11,0.12);
+    color:       var(--color-amber);
+    border-color: var(--color-premium-brd);
+    box-shadow:  0 0 12px rgba(245,158,11,0.18);
+  }
+  &-verified { background: rgba(16,185,129,0.15);  color: var(--color-success);       border-color: rgba(16,185,129,0.3); }
+  &-error    { background: rgba(239,68,68,0.12);   color: var(--color-error);         border-color: rgba(239,68,68,0.22); }
+
+  [data-theme="light"] & {
+    &-primary  { background: #FFF7ED; color: #9A3412; border-color: #FED7AA; }
+    &-success  { background: #F0FDF4; color: #166534; border-color: #BBF7D0; }
+    &-premium  { background: #FFF9E5; color: #92400E; border-color: var(--color-premium-brd); }
+    &-amber    { background: #FFFBEB; color: #92400E; border-color: #FDE68A; }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SECTION LABEL
+// ════════════════════════════════════════════════════════════════════════════
+.section-eyebrow {
+  @include label-caps;
+  color:          var(--color-primary);
+  display:        inline-flex;
+  align-items:    center;
+  gap:            0.5rem;
+  margin-bottom:  0.75rem;
+
+  &::before {
+    content: '';
+    display: block;
+    width:   24px;
+    height:  2px;
+    background: var(--color-primary);
+    border-radius: $radius-full;
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SKELETON LOADER
+// ════════════════════════════════════════════════════════════════════════════
+.skeleton {
+  border-radius: $radius-md;
+  background:    linear-gradient(
+    90deg,
+    var(--glass-bg)     25%,
+    var(--glass-bg-mid) 50%,
+    var(--glass-bg)     75%
+  );
+  background-size: 100% 100%;
+  animation:       none;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SCROLLBAR
+// ════════════════════════════════════════════════════════════════════════════
+::-webkit-scrollbar          { width: 6px; height: 6px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: var(--glass-border-hover); border-radius: $radius-full; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
+::selection { background: var(--color-primary); color: #fff; }
+
+// ════════════════════════════════════════════════════════════════════════════
+// GLOBAL KEYFRAMES
+// ════════════════════════════════════════════════════════════════════════════
+@keyframes auroraDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(40px, -30px) scale(1.15); }
+  66%  { transform: translate(-20px, 40px) scale(0.95); }
+  100% { transform: translate(60px, -60px) scale(1.2); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(-30px) rotate(3deg); }
+  66%       { transform: translateY(-15px) rotate(-2deg); }
+}
+
+@keyframes skeletonShimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@keyframes shimmerPulse {
+  0%, 100% { opacity: 0.8; }
+  50%       { opacity: 1; }
+}
+
+@keyframes heroReveal {
+  from { opacity: 0; transform: translateY(40px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 12px var(--color-primary-glow); }
+  50%       { box-shadow: 0 0 28px var(--color-primary-glow), 0 0 48px rgba(37,99,235,0.15); }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// ANIMATION UTILITY CLASSES
+// ════════════════════════════════════════════════════════════════════════════
+.anim-fade-in-up { animation: fadeInUp 0.6s var(--ease-smooth) both; }
+.anim-fade-in    { animation: fadeIn   0.5s var(--ease-smooth) both; }
+.anim-delay-1 { animation-delay: 0.1s; }
+.anim-delay-2 { animation-delay: 0.2s; }
+.anim-delay-3 { animation-delay: 0.3s; }
+.anim-delay-4 { animation-delay: 0.4s; }
+.anim-delay-5 { animation-delay: 0.5s; }
+
+// ── Layout Utilities ──────────────────
+.center-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 40vh;
+  padding: 4rem 0;
+}
+
+// ── PREMIUM UTILITIES (Light Mode Optimized) ─────────────────────────
+.glow-primary {
+  [data-theme="light"] & { box-shadow: 0 0 28px rgba(234, 179, 8, 0.22); }
+}
+
+.glow-accent {
+  [data-theme="light"] & { box-shadow: 0 0 28px rgba(250, 204, 21, 0.20); }
+}
+
+.soft-3d-lift {
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-card-hover);
+  }
+}
+
+.text-gradient-premium {
+  @include text-gradient;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// LIGHT MODE — NUCLEAR SECTION TEXT OVERRIDE
+// These selectors have maximum specificity to ensure section text is ALWAYS
+// visible in light mode regardless of component-level CSS.
+// ════════════════════════════════════════════════════════════════════════════
+html[data-theme="light"],
+:root[data-theme="light"] {
+  // ── HEADINGS — always dark
+  h1, h2, h3, h4, h5, h6 {
+    color: #0C0A06 !important;
+  }
+
+  p {
+    color: #292524;
+  }
+
+  // ── SECTION EYEBROW ─────────────────────────────────────────────────
+  .section-eyebrow {
+    color: #B45309 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    &::before { background: #B45309 !important; }
+    svg { color: #B45309 !important; }
+  }
+
+  // ── SECTION TITLE ─────────────────────────────────────────────────
+  .section-title {
+    color: #0C0A06 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  // ── SECTION SUB ──────────────────────────────────────────────────
+  .section-sub {
+    color: #57534E !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  // ── SECTION HEAD ──────────────────────────────────────────────────
+  .section-head {
+    position: relative;
+    z-index: 10;
+    .section-eyebrow {
+      color: #B45309 !important;
+    }
+    .section-title {
+      color: #0C0A06 !important;
+    }
+    .section-sub {
+      color: #57534E !important;
+    }
+  }
+
+  // ── HERO TEXTS ────────────────────────────────────────────────────────
+  .hero-title {
+    color: #ffffff !important;    // Hero has bg image — keep white
+    text-shadow: 0 2px 20px rgba(0,0,0,0.5) !important;
+  }
+
+  .hero-subtitle {
+    color: rgba(255, 255, 255, 0.88) !important;  // on bg image — keep light
+  }
+
+  .trust-badge {
+    color: rgba(255, 255, 255, 0.92) !important;
+  }
+
+  .stat-body strong { color: #ffffff !important; }
+  .stat-body span   { color: rgba(255,255,255,0.8) !important; }
+
+  // ── HOW-IT-WORKS CARDS ────────────────────────────────────────────────
+  .how-card {
+    background:   #FFFFFF !important;
+    border-color: rgba(120, 80, 20, 0.10) !important;
+    box-shadow:   0 4px 20px rgba(15, 8, 0, 0.06),
+                  0 1px 4px rgba(15, 8, 0, 0.04) !important;
+
+    h3    { color: #0C0A06 !important; }
+    p     { color: #57534E !important; }
+    .how-num { color: #D97706 !important; opacity: 0.15 !important; }
+
+    &:hover {
+      box-shadow:   0 12px 40px rgba(15, 8, 0, 0.10),
+                    0 4px 12px rgba(217, 119, 6, 0.08) !important;
+      border-color: rgba(217, 119, 6, 0.25) !important;
+    }
+  }
+
+  // ── ADVANTAGE CARDS ───────────────────────────────────────────────────
+  .advantage-card {
+    background:   #FFFFFF !important;
+    border-color: rgba(120, 80, 20, 0.09) !important;
+    box-shadow:   0 4px 20px rgba(15, 8, 0, 0.06),
+                  0 1px 4px rgba(15, 8, 0, 0.04) !important;
+
+    h3 { color: #0C0A06 !important; }
+    p  { color: #57534E !important; }
+
+    .adv-icon-wrapper {
+      background: rgba(217, 119, 6, 0.08) !important;
+      color: #B45309 !important;
+    }
+
+    &:hover {
+      box-shadow:   0 12px 40px rgba(15, 8, 0, 0.10) !important;
+      border-color: rgba(217, 119, 6, 0.25) !important;
+    }
+  }
+
+  // ── TESTIMONIAL CARDS ─────────────────────────────────────────────────
+  .testimonial-card {
+    background:   #FFFFFF !important;
+    border-color: rgba(120, 80, 20, 0.09) !important;
+    box-shadow:   0 4px 20px rgba(15, 8, 0, 0.06),
+                  0 1px 4px rgba(15, 8, 0, 0.04) !important;
+
+    .t-quote  { color: #292524 !important; }
+    .t-author strong { color: #0C0A06 !important; }
+    .t-author span   { color: #57534E !important; }
+    .t-author        { border-top-color: rgba(120, 80, 20, 0.10) !important; }
+
+    &:hover {
+      box-shadow:   0 12px 40px rgba(15, 8, 0, 0.10) !important;
+    }
+  }
+
+  // ── LISTING CARDS ─────────────────────────────────────────────────────
+  .premium-listing-card,
+  .listing-card-liquid {
+    background:   #FFFFFF !important;
+    border-color: rgba(120, 80, 20, 0.09) !important;
+    color:        #0C0A06 !important;
+    box-shadow:   0 4px 20px rgba(15, 8, 0, 0.06),
+                  0 1px 4px rgba(15, 8, 0, 0.04) !important;
+
+    .card-title    { color: #0C0A06 !important; }
+    .card-location { color: #57534E !important; }
+    .price-value   { color: #B45309 !important; }
+    .price-label   { color: #78716C !important; }
+    .price-period  { color: #78716C !important; }
+    .info-item     { color: #57534E !important; background: rgba(245, 158, 11, 0.05) !important; }
+    .card-footer   { border-top-color: rgba(120, 80, 20, 0.10) !important; }
+
+    &:hover {
+      box-shadow:   0 12px 40px rgba(15, 8, 0, 0.10),
+                    0 0 0 1px rgba(217, 119, 6, 0.15) !important;
+    }
+  }
+
+  // ── AI BANNER ────────────────────────────────────────────────────────
+  .ai-banner-card {
+    background: linear-gradient(135deg,
+      rgba(255,252,245,0.95) 0%,
+      rgba(255,248,230,0.90) 100%
+    ) !important;
+    border-color: rgba(217, 119, 6, 0.15) !important;
+    box-shadow: 0 8px 40px rgba(15, 8, 0, 0.08) !important;
+  }
+
+  .ai-content {
+    h2 { color: #0C0A06 !important; }
+    p  { color: #57534E !important; }
+    .ai-badge { background: #FEF3C7 !important; color: #B45309 !important; }
+  }
+
+  // ── VIEW ALL BUTTON (outline) ─────────────────────────────────────────
+  .btn-outline {
+    color:        #0C0A06 !important;
+    border-color: rgba(120, 80, 20, 0.20) !important;
+    &:hover {
+      border-color: #D97706 !important;
+      color:        #D97706 !important;
+      background:   rgba(217, 119, 6, 0.06) !important;
+    }
+  }
+
+  // ── OWNER CTA CARD ────────────────────────────────────────────────────
+  .owner-cta-card {
+    background:   #FFFFFF !important;
+    border-color: rgba(120, 80, 20, 0.09) !important;
+    box-shadow:   0 8px 40px rgba(15, 8, 0, 0.08) !important;
+
+    h2 { color: #0C0A06 !important; }
+    p  { color: #57534E !important; }
+  }
+
+  .owner-feat {
+    background:   rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(120, 80, 20, 0.12) !important;
+    color:        #292524 !important;
+    svg { color: #B45309 !important; }
+  }
+
+  // ── FILTER PILLS ──────────────────────────────────────────────────────
+  .pill {
+    background:   rgba(255,255,255,0.9) !important;
+    border-color: rgba(120, 80, 20, 0.12) !important;
+    color:        #292524 !important;
+
+    &.active {
+      background:   var(--gradient-primary) !important;
+      border-color: transparent !important;
+      color:        #fff !important;
+    }
+  }
+
+  // ── SKELETON CARDS ────────────────────────────────────────────────────
+  .skeleton-card {
+    background: linear-gradient(
+      90deg,
+      #F5F2EC 25%,
+      #EDE8E0 50%,
+      #F5F2EC 75%
+    ) !important;
+  }
+
+  // ── SEARCH PANEL (in hero — on bg image) ─────────────────────────────
+  .search-panel {
+    background:   rgba(15, 8, 0, 0.55) !important;
+    backdrop-filter: none !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    box-shadow:   0 40px 100px rgba(0,0,0,0.35) !important;
+
+    .search-field label { color: rgba(255,255,255,0.65) !important; }
+    .search-field select,
+    .search-field input {
+      background:   rgba(255, 255, 255, 0.10) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+      color:        #ffffff !important;
+    }
+    .field-input.static {
+      background:   rgba(255, 255, 255, 0.06) !important;
+      border-color: rgba(255, 255, 255, 0.10) !important;
+      color:        rgba(255,255,255,0.7) !important;
+    }
+    .price-sep { color: rgba(255,255,255,0.35) !important; }
+    .btn-ai {
+      background:   rgba(255, 255, 255, 0.08) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+      color:        rgba(255,255,255,0.9) !important;
+    }
+  }
+
+  // ── FEATURED / SECTIONS backgrounds ───────────────────────────────────
+  .featured-section {
+    background: linear-gradient(
+      to bottom,
+      #FAFAF8 0%,
+      #F5F2EC 50%,
+      #FAFAF8 100%
+    ) !important;
+  }
+
+  // .how-section       { background: transparent !important; }
+  .locations-section { background: transparent !important; }
+  .advantages-section { background: #F5F2EC !important; }
+  .testimonials-section {
+    background: linear-gradient(to bottom, #FAFAF8, #F5F2EC) !important;
+  }
+  .owner-cta-section { background: #FAFAF8 !important; }
+  .ai-recommendation { background: transparent !important; }
+}

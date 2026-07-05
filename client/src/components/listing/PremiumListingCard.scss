@@ -1,0 +1,267 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PREMIUM LISTING CARD — Aurora Glass 3.0
+// ═══════════════════════════════════════════════════════════════════════════
+
+.premium-listing-card {
+  @include flex-col;
+  height:        100%;
+  overflow:      hidden;
+  border-radius: $radius-lg;
+  
+  // SOLID BACKGROUND (Ensures icons don't bleed through text/images)
+  [data-theme="dark"] & {
+    background: #0B1020 !important; // Deep navy solid
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  }
+  
+  border:        1px solid var(--glass-border);
+  backdrop-filter: none !important;
+  box-shadow:    var(--shadow-sm);
+  transition:    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                 box-shadow 0.5s ease,
+                 border-color 0.3s ease;
+  position:      relative;
+  cursor:        pointer;
+
+  [data-theme="light"] & {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.02);
+    
+    &:hover {
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.04);
+      border-color: rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  // Shine overlay
+  &::before {
+    content:    '';
+    position:   absolute;
+    inset:      0;
+    border-radius: inherit;
+    background: var(--gradient-card-shine);
+    pointer-events: none;
+    z-index:    0;
+    opacity:    0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover {
+    transform:    translateY(-5px);
+    box-shadow:   var(--shadow-card-hover);
+    border-color: var(--glass-border-hover);
+
+    &::before { opacity: 1; }
+
+    .card-image { transform: scale(1.045); }
+
+    .card-cta-btn { transform: scale(1.05) rotate(-3deg); }
+  }
+
+  // ── IMAGE ──────────────────────────────────────────────────────────────
+  .card-image-wrapper {
+    position:  relative;
+    width:     100%;
+    height:    220px;
+    overflow:  hidden;
+    background: var(--bg-elevated);
+    flex-shrink: 0;
+
+    @include mobile { height: 200px; }
+  }
+
+  .card-image {
+    width:      100%;
+    height:     100%;
+    object-fit: cover;
+    transition: transform 0.78s cubic-bezier(0.16, 1, 0.3, 1);
+    display:    block;
+  }
+
+  .card-image-overlay {
+    position:        absolute;
+    inset:           0;
+    background:      rgba(5, 9, 26, 0.42);
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    z-index:         5;
+    opacity:         0;
+    pointer-events:  none;
+    transition:      opacity 0.36s ease;
+
+    .overlay-btn {
+      @include glass-base;
+      @include button-secondary;
+      padding:       $space-sm $space-lg;
+      font-size:     0.82rem;
+      border-radius: $radius-sm;
+      color:         #fff;
+      backdrop-filter: none;
+
+      &:hover { background: rgba(255, 255, 255, 0.15); }
+    }
+  }
+
+  &:hover .card-image-overlay {
+    opacity:        1;
+    pointer-events: auto;
+  }
+
+  // ── BADGES ─────────────────────────────────────────────────────────────
+  .card-badges {
+    position:       absolute;
+    top:            $space-md;
+    left:           $space-md;
+    display:        flex;
+    flex-direction: column;
+    gap:            $space-xs;
+    z-index:        10;
+  }
+
+  // ── FAVORITE ───────────────────────────────────────────────────────────
+  .favorite-btn {
+    @include btn-reset;
+    position:        absolute;
+    top:             $space-md;
+    right:           $space-md;
+    width:           36px;
+    height:          36px;
+    border-radius:   $radius-sm;
+    background:      rgba(5, 9, 26, 0.36);
+    border:          1px solid rgba(255, 255, 255, 0.10);
+    color:           rgba(255, 255, 255, 0.85);
+    backdrop-filter: none;
+    transition:      color 0.28s ease,
+                     background 0.28s ease,
+                     border-color 0.28s ease,
+                     transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index:         11;
+
+    [data-theme="light"] & {
+      background: rgba(255, 255, 255, 0.5);
+      border-color: rgba(30, 64, 175, 0.1);
+      color: var(--color-primary);
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: rgba(30, 64, 175, 0.2);
+      }
+    }
+
+    &:hover {
+      background:   rgba(5, 9, 26, 0.55);
+      border-color: rgba(255, 255, 255, 0.22);
+      transform:    scale(1.06);
+    }
+
+    &.active {
+      color:        var(--color-error);
+      background:   rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.32);
+    }
+
+    &.loading { opacity: 0.6; }
+  }
+
+  // ── CARD CONTENT ───────────────────────────────────────────────────────
+  .card-content {
+    @include flex-col;
+    flex:     1;
+    padding:  $space-lg;
+    position: relative;
+    z-index:  2;
+    gap:      $space-sm;
+  }
+
+  .card-title {
+    font-family:    $font-heading;
+    font-size:      1.05rem;
+    font-weight:    $fw-bold;
+    color:          var(--color-text);
+    line-height:    $lh-snug;
+    @include text-clamp(2);
+    min-height:     2.8em;
+  }
+
+  .card-location {
+    display:     flex;
+    align-items: center;
+    gap:         5px;
+    font-size:   0.82rem;
+    font-weight: $fw-medium;
+    color:       var(--color-muted);
+
+    svg { color: var(--color-primary); opacity: 0.8; flex-shrink: 0; }
+  }
+
+  .card-quick-info {
+    display:  flex;
+    gap:      $space-sm;
+    flex-wrap: wrap;
+    margin-top: $space-xs;
+
+    .info-item {
+      display:       flex;
+      align-items:   center;
+      gap:           5px;
+      font-size:     0.8rem;
+      font-weight:   $fw-semibold;
+      color:         var(--color-subtle);
+      background:    var(--glass-bg);
+      padding:       3px $space-sm;
+      border-radius: $radius-full;
+      border:        1px solid var(--glass-border);
+      white-space:   nowrap;
+    }
+  }
+
+  // ── FOOTER ─────────────────────────────────────────────────────────────
+  .card-footer {
+    @include flex-between;
+    margin-top:  auto;
+    padding-top: $space-md;
+    border-top:  1px solid var(--glass-border);
+  }
+
+  .price-section { @include flex-col; gap: 1px; }
+
+  .price-label {
+    @include label-caps;
+    color:     var(--color-subtle);
+    font-size: 0.65rem;
+  }
+
+  .price-value {
+    font-family:    $font-heading;
+    font-size:      1.35rem;
+    font-weight:    $fw-extrabold;
+    color:          var(--color-primary-light);
+    line-height:    1;
+  }
+
+  .price-period {
+    font-size:   0.72rem;
+    color:       var(--color-subtle);
+    font-weight: $fw-medium;
+  }
+
+  .card-cta-btn {
+    @include btn-reset;
+    width:         40px;
+    height:        40px;
+    border-radius: $radius-md;
+    background:    var(--gradient-primary);
+    color:         #fff;
+    box-shadow:    var(--shadow-btn-primary);
+    transition:    transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+                   box-shadow 0.34s ease;
+    flex-shrink:   0;
+
+    &:hover { box-shadow: var(--shadow-btn-hover); }
+  }
+}

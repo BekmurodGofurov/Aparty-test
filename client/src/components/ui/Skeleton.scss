@@ -1,0 +1,86 @@
+@use "../../styles/variables" as *;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SKELETON LOADER — Dual-theme shimmer system
+// ─────────────────────────────────────────────────────────────────────────────
+
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+// ── Base shimmer strip ────────────────────────────────────────────────────────
+.skeleton {
+  border-radius: 8px;
+  background-size: 100% 100%;
+  animation: none;
+
+  // Dark mode — subtle blue-gray shimmer
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+
+  [data-theme="light"] & {
+    // Light mode — warm cream shimmer with amber mid-tone
+    background: linear-gradient(
+      90deg,
+      #F3F4F6 25%,
+      #E9EAEC 50%,
+      #F3F4F6 75%
+    );
+  }
+}
+
+// ── Card skeleton ─────────────────────────────────────────────────────────────
+.skeleton-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  overflow: hidden;
+
+  [data-theme="light"] & {
+    background: #FFFFFF;
+    border-color: #E5E7EB;
+    box-shadow: 0 2px 8px rgba(17, 24, 39, 0.05);
+  }
+
+  .skeleton-image {
+    height: 200px;
+    @extend .skeleton;
+    border-radius: 0;
+  }
+
+  .skeleton-body {
+    padding: 16px;
+  }
+
+  .skeleton-line {
+    @extend .skeleton;
+    height: 13px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+
+    &.short  { width: 55%; }
+    &.medium { width: 78%; }
+    &.full   { width: 100%; }
+  }
+
+  .skeleton-title {
+    @extend .skeleton;
+    height: 18px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+    width: 85%;
+  }
+
+  .skeleton-badge {
+    @extend .skeleton;
+    height: 24px;
+    width: 72px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+}

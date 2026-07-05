@@ -1,0 +1,140 @@
+@use "../../../styles/variables" as *;
+@use "../../../styles/mixins" as *;
+
+.modal-overlay-clean {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.3);
+    backdrop-filter: blur(8px);
+    [data-theme="dark"] & { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); }
+  }
+
+  .edit-modal-minimal {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 480px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 32px;
+    box-shadow: 0 30px 100px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    [data-theme="dark"] & {
+      background: #0f172a;
+      border-color: rgba(255,255,255,0.08);
+      box-shadow: 0 40px 120px rgba(0,0,0,0.6);
+    }
+
+    .modal-header {
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f1f5f9;
+      [data-theme="dark"] & { border-color: #334155; }
+
+      h3 { margin: 0; font-size: 1.25rem; font-weight: 800; color: #1e293b; [data-theme="dark"] & { color: #f1f5f9; } }
+      .close {
+        background: transparent; border: none; color: #64748b; cursor: pointer;
+        padding: 4px; border-radius: 50%; transition: 0.2s;
+        &:hover { background: #f1f5f9; color: #1e293b; }
+        [data-theme="dark"] &:hover { background: #334155; color: #fff; }
+      }
+    }
+
+    .modal-body {
+      padding: 2rem;
+      max-height: 70vh;
+      overflow-y: auto;
+
+      .avatar-edit-minimal {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 2rem;
+
+        .img-box {
+          position: relative;
+          width: 100px; height: 100px;
+          border-radius: 50%;
+          border: 4px solid #f8fafc;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+          [data-theme="dark"] & { border-color: #0f172a; }
+
+          img, .placeholder {
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+            background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 800;
+          }
+
+          .cam-btn {
+            position: absolute; bottom: 0; right: 0;
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #ffffff; color: #3b82f6; border: 1px solid #e2e8f0;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            &:hover { transform: scale(1.1); }
+            [data-theme="dark"] & { background: #334155; border-color: #475569; }
+          }
+        }
+        .uploading-txt { margin-top: 0.75rem; font-size: 0.8rem; color: #3b82f6; font-weight: 700; }
+      }
+
+      .form-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .phone-input-wrap {
+        &.confirm-mode {
+          .phone-warning {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #fffbeb;
+            border: 1px solid #fef3c7;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #b45309;
+            font-size: 0.85rem;
+            font-weight: 600;
+            [data-theme="dark"] & { background: rgba(251, 191, 36, 0.05); border-color: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+          }
+        }
+      }
+
+      .field-hint {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 500;
+        display: block;
+      }
+    }
+
+    .modal-footer {
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      background: #f8fafc;
+      border-top: 1px solid #f1f5f9;
+      [data-theme="dark"] & { background: rgba(0,0,0,0.1); border-color: #334155; }
+    }
+  }
+}

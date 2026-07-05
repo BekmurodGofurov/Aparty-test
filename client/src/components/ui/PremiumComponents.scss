@@ -1,0 +1,164 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PREMIUM COMPONENTS — Reusable glass UI library
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── GLASS CARD ─────────────────────────────────────────────────────────────
+.premium-glass-card {
+  @include glass-premium;
+  padding: $space-xl;
+
+  &.variant-elevated {
+    @include glass-elevated;
+  }
+
+  &.variant-interactive {
+    @include glass-interactive;
+    cursor: pointer;
+  }
+}
+
+// ── BUTTON ─────────────────────────────────────────────────────────────────
+.premium-btn {
+  @include button-base;
+
+  &.variant-primary   { @include button-primary; }
+  &.variant-secondary { @include button-secondary; }
+  &.variant-ghost     { @include button-ghost; }
+  
+  &.variant-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--color-error);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    
+    &:hover:not(:disabled) {
+      background: var(--color-error);
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+  }
+
+  &.size-sm { padding: 0.45rem 1rem;   font-size: 0.82rem; }
+  &.size-md { padding: 0.7rem  1.5rem; font-size: 0.92rem; }
+  &.size-lg { padding: 0.9rem  2rem;   font-size: 1rem; }
+}
+
+// ── BADGE ──────────────────────────────────────────────────────────────────
+.premium-badge {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            5px;
+  padding:        0.22rem 0.65rem;
+  border-radius:  $radius-full;
+  font-size:      0.7rem;
+  font-weight:    $fw-bold;
+  letter-spacing: $ls-wide;
+  text-transform: uppercase;
+  border:         1px solid transparent;
+
+  &.variant-primary {
+    background:   rgba(59, 130, 246, 0.15);
+    color:        var(--color-primary-light);
+    border-color: rgba(59, 130, 246, 0.25);
+  }
+  &.variant-success {
+    background:   rgba(16, 185, 129, 0.15);
+    color:        var(--color-success);
+    border-color: rgba(16, 185, 129, 0.25);
+  }
+  &.variant-premium {
+    background:   rgba(245, 158, 11, 0.15);
+    color:        var(--color-amber);
+    border-color: rgba(245, 158, 11, 0.35);
+    box-shadow:   0 0 12px rgba(245, 158, 11, 0.15);
+  }
+  &.variant-error {
+    background:   rgba(239, 68, 68, 0.15);
+    color:        var(--color-error);
+    border-color: rgba(239, 68, 68, 0.25);
+  }
+}
+
+// ── SECTION WRAPPER ────────────────────────────────────────────────────────
+.premium-section {
+  padding:  $space-giant 0;
+  width:    100%;
+
+  .section-container {
+    @include container;
+    padding-inline: $space-lg;
+
+    @include mobile { padding-inline: $space-md; }
+  }
+
+  .section-header {
+    text-align:    center;
+    margin-bottom: $space-xxl;
+
+    h2 {
+      @include heading-lg;
+      margin-bottom: $space-md;
+    }
+
+    p {
+      font-size:   1.05rem;
+      color:       var(--color-muted);
+      max-width:   560px;
+      margin:      0 auto;
+      line-height: $lh-relaxed;
+    }
+  }
+}
+
+// ── INPUT WRAPPER ──────────────────────────────────────────────────────────
+.premium-input-wrapper {
+  width:         100%;
+  margin-bottom: $space-md;
+
+  label {
+    display:       block;
+    margin-bottom: $space-xs;
+    font-size:     0.85rem;
+    font-weight:   $fw-semibold;
+    color:         var(--color-muted);
+  }
+
+  .input-container {
+    position: relative;
+
+    .icon {
+      position:  absolute;
+      left:      1rem;
+      top:       50%;
+      transform: translateY(-50%);
+      color:     var(--color-subtle);
+      pointer-events: none;
+    }
+
+    input {
+      padding-left: 3rem;
+    }
+  }
+
+  .error-text {
+    margin-top: $space-xs;
+    font-size:  0.8rem;
+    color:      var(--color-error);
+  }
+}
+
+// ── SKELETON BOX ───────────────────────────────────────────────────────────
+.skeleton-box {
+  border-radius: $radius-sm;
+  background:    linear-gradient(
+    90deg,
+    var(--glass-bg)     25%,
+    var(--glass-bg-mid) 50%,
+    var(--glass-bg)     75%
+  );
+  background-size: 100% 100%;
+  animation:       none;
+}

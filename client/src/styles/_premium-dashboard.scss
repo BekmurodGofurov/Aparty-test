@@ -1,0 +1,562 @@
+@use "./variables" as *;
+
+@mixin premium-page-shell($accent: #38bdf8, $accent-2: #8b5cf6) {
+  --dash-accent: #{$accent};
+  --dash-accent-2: #{$accent-2};
+  --dash-glow: color-mix(in srgb, var(--dash-accent) 34%, transparent);
+  --dash-panel: linear-gradient(145deg, rgba(15, 23, 42, 0.72), rgba(2, 8, 23, 0.46));
+  --dash-panel-strong: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.58));
+  --dash-border: rgba(255, 255, 255, 0.11);
+  --dash-border-hot: color-mix(in srgb, var(--dash-accent) 52%, rgba(255, 255, 255, 0.16));
+  --dash-radius: 22px;
+  --dash-radius-lg: 30px;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--dash-accent) 18%, transparent), transparent 30%),
+    radial-gradient(circle at 86% 6%, color-mix(in srgb, var(--dash-accent-2) 16%, transparent), transparent 32%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.18), transparent 36%);
+
+  &::before {
+    content: "";
+    position: fixed;
+    inset: 68px 0 auto;
+    z-index: -1;
+    height: 360px;
+    pointer-events: none;
+    background:
+      linear-gradient(110deg, transparent 0 20%, color-mix(in srgb, var(--dash-accent) 10%, transparent), transparent 46% 100%),
+      radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.06), transparent 64%);
+    opacity: 0.9;
+    animation: premiumDashAurora 18s ease-in-out infinite alternate;
+  }
+
+  .page-container,
+  &__shell,
+  .owner-dashboard__shell,
+  .broker-dashboard__shell,
+  .profile-content-wrapper {
+    width: min(1220px, calc(100% - 32px));
+    max-width: 1220px;
+  }
+
+  .page-container,
+  &__shell,
+  .owner-dashboard__shell,
+  .broker-dashboard__shell {
+    margin-inline: auto;
+  }
+}
+
+@mixin premium-surface {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--dash-border) !important;
+  border-radius: var(--dash-radius) !important;
+  background: var(--dash-panel) !important;
+  box-shadow:
+    0 22px 70px rgba(2, 6, 23, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(22px) saturate(1.18);
+  -webkit-backdrop-filter: blur(22px) saturate(1.18);
+  transition:
+    transform 260ms var(--ease-smooth),
+    border-color 260ms var(--ease-smooth),
+    box-shadow 260ms var(--ease-smooth),
+    background 260ms var(--ease-smooth);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.14), transparent 34%),
+      radial-gradient(circle at 100% 0%, var(--dash-glow), transparent 38%);
+    opacity: 0.62;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@mixin premium-button {
+  border-radius: 16px !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  min-height: 42px;
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.16);
+  transition:
+    transform 220ms var(--ease-smooth),
+    box-shadow 220ms var(--ease-smooth),
+    border-color 220ms var(--ease-smooth),
+    background 220ms var(--ease-smooth);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: var(--dash-border-hot) !important;
+    box-shadow: 0 18px 44px color-mix(in srgb, var(--dash-accent) 18%, rgba(2, 6, 23, 0.24));
+  }
+}
+
+.admin-dashboard { @include premium-page-shell(#38bdf8, #8b5cf6); }
+.admin-users,
+.admin-listings,
+.admin-profile,
+.admin-revenue,
+.admin-complaints,
+.admin-detail {
+  @include premium-page-shell(#38bdf8, #8b5cf6);
+}
+
+.owner-dashboard,
+.owner-profile-page {
+  @include premium-page-shell(#22c55e, #0ea5e9);
+}
+
+.broker-dashboard,
+.broker-profile-page,
+.makler-subscription {
+  @include premium-page-shell(#14b8a6, #8b5cf6);
+}
+
+.user-profile-premium {
+  @include premium-page-shell(#38bdf8, #ec4899);
+}
+
+.admin-dashboard,
+.admin-users,
+.admin-listings,
+.admin-profile,
+.admin-revenue,
+.admin-complaints,
+.admin-detail,
+.owner-dashboard,
+.broker-dashboard,
+.owner-profile-page,
+.broker-profile-page,
+.makler-subscription,
+.user-profile-premium {
+  h1 {
+    letter-spacing: -0.02em !important;
+  }
+
+  .eyebrow,
+  .owner-eyebrow,
+  .broker-eyebrow,
+  .admin-profile__eyebrow,
+  .broker-profile-page__eyebrow,
+  .owner-profile-page__eyebrow {
+    color: var(--dash-accent) !important;
+    font-size: 0.72rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase;
+  }
+}
+
+.admin-dashboard__header,
+.admin-users__header,
+.admin-listings__header,
+.owner-profile-hero,
+.broker-profile-hero,
+.owner-profile-page__hero,
+.broker-profile-page__hero,
+.admin-profile .admin-hero,
+.user-profile-premium .unified-profile-card {
+  @include premium-surface;
+  border-radius: var(--dash-radius-lg) !important;
+  padding: clamp(20px, 3vw, 34px) !important;
+}
+
+.admin-dashboard__header,
+.admin-users__header,
+.admin-listings__header {
+  align-items: center !important;
+  margin-bottom: 18px !important;
+}
+
+.profile-shortcut,
+.admin-link,
+.owner-primary-btn,
+.owner-secondary-btn,
+.owner-ghost-btn,
+.owner-icon-btn,
+.broker-primary-btn,
+.broker-secondary-btn,
+.broker-ghost-btn,
+.broker-icon-btn,
+.owner-profile-page__primary,
+.owner-profile-page__danger,
+.owner-profile-page__back,
+.broker-profile-page__primary,
+.broker-profile-page__danger,
+.broker-profile-page__back,
+.logout-admin,
+.dashboard-link,
+.review-btn,
+.status-action,
+.edit-btn,
+.btn-primary {
+  @include premium-button;
+}
+
+.owner-primary-btn,
+.broker-primary-btn,
+.owner-profile-page__primary,
+.broker-profile-page__primary,
+.btn-primary {
+  background:
+    linear-gradient(135deg, var(--dash-accent), var(--dash-accent-2)) !important;
+  color: #fff !important;
+  border-color: color-mix(in srgb, var(--dash-accent) 56%, white 18%) !important;
+}
+
+.stat-card,
+.limit-card,
+.owner-stat-card,
+.broker-stat-card,
+.owner-panel,
+.broker-panel,
+.owner-listing-card,
+.broker-listing-card,
+.owner-rental-card,
+.broker-subscription-card,
+.broker-mini-list div,
+.owner-empty-state,
+.broker-empty-state,
+.owner-dashboard__loading,
+.broker-dashboard__loading,
+.profile-panel,
+.broker-profile-panel,
+.owner-profile-panel,
+.revenue-card,
+.transactions,
+.table-responsive,
+.user-tools,
+.listing-tools,
+.user-count,
+.listing-count,
+.users-loading,
+.listings-loading,
+.admin-profile__loading,
+.admin-revenue .transactions,
+.user-profile-premium .premium-stat-card,
+.user-profile-premium .session-card,
+.user-profile-premium .mini-review-card,
+.user-profile-premium .profile-empty-card,
+.user-profile-premium .setting-action-card,
+.user-profile-premium .danger-zone-card {
+  @include premium-surface;
+}
+
+.stat-card,
+.owner-stat-card,
+.broker-stat-card,
+.premium-stat-card {
+  animation: premiumDashEnter 520ms var(--ease-smooth) both;
+
+  &:hover {
+    transform: translateY(-5px);
+    border-color: var(--dash-border-hot) !important;
+    box-shadow:
+      0 24px 70px color-mix(in srgb, var(--dash-accent) 18%, rgba(2, 6, 23, 0.28)),
+      inset 0 1px 0 rgba(255,255,255,0.18) !important;
+  }
+}
+
+.stats-grid > *,
+.owner-stats-grid > *,
+.broker-stats-grid > *,
+.plans-grid > * {
+  &:nth-child(2) { animation-delay: 70ms; }
+  &:nth-child(3) { animation-delay: 140ms; }
+  &:nth-child(4) { animation-delay: 210ms; }
+}
+
+.stat-icon,
+.owner-avatar,
+.broker-avatar,
+.admin-avatar,
+.owner-profile-page__avatar,
+.broker-profile-page__avatar,
+.owner-listing-image,
+.broker-listing-image,
+.listing-icon,
+.user-avatar,
+.session-icon,
+.icon-box {
+  border-radius: 18px !important;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--dash-accent) 18%, transparent), rgba(255,255,255,0.04)) !important;
+  color: var(--dash-accent) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    0 12px 30px color-mix(in srgb, var(--dash-accent) 16%, transparent);
+}
+
+.owner-avatar,
+.broker-avatar,
+.admin-avatar,
+.owner-profile-page__avatar,
+.broker-profile-page__avatar {
+  border-radius: 24px !important;
+}
+
+.owner-stats-grid,
+.broker-stats-grid,
+.stats-grid {
+  gap: 16px !important;
+}
+
+.owner-content-grid,
+.broker-content-grid {
+  grid-template-columns: minmax(0, 1.5fr) minmax(310px, 0.9fr) !important;
+  gap: 18px !important;
+}
+
+.owner-panel--wide,
+.broker-panel--wide {
+  grid-row: span 2;
+}
+
+.owner-listing-card,
+.broker-listing-card {
+  align-items: center;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: var(--dash-border-hot) !important;
+  }
+}
+
+.owner-status,
+.broker-status,
+.role-pill,
+.status-pill,
+.price-pill,
+.type-pill,
+.request-status,
+.broker-subscription-card__status,
+.admin-badges span,
+.owner-badges span,
+.broker-badges span,
+.owner-profile-page__badges span,
+.broker-profile-page__badges span {
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+  backdrop-filter: blur(12px);
+}
+
+.admin-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background:
+      linear-gradient(180deg, rgba(15, 23, 42, 0.84), rgba(15, 23, 42, 0.56)) !important;
+    backdrop-filter: blur(18px);
+  }
+
+  tbody tr {
+    transition: transform 180ms var(--ease-smooth), background 180ms var(--ease-smooth);
+
+    &:hover {
+      background: color-mix(in srgb, var(--dash-accent) 7%, transparent) !important;
+    }
+  }
+}
+
+.search-box,
+.filter-group select,
+.broker-request-reply input,
+.owner-request-reply input,
+.owner-profile-field input,
+.broker-profile-field input,
+.owner-profile-field__with-icon,
+.broker-profile-field__with-icon {
+  border-radius: 16px !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  background: rgba(2, 6, 23, 0.34) !important;
+}
+
+.broker-limit-bar {
+  height: 14px !important;
+  padding: 3px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(2, 6, 23, 0.32) !important;
+
+  span {
+    position: relative;
+    background:
+      linear-gradient(90deg, var(--dash-accent), var(--dash-accent-2)) !important;
+    box-shadow: 0 0 24px var(--dash-glow);
+  }
+}
+
+.broker-subscription-card {
+  &::after {
+    content: "";
+    display: block;
+    width: 138px;
+    aspect-ratio: 1;
+    margin: 16px auto 2px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at center, rgba(2,6,23,0.74) 0 52%, transparent 53%),
+      conic-gradient(var(--dash-accent) 0 72%, rgba(255,255,255,0.12) 72% 100%);
+    box-shadow: 0 0 46px var(--dash-glow);
+  }
+}
+
+.support-card-premium {
+  border: 1px solid color-mix(in srgb, var(--dash-accent) 38%, rgba(255,255,255,0.18));
+  box-shadow: 0 28px 70px var(--dash-glow);
+}
+
+.modal-overlay-clean {
+  .backdrop {
+    background:
+      radial-gradient(circle at 50% 8%, color-mix(in srgb, var(--color-primary-light) 22%, transparent), transparent 34%),
+      rgba(2, 6, 23, 0.68) !important;
+    backdrop-filter: blur(18px) saturate(1.18) !important;
+  }
+
+  .edit-modal-minimal {
+    border-radius: 30px !important;
+    border: 1px solid rgba(255,255,255,0.14) !important;
+    background:
+      linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(2, 8, 23, 0.88)) !important;
+    box-shadow:
+      0 34px 110px rgba(2, 6, 23, 0.56),
+      inset 0 1px 0 rgba(255,255,255,0.16) !important;
+
+    .modal-header,
+    .modal-footer {
+      border-color: rgba(255,255,255,0.1) !important;
+      background: rgba(255,255,255,0.035) !important;
+    }
+
+    .img-box {
+      border-radius: 28px !important;
+      border-color: rgba(255,255,255,0.12) !important;
+      box-shadow: 0 20px 52px rgba(2,6,23,0.34) !important;
+
+      img,
+      .placeholder {
+        border-radius: 24px !important;
+        background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)) !important;
+      }
+    }
+
+    input {
+      border-radius: 16px !important;
+    }
+  }
+}
+
+html[data-theme="light"] {
+  .admin-dashboard,
+  .admin-users,
+  .admin-listings,
+  .admin-profile,
+  .admin-revenue,
+  .admin-complaints,
+  .admin-detail,
+  .owner-dashboard,
+  .broker-dashboard,
+  .owner-profile-page,
+  .broker-profile-page,
+  .makler-subscription,
+  .user-profile-premium {
+    --dash-panel: linear-gradient(145deg, rgba(255,255,255,0.94), rgba(248,250,252,0.78));
+    --dash-panel-strong: linear-gradient(145deg, #fff, rgba(248,250,252,0.92));
+    --dash-border: rgba(15, 23, 42, 0.08);
+    --dash-border-hot: color-mix(in srgb, var(--dash-accent) 42%, rgba(15,23,42,0.08));
+
+    background:
+      radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--dash-accent) 11%, transparent), transparent 34%),
+      radial-gradient(circle at 86% 8%, color-mix(in srgb, var(--dash-accent-2) 8%, transparent), transparent 32%),
+      linear-gradient(180deg, rgba(255,255,255,0.5), transparent 42%);
+  }
+
+  .admin-table th {
+    background: rgba(255,255,255,0.86) !important;
+  }
+
+  .search-box,
+  .filter-group select,
+  .broker-request-reply input,
+  .owner-request-reply input,
+  .owner-profile-field input,
+  .broker-profile-field input,
+  .owner-profile-field__with-icon,
+  .broker-profile-field__with-icon {
+    background: rgba(255,255,255,0.86) !important;
+    border-color: rgba(15,23,42,0.08) !important;
+  }
+}
+
+@keyframes premiumDashAurora {
+  from {
+    transform: translate3d(-2%, -2%, 0) scale(1);
+    opacity: 0.62;
+  }
+  to {
+    transform: translate3d(2%, 3%, 0) scale(1.05);
+    opacity: 0.96;
+  }
+}
+
+@keyframes premiumDashEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 920px) {
+  .owner-content-grid,
+  .broker-content-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard,
+  .admin-users,
+  .admin-listings,
+  .admin-profile,
+  .admin-revenue,
+  .admin-complaints,
+  .admin-detail,
+  .owner-dashboard,
+  .broker-dashboard,
+  .owner-profile-page,
+  .broker-profile-page,
+  .makler-subscription,
+  .user-profile-premium {
+    &::before {
+      animation: none !important;
+    }
+  }
+
+  .stat-card,
+  .owner-stat-card,
+  .broker-stat-card,
+  .premium-stat-card {
+    animation: none !important;
+  }
+}

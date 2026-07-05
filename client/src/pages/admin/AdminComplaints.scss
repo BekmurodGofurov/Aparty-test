@@ -1,0 +1,66 @@
+.admin-complaints {
+  min-height: 100vh;
+  padding: 6rem 1.25rem 5rem;
+  color: var(--color-text);
+
+  .page-container {
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    margin: 0 0 1rem;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 850;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    background: var(--glass-bg-mid);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .admin-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--glass-border);
+      text-align: left;
+    }
+
+    th {
+      color: var(--color-muted);
+      font-size: 0.76rem;
+      font-weight: 850;
+      text-transform: uppercase;
+      background: var(--glass-bg);
+    }
+
+    .empty {
+      padding: 2rem;
+      color: var(--color-muted);
+      text-align: center;
+    }
+
+    button {
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      background: var(--glass-bg-high);
+      color: var(--color-text);
+      padding: 0.35rem 0.7rem;
+      font-weight: 800;
+      cursor: pointer;
+
+      &:hover {
+        border-color: var(--glass-border-hover);
+        background: var(--glass-hover);
+      }
+    }
+  }
+}

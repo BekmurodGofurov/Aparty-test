@@ -1,0 +1,9 @@
+.owner-edit__state {
+  border: 1px solid var(--glass-border-hover);
+  border-radius: 8px;
+  background: var(--bg-card);
+  padding: 28px;
+  color: var(--color-muted);
+  font-weight: 800;
+  backdrop-filter: blur(var(--glass-blur));
+}

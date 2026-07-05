@@ -1,0 +1,20 @@
+@use "./variables" as *;
+
+// Typography base — overridden by global.scss
+// Kept minimal to avoid conflicts
+body {
+  font-family: $font-body;
+  color:       var(--color-text);
+  line-height: $lh-normal;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family:    $font-heading;
+  color:          var(--color-text);
+  letter-spacing: $ls-tight;
+  margin:         0;
+}
+
+code, .mono {
+  font-family: $font-mono;
+}

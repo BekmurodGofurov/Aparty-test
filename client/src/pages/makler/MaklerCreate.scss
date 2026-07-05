@@ -1,0 +1,18 @@
+@use "../owner/OwnerCreate.scss";
+
+.makler-create {
+  --owner-create-primary: var(--color-amber);
+
+  .owner-create__status,
+  .owner-create__metric {
+    border-color: var(--color-verified-brd);
+    background: var(--color-verified-bg);
+    color: var(--color-success);
+
+    span,
+    strong,
+    svg {
+      color: var(--color-success);
+    }
+  }
+}

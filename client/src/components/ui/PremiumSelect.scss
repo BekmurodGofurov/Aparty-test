@@ -1,0 +1,130 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.premium-select-container {
+  position: relative;
+  width: 100%;
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .select-trigger {
+    @include btn-reset;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    text-align: left;
+    transition: all 0.3s ease;
+
+    [data-theme="light"] & {
+      color: #0f172a;
+    }
+
+    .current-value {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chevron {
+      color: #94a3b8;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      
+      &.rotated {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  .select-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    padding: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+
+    [data-theme="light"] & {
+      background: #ffffff;
+      border-color: rgba(0, 0, 0, 0.04);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06);
+    }
+
+    // Scrollbar styling
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    .menu-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .select-option {
+      @include btn-reset;
+      position: relative;
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #94a3b8;
+      text-align: left;
+      transition: all 0.2s ease;
+      overflow: hidden;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+
+        [data-theme="light"] & {
+          background: #f1f5f9;
+          color: #0f172a;
+        }
+      }
+
+      &.selected {
+        color: #fff;
+        font-weight: 700;
+
+        [data-theme="light"] & {
+          color: var(--color-primary-dark);
+          background: rgba(245, 158, 11, 0.1);
+        }
+
+        .active-indicator {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(139, 92, 246, 0.1));
+          border-left: 3px solid #38bdf8;
+          z-index: -1;
+
+          [data-theme="light"] & {
+            background: rgba(245, 158, 11, 0.04);
+            border-left-color: #B45309;
+          }
+        }
+      }
+    }
+  }
+}

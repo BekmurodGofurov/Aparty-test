@@ -1,0 +1,306 @@
+@use "./variables" as *;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RESPONSIVE BREAKPOINTS
+// ═══════════════════════════════════════════════════════════════════════════
+@mixin mobile   { @media (max-width: #{$bp-md - 1px}) { @content; } }
+@mixin tablet   { @media (max-width: #{$bp-lg - 1px}) { @content; } }
+@mixin desktop  { @media (min-width: $bp-lg)           { @content; } }
+@mixin wide     { @media (min-width: $bp-xl)           { @content; } }
+@mixin ultrawide{ @media (min-width: $bp-xxl)          { @content; } }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LAYOUT & CONTAINER
+// ═══════════════════════════════════════════════════════════════════════════
+@mixin container($max: 1320px) {
+  width: min(#{$max}, 92vw);
+  margin-inline: auto;
+}
+
+@mixin flex-center  { display: flex; align-items: center; justify-content: center; }
+@mixin flex-between { display: flex; align-items: center; justify-content: space-between; }
+@mixin flex-col     { display: flex; flex-direction: column; }
+
+@mixin page-padding {
+  padding: $space-lg;
+  @include tablet { padding: $space-md; }
+  @include mobile { padding: $space-sm $space-md; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GLASS SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Base glass — subtle translucent surface
+@mixin glass-base {
+  background:      rgba(15, 23, 42, 0.15); // Dark mode biroz quyuqroq
+  backdrop-filter: blur(var(--glass-blur));
+  border:          1px solid var(--glass-border);
+  border-radius:   $radius-lg;
+
+  [data-theme="light"] & {
+    background:      rgba(255, 255, 255, 0.80);
+    backdrop-filter: blur(var(--glass-blur));
+    border:          1px solid rgba(120, 80, 20, 0.10);
+    box-shadow:      var(--shadow-sm);
+  }
+}
+
+// Premium glass — layered depth for cards & panels
+@mixin glass-premium {
+  background:      var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  border:          1px solid var(--glass-border);
+  border-radius:   $radius-lg;
+  box-shadow:      var(--glass-shadow);
+  position:        relative;
+
+  [data-theme="light"] & {
+    background:      rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border:          1px solid rgba(120, 80, 20, 0.09);
+    box-shadow:      var(--shadow-md);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--gradient-surface);
+    pointer-events: none;
+    z-index: 0;
+
+    [data-theme="light"] & {
+      background: transparent;
+    }
+  }
+
+  > * { position: relative; z-index: 1; }
+}
+
+// Elevated glass — for panels, modals, search boxes
+@mixin glass-elevated {
+  @include glass-premium;
+  background: var(--glass-bg-mid);
+
+  [data-theme="light"] & {
+    background: #FFFFFF;
+    box-shadow: var(--shadow-lg);
+    border:     1px solid rgba(120, 80, 20, 0.09);
+  }
+}
+
+// Interactive glass — hover-responsive cards
+@mixin glass-interactive {
+  @include glass-premium;
+  cursor: pointer;
+  transition: all var(--transition-base);
+
+  &:hover {
+    background:   var(--glass-bg-mid);
+    border-color: var(--glass-border-hover);
+    box-shadow:   var(--shadow-hover);
+    transform:    translateY(-6px) scale(1.01);
+  }
+
+  &:active { transform: translateY(-2px) scale(0.99); }
+
+  [data-theme="light"] & {
+    &:hover {
+      box-shadow:   var(--shadow-hover);
+      border-color: rgba(56, 189, 248, 0.40);
+    }
+  }
+}
+
+// Navbar glass
+@mixin glass-nav {
+  background:      var(--bg-nav);
+  backdrop-filter: blur(16px);
+  border-bottom:   1px solid var(--glass-border);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUTTON SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════
+@mixin btn-reset {
+  border: none;
+  background: none;
+  cursor: pointer;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin button-base {
+  @include btn-reset;
+  padding: 0.75rem 1.5rem;
+  gap: $space-sm;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: $radius-md;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    background-size: 200% 100%;
+    animation: waveGleam 3s infinite linear;
+    border-radius: inherit;
+  }
+  &:hover:not(:disabled)::after { opacity: 1; }
+}
+
+@keyframes waveGleam {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@mixin button-primary {
+  @include button-base;
+  background:  var(--gradient-primary);
+  background-size: 200% auto;
+  color:       #fff;
+  box-shadow:  var(--shadow-btn-primary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  &:hover:not(:disabled) {
+    transform:  translateY(-2px) scale(1.02);
+    box-shadow: var(--shadow-btn-hover);
+    background-position: right center;
+  }
+  &:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+}
+
+@mixin button-secondary {
+  @include button-base;
+  background:      var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border:          1px solid var(--glass-border);
+  color:           var(--color-text);
+
+  [data-theme="light"] & {
+    background:   rgba(250, 250, 248, 0.9);
+    border-color: rgba(120, 80, 20, 0.12);
+    color:        var(--color-text);
+  }
+
+  &:hover:not(:disabled) {
+    background:   var(--glass-hover);
+    border-color: var(--glass-border-hover);
+    transform:    translateY(-2px);
+  }
+}
+
+@mixin button-ghost {
+  @include button-base;
+  background:   transparent;
+  border:       1px solid transparent;
+  color:        var(--color-muted);
+
+  &:hover:not(:disabled) {
+    background:   var(--bg-nav-hover);
+    border-color: var(--glass-border);
+    color:        var(--color-text);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPOGRAPHY
+// ═══════════════════════════════════════════════════════════════════════════
+@mixin heading-xl {
+  font-family:    $font-heading;
+  font-size:      clamp(2.8rem, 7vw, 5rem);
+  font-weight:    $fw-black;
+  letter-spacing: $ls-tight;
+  line-height:    $lh-tight;
+}
+
+@mixin heading-lg {
+  font-family:    $font-heading;
+  font-size:      clamp(2rem, 4vw, 3.2rem);
+  font-weight:    $fw-extrabold;
+  letter-spacing: $ls-snug;
+  line-height:    $lh-snug;
+}
+
+@mixin heading-md {
+  font-family:    $font-heading;
+  font-size:      clamp(1.4rem, 2.5vw, 2rem);
+  font-weight:    $fw-bold;
+  letter-spacing: $ls-snug;
+  line-height:    $lh-snug;
+}
+
+@mixin label-caps {
+  font-size:      0.72rem;
+  font-weight:    $fw-bold;
+  letter-spacing: $ls-wider;
+  text-transform: uppercase;
+}
+
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin text-clamp($n: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $n;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEXT GRADIENT
+// ═══════════════════════════════════════════════════════════════════════════
+@mixin text-gradient {
+  background:              var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip:         text;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ANIMATION HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+@mixin float-orb {
+  animation: orbFloat 18s ease-in-out infinite;
+}
+
+@mixin shimmer-pulse {
+  animation: shimmerPulse 2.5s ease-in-out infinite;
+}
+
+@mixin pulse-glow($color: rgba(37, 99, 235, 0.4)) {
+  animation: glowPulse 2.4s ease-in-out infinite;
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 20px $color; }
+    50%       { box-shadow: 0 0 40px $color, 0 0 60px rgba(37,99,235,0.2); }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SURFACE CARD
+// ═══════════════════════════════════════════════════════════════════════════
+@mixin card {
+  background:    var(--bg-card);
+  border:        1px solid var(--glass-border);
+  border-radius: $radius-lg;
+  box-shadow:    var(--shadow-sm);
+}

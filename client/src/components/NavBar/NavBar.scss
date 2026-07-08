@@ -14,26 +14,21 @@
   height:      68px;
   background:  var(--bg-nav);
   border-bottom: 1px solid transparent;
-  transition:
-    background    var(--transition-base),
-    box-shadow    var(--transition-base),
-    border-color  var(--transition-base),
-    height        var(--transition-base);
 
   // ── DARK MODE default
   [data-theme="dark"] & {
     background-color: #0b1220; // Removed !important
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    backdrop-filter: none; // Removed !important
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+// Removed !important
+  border: 1px solid var(--color-border);
   }
 
   // ── LIGHT MODE default
   [data-theme="light"] & {
     background-color: #ffffff; // Removed !important
-    backdrop-filter: none; // Removed !important
+// Removed !important
     border-bottom: 1px solid #e2e8f0;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--color-border);
 
     // Nav links visible in light mode
     .nav-link { color: var(--color-text-secondary); }
@@ -47,8 +42,7 @@
 
     [data-theme="light"] & {
       background-color: #ffffff !important;
-      backdrop-filter: none !important;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border);
       border-bottom-color: #f1f5f9;
 
       // Text stays dark on white scrolled bar
@@ -59,7 +53,7 @@
 
     [data-theme="dark"] & {
       background: var(--bg-nav-scrolled);
-      box-shadow: var(--glass-shadow);
+  border: 1px solid var(--color-border);
       .nav-link { color: var(--color-muted); }
       .ctrl-icon-btn, .ctrl-lang-btn { color: var(--color-muted); }
     }
@@ -72,17 +66,16 @@
   &.on-hero {
     background:   transparent;
     border-color: transparent;
-    box-shadow:   none;
+  border: 1px solid var(--color-border);
 
     [data-theme="light"] & {
       background: rgba(255, 255, 255, 0.08) !important; // Force transparency on hero
-      backdrop-filter: blur(20px) !important; // Stronger blur
+// Stronger blur
       border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 
     [data-theme="dark"] & {
       background: rgba(11, 18, 32, 0.2) !important;
-      backdrop-filter: blur(20px) !important;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
     }
 
@@ -113,8 +106,9 @@
       background: var(--gradient-primary) !important;
       color: #fff !important;
       border: none !important;
-      box-shadow: var(--shadow-btn-primary);
-      &:hover { transform: translateY(-1.5px); box-shadow: var(--shadow-btn-hover); background: var(--gradient-primary-hover) !important; }
+  border: 1px solid var(--color-border);
+      &:hover { transform: translateY(-1.5px);  border: 1px solid var(--color-border);
+background: var(--gradient-primary-hover) !important; }
     }
 
     .user-name { color: rgba(255,255,255,0.92) !important; }
@@ -139,7 +133,6 @@
     gap:             3px;
     text-decoration: none;
     flex-shrink:     0;
-    transition:      opacity var(--transition-fast);
 
     &:hover { opacity: 0.85; }
 
@@ -162,7 +155,7 @@
       height:       7px;
       border-radius: $radius-full;
       background:   var(--color-primary);
-      box-shadow:   0 0 14px var(--color-primary-glow);
+  border: 1px solid var(--color-border);
       margin-bottom: 10px;
       margin-inline: 1px;
     }
@@ -195,8 +188,6 @@
       font-weight:    $fw-semibold;
       color:          var(--color-muted);
       text-decoration: none;
-      transition:     color var(--transition-fast),
-                      background var(--transition-fast);
       white-space:    nowrap;
 
       [data-theme="light"] & {
@@ -213,7 +204,6 @@
         height:        2px;
         background:    var(--color-primary);
         border-radius: $radius-full;
-        transition:    width var(--transition-base);
       }
 
       &:hover {
@@ -246,7 +236,6 @@
     font-weight: 850;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
     border: 1px solid transparent;
     position: relative;
@@ -257,13 +246,13 @@
       height: 6px;
       border-radius: 50%;
       background: currentColor;
-      box-shadow: 0 0 10px currentColor;
+  border: 1px solid var(--color-border);
     }
 
     // Default Hover State
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--color-border);
     }
 
     &.active {
@@ -305,25 +294,29 @@
         color: #b45309;
         background: #fef3c7;
         border-color: #fcd34d;
-        &:hover { background: #ffedd5; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15); }
+        &:hover { background: #ffedd5;  border: 1px solid var(--color-border);
+}
       }
       &.owner {
         color: #0369a1;
         background: #e0f2fe;
         border-color: #7dd3fc;
-        &:hover { background: #dbeafe; box-shadow: 0 8px 20px rgba(14, 165, 233, 0.15); }
+        &:hover { background: #dbeafe;  border: 1px solid var(--color-border);
+}
       }
       &.admin {
         color: #b91c1c;
         background: #fee2e2;
         border-color: #fca5a5;
-        &:hover { background: #fecaca; box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15); }
+        &:hover { background: #fecaca;  border: 1px solid var(--color-border);
+}
       }
       &.subscription {
         color: #0f766e;
         background: #ccfbf1;
         border-color: #5eead4;
-        &:hover { background: #99f6e4; box-shadow: 0 8px 20px rgba(20, 184, 166, 0.16); }
+        &:hover { background: #99f6e4;  border: 1px solid var(--color-border);
+}
       }
     }
 
@@ -332,9 +325,9 @@
       background: rgba(255, 255, 255, 0.1) !important;
       border-color: rgba(255, 255, 255, 0.2) !important;
       color: #fff !important;
-      backdrop-filter: blur(10px);
       
-      .role-dot { box-shadow: 0 0 12px #fff; }
+      .role-dot {  border: 1px solid var(--color-border);
+}
       &:hover { background: rgba(255, 255, 255, 0.2) !important; }
     }
   }
@@ -354,9 +347,6 @@
     height:        38px;
     border-radius: $radius-sm;
     color:         var(--color-muted);
-    transition:    color var(--transition-fast),
-                   background var(--transition-fast),
-                   transform var(--transition-fast);
 
     &:hover {
       color:      var(--color-text);
@@ -386,14 +376,14 @@
       }
 
       [data-theme="light"] & {
-        background: rgba(0, 0, 0, 0.03);
-        &:hover { background: rgba(0, 0, 0, 0.06); color: var(--color-primary-dark); }
+        background: transparent;
+        &:hover { background: transparent; color: var(--color-primary-dark); }
       }
 
       &.active {
         color: #fff;
         background: var(--gradient-primary);
-        box-shadow: var(--shadow-btn-primary);
+  border: 1px solid var(--color-border);
 
         [data-theme="light"] & {
           color: #fff;
@@ -449,20 +439,16 @@
     flex-direction: column;
     z-index: 1200;
     
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(28px) saturate(1.8);
-    -webkit-backdrop-filter: blur(28px) saturate(1.8);
+    background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 24px;
-    box-shadow: 
-      0 32px 80px rgba(2, 6, 23, 0.45),
-      inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border);
     overflow: hidden;
 
     [data-theme="light"] & {
       background: rgba(255, 255, 255, 0.9);
       border-color: rgba(15, 23, 42, 0.06);
-      box-shadow: 0 32px 80px rgba(15, 23, 42, 0.12);
+  border: 1px solid var(--color-border);
     }
 
     @include mobile {
@@ -512,7 +498,6 @@
       font-weight: 800;
       color: var(--color-primary-light);
       opacity: 0.8;
-      transition: opacity 0.2s;
       &:hover { opacity: 1; }
     }
   }
@@ -538,13 +523,12 @@
     padding: 16px;
     margin-bottom: 4px;
     border-radius: 16px;
-    transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
     
     &:hover {
       background: rgba(255, 255, 255, 0.03);
       transform: translateX(4px);
       
-      [data-theme="light"] & { background: rgba(15, 23, 42, 0.03); }
+      [data-theme="light"] & { background: transparent; }
     }
 
     &.unread {
@@ -555,7 +539,7 @@
       .notif-accent {
         height: 24px;
         background: var(--color-primary);
-        box-shadow: 0 0 12px var(--color-primary);
+  border: 1px solid var(--color-border);
       }
 
       .notif-title { color: var(--color-text); font-weight: 900; }
@@ -569,7 +553,6 @@
       width: 3px;
       height: 0;
       border-radius: 10px;
-      transition: all 0.3s ease;
     }
 
     .notif-content {
@@ -631,7 +614,6 @@
         inset: -15px;
         border: 1px solid var(--color-primary);
         border-radius: 50%;
-        animation: pulseFade 2s infinite;
       }
     }
 
@@ -665,13 +647,12 @@
       font-size: 0.82rem;
       font-weight: 850;
       color: var(--color-muted);
-      transition: all 0.2s;
       
       &:hover {
         background: rgba(255, 255, 255, 0.03);
         color: var(--color-text);
         
-        [data-theme="light"] & { background: rgba(15, 23, 42, 0.03); }
+        [data-theme="light"] & { background: transparent; }
       }
     }
   }
@@ -724,11 +705,8 @@
     letter-spacing: $ls-wide;
     color:         var(--color-muted);
     text-transform: uppercase;
-    transition:    color var(--transition-fast),
-                   background var(--transition-fast);
 
     svg {
-      transition: transform var(--transition-fast);
       &.rotated { transform: rotate(180deg); }
     }
 
@@ -763,8 +741,6 @@
     letter-spacing: $ls-wide;
     color:         var(--color-muted);
     text-transform: uppercase;
-    transition:    color var(--transition-fast),
-                   background var(--transition-fast);
 
     .lang-name {
       font-weight:    $fw-medium;
@@ -819,13 +795,13 @@
 
     [data-theme="light"] & {
       background: var(--gradient-primary);
-      box-shadow: var(--shadow-btn-primary);
+  border: 1px solid var(--color-border);
       border: none;
       color: #FFFFFF;
       
       &:hover {
         transform: translateY(-1.5px);
-        box-shadow: var(--shadow-btn-hover);
+  border: 1px solid var(--color-border);
         background: var(--gradient-primary-hover);
       }
     }
@@ -851,7 +827,6 @@
     border-radius: $radius-md;
     text-decoration: none;
     color:         var(--color-text);
-    transition:    background var(--transition-fast);
     max-width:     180px;
     cursor:        pointer !important;
     pointer-events: auto !important;
@@ -884,12 +859,12 @@
     border: 1px solid var(--glass-border);
     border-radius: 8px;
     background: var(--bg-nav-scrolled);
-    box-shadow: var(--glass-shadow);
+  border: 1px solid var(--color-border);
 
     [data-theme="light"] & {
       background: #ffffff;
       border-color: #e2e8f0;
-      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+  border: 1px solid var(--color-border);
     }
 
     a,
@@ -943,7 +918,6 @@
   .mobile-menu {
     overflow: hidden;
     background: var(--bg-nav-scrolled);
-    backdrop-filter: blur(var(--glass-blur-heavy));
     border-top: 1px solid var(--glass-border);
   }
 
@@ -962,8 +936,6 @@
       font-weight:   $fw-semibold;
       color:         var(--color-muted);
       text-decoration: none;
-      transition:    color var(--transition-fast),
-                     background var(--transition-fast);
 
       &:hover {
         color:      var(--color-text);
@@ -995,7 +967,6 @@
       font-weight:   $fw-semibold;
       color:         var(--color-error);
       opacity:       0.8;
-      transition:    background var(--transition-fast), opacity var(--transition-fast);
 
       &:hover { background: rgba(239,68,68,0.08); opacity: 1; }
     }
@@ -1019,7 +990,6 @@
       color:         var(--color-muted);
       background:    var(--glass-bg);
       border:        1px solid var(--glass-border);
-      transition:    all var(--transition-fast);
 
       &:hover {
         color:      var(--color-text);
@@ -1052,16 +1022,13 @@
     padding:         $space-sm $space-md;
     border-radius:   $radius-xl;
     background:      var(--bg-bottom-nav);
-    backdrop-filter: none;
     border:          1px solid var(--glass-border);
-    box-shadow:      var(--glass-shadow);
-    animation:       fadeInUp 0.5s var(--ease-smooth) both;
+  border: 1px solid var(--color-border);
 
     [data-theme="light"] & {
       background: var(--bg-bottom-nav);
-      backdrop-filter: none;
       border: 1px solid var(--glass-border);
-      box-shadow: var(--glass-shadow);
+  border: 1px solid var(--color-border);
       
       &::after {
         content: '';
@@ -1088,12 +1055,10 @@
     text-transform:  uppercase;
     color:           var(--color-subtle);
     text-decoration: none;
-    transition:      all var(--transition-base);
 
     .bottom-icon {
       font-size:  1.3rem;
       line-height: 1;
-      transition: transform var(--transition-base);
     }
 
     .add-icon {

@@ -14,7 +14,7 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    history: Optional[List[Dict]] = None # Gemini history format
+    history: Optional[List[Dict]] = None
 
 # More standard chat format
 class MessagePart(BaseModel):
@@ -37,7 +37,7 @@ async def chat_endpoint(
     AI Chatbot bilan muloqot qilish.
     """
     try:
-        # Convert history to Gemini format if provided
+        # Normalise history into role/content dicts for the AI service
         history = []
         if payload.history:
             for h in payload.history:

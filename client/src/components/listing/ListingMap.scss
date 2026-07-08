@@ -8,13 +8,8 @@
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--glass-border-hover) 24%, var(--glass-border));
   border-radius: 22px;
-  background:
-    radial-gradient(circle at 78% 10%, color-mix(in srgb, var(--color-primary-glow) 28%, transparent), transparent 34%),
-    var(--bg-elevated);
-  box-shadow:
-    var(--glass-highlight),
-    0 16px 46px rgba(0,0,0,0.18),
-    0 0 0 1px color-mix(in srgb, var(--color-primary-light) 8%, transparent);
+  background: transparent;
+  border: 1px solid var(--color-border);
   cursor: pointer;
 
   &::after {
@@ -23,9 +18,7 @@
     inset: 0;
     z-index: 500;
     pointer-events: none;
-    background:
-      linear-gradient(180deg, rgba(2,6,23,0.08), transparent 30%, rgba(2,6,23,0.18)),
-      radial-gradient(circle at 78% 12%, color-mix(in srgb, var(--color-primary-glow) 28%, transparent), transparent 32%);
+  background: var(--color-surface);
   }
 
   &::before {
@@ -35,9 +28,7 @@
     z-index: 501;
     border-radius: inherit;
     pointer-events: none;
-    background:
-      linear-gradient(115deg, transparent 0 42%, rgba(255,255,255,0.16), transparent 58%),
-      repeating-linear-gradient(90deg, rgba(255,255,255,0.022) 0 1px, transparent 1px 10px);
+  background: var(--color-surface);
     opacity: 0.6;
     mix-blend-mode: screen;
   }
@@ -72,9 +63,7 @@
   color: #fff;
   background: rgba(2, 6, 23, 0.58);
   border: 1px solid rgba(255,255,255,0.16);
-  box-shadow: 0 14px 34px rgba(0,0,0,0.26);
-  backdrop-filter: blur(var(--glass-blur-heavy));
-  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  border: 1px solid var(--color-border);
 
   strong,
   small {
@@ -112,13 +101,10 @@
   border-radius: 14px;
   color: #fff;
   background: rgba(2, 6, 23, 0.66);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.28);
-  backdrop-filter: blur(var(--glass-blur-heavy));
-  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  border: 1px solid var(--color-border);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 820;
-  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
 
   &:hover {
     transform: translateY(-2px);
@@ -135,7 +121,7 @@
   border-radius: 14px;
   color: #fff;
   background: var(--gradient-primary);
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary-glow) 38%, transparent);
+  border: 1px solid var(--color-border);
 }
 
 .map-pin-orb {

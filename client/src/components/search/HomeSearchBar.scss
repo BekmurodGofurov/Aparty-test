@@ -4,19 +4,17 @@
 .home-search-container {
   width: 100%;
   max-width: 1000px;
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(20px);
+  background: transparent;
   padding: 2.5rem;
   border-radius: 40px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--color-border);
   margin: 2rem 0;
 
   [data-theme="light"] & {
     background: rgba(255, 255, 255, 0.22) !important;
     border-color: rgba(255, 255, 255, 0.35);
-    box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(25px) saturate(1.8);
+  border: 1px solid var(--color-border);
   }
 
   .search-grid {
@@ -38,13 +36,11 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     padding: 1.25rem;
-    transition: all 0.3s ease;
 
     [data-theme="light"] & {
       background: rgba(255, 255, 255, 0.3) !important;
       border-color: rgba(255, 255, 255, 0.5);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.02);
-      backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border);
 
       &:hover {
         background: rgba(255, 255, 255, 0.45) !important;
@@ -143,7 +139,6 @@
           font-size: 0.9rem;
           color: #fff;
           text-align: center;
-          transition: all 0.3s ease;
 
           &::-webkit-outer-spin-button,
           &::-webkit-inner-spin-button {
@@ -154,7 +149,7 @@
           &:focus {
             background: rgba(255, 255, 255, 0.08);
             border-color: var(--color-primary-light);
-            box-shadow: 0 0 15px rgba(14, 165, 233, 0.1);
+  border: 1px solid var(--color-border);
           }
 
           [data-theme="light"] & {
@@ -165,7 +160,7 @@
             &:focus {
               background: #ffffff;
               border-color: #f59e0b;
-              box-shadow: 0 0 15px rgba(245, 158, 11, 0.1);
+  border: 1px solid var(--color-border);
             }
           }
 
@@ -202,18 +197,17 @@
       align-items: center;
       justify-content: center;
       gap: 12px;
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       cursor: pointer;
     }
 
     .btn-search-main {
       background: var(--gradient-primary) !important;
       color: #fff;
-      box-shadow: var(--shadow-btn-primary);
+  border: 1px solid var(--color-border);
       
       &:hover {
         transform: translateY(-4px) scale(1.02);
-        box-shadow: var(--shadow-btn-hover);
+  border: 1px solid var(--color-border);
         background: var(--gradient-primary-hover) !important;
       }
     }
@@ -232,12 +226,12 @@
       [data-theme="light"] & {
         background: #0f172a;
         color: #fff;
-        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+  border: 1px solid var(--color-border);
         border: none;
         
         &:hover {
           background: #1e293b;
-          box-shadow: 0 15px 35px rgba(15, 23, 42, 0.25);
+  border: 1px solid var(--color-border);
           transform: translateY(-4px);
         }
       }

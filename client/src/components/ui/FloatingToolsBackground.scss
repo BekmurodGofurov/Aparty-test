@@ -32,14 +32,12 @@
 
   .floating-icon {
     will-change: transform, opacity;
-    transition: color 0.5s ease, filter 0.5s ease, opacity 0.5s ease;
   }
 
   .floating-particle {
     position: absolute;
     border-radius: 50%;
     will-change: transform, opacity;
-    transition: background 0.5s ease, box-shadow 0.5s ease;
   }
 
   @media (max-width: 768px) {
@@ -81,7 +79,7 @@ html[data-theme="dark"] .premium-saas-bg,
   .floating-particle {
     opacity: 0.22;
     background: #38bdf8;
-    box-shadow: 0 0 14px rgba(56, 189, 248, 0.28);
+  border: 1px solid var(--color-border);
   }
 }
 
@@ -109,6 +107,6 @@ html[data-theme="light"] .premium-saas-bg {
   .floating-particle {
     opacity: 0.22;
     background: #b45309;
-    box-shadow: 0 0 12px rgba(180, 83, 9, 0.16);
+  border: 1px solid var(--color-border);
   }
 }

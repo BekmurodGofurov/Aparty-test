@@ -25,9 +25,7 @@
 }
 
 body {
-  background:
-    linear-gradient(180deg, rgba(56, 189, 248, 0.07), transparent 360px),
-    var(--ui-page-bg);
+  background: var(--color-surface);
 }
 
 .route-transition-wrapper {
@@ -65,9 +63,7 @@ body {
 .listing-page,
 .messages-page,
 .map-page {
-  background:
-    linear-gradient(180deg, rgba(56, 189, 248, 0.07), transparent 320px),
-    var(--ui-page-bg) !important;
+  background: var(--color-surface);
   color: var(--color-text);
 }
 
@@ -99,9 +95,7 @@ body {
   inset: 68px 0 0;
   z-index: -1;
   pointer-events: none;
-  background-image:
-    linear-gradient(var(--ui-border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ui-border) 1px, transparent 1px);
+  background: var(--color-surface);
   background-size: 72px 72px;
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 70%);
 }
@@ -144,9 +138,7 @@ body {
   background: var(--ui-surface) !important;
   border-color: var(--ui-border) !important;
   border-radius: var(--ui-radius) !important;
-  box-shadow: var(--ui-shadow-soft) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--color-border);
 }
 
 .broker-listing-card,
@@ -167,7 +159,6 @@ thead {
   box-sizing: border-box;
   background-color: var(--ui-surface-2) !important;
   border-color: var(--ui-border) !important;
-  backdrop-filter: none !important;
 }
 
 .admin-dashboard *,
@@ -207,11 +198,6 @@ button,
 .btn-liquid-primary,
 .plan-card .btn-primary {
   will-change: transform;
-  transition:
-    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
-    background 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 button:active,
@@ -242,17 +228,15 @@ select:focus,
 textarea:focus {
   background: var(--ui-surface) !important;
   border-color: var(--ui-border-strong) !important;
-  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.14) !important;
+  border: 1px solid var(--color-border);
 }
 
 .skeleton,
 .skeleton-box,
 .skeleton-card,
 .conversation-skeletons span {
-  background:
-    linear-gradient(90deg, var(--ui-surface-2), var(--ui-surface-3), var(--ui-surface-2)) !important;
+  background: var(--color-surface);
   background-size: 220% 100% !important;
-  animation: skeletonShimmer 1.25s linear infinite !important;
 }
 
 .error-message,

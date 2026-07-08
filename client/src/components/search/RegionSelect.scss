@@ -30,36 +30,23 @@
     border: 1px solid var(--glass-border);
     border-radius: 17px;
     color: var(--color-text);
-    background:
-      linear-gradient(135deg, color-mix(in srgb, var(--glass-bg-high) 62%, transparent), transparent),
-      var(--glass-bg-mid);
-    box-shadow: var(--glass-highlight);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
     cursor: pointer;
     font-size: 0.84rem;
     font-weight: 780;
     letter-spacing: 0;
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    transition:
-      transform var(--transition-base),
-      border-color var(--transition-base),
-      background var(--transition-base),
-      box-shadow var(--transition-base);
 
     &:hover:not(:disabled) {
       transform: translateY(-1px);
       border-color: var(--glass-border-hover);
       background: var(--glass-hover);
-      box-shadow:
-        var(--glass-highlight),
-        0 14px 28px color-mix(in srgb, var(--color-primary-glow) 18%, transparent);
+  border: 1px solid var(--color-border);
     }
 
     &.open {
       border-color: var(--glass-border-hover);
-      box-shadow:
-        0 0 0 4px color-mix(in srgb, var(--color-primary-glow) 45%, transparent),
-        var(--glass-highlight);
+  border: 1px solid var(--color-border);
 
       svg {
         transform: rotate(180deg);
@@ -84,7 +71,6 @@
     svg {
       flex: 0 0 auto;
       color: var(--color-muted);
-      transition: transform var(--transition-base), color var(--transition-base);
     }
   }
 
@@ -100,16 +86,11 @@
     border: 1px solid var(--glass-border);
     border-radius: 18px;
     background: #08111f;
-    box-shadow:
-      0 24px 60px rgba(0, 0, 0, 0.36),
-      var(--glass-highlight);
-    backdrop-filter: blur(var(--glass-blur-heavy));
-    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
-    animation: premiumDropdown 0.22s var(--ease-smooth) both;
+  border: 1px solid var(--color-border);
 
     [data-theme="light"] & {
       background: #ffffff;
-      box-shadow: 0 20px 50px rgba(15, 8, 0, 0.12);
+  border: 1px solid var(--color-border);
     }
 
     .select-option {
@@ -124,7 +105,6 @@
       font-size: 0.82rem;
       font-weight: 720;
       text-align: left;
-      transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
 
       &:hover {
         color: var(--color-text);
@@ -135,7 +115,7 @@
       &.selected {
         color: #fff;
         background: var(--gradient-primary);
-        box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary-glow) 34%, transparent);
+  border: 1px solid var(--color-border);
       }
     }
   }

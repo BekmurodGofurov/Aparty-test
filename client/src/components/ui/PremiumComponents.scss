@@ -37,7 +37,7 @@
       background: var(--color-error);
       color: #fff;
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+  border: 1px solid var(--color-border);
     }
   }
 
@@ -73,7 +73,7 @@
     background:   rgba(245, 158, 11, 0.15);
     color:        var(--color-amber);
     border-color: rgba(245, 158, 11, 0.35);
-    box-shadow:   0 0 12px rgba(245, 158, 11, 0.15);
+  border: 1px solid var(--color-border);
   }
   &.variant-error {
     background:   rgba(239, 68, 68, 0.15);
@@ -153,12 +153,6 @@
 // ── SKELETON BOX ───────────────────────────────────────────────────────────
 .skeleton-box {
   border-radius: $radius-sm;
-  background:    linear-gradient(
-    90deg,
-    var(--glass-bg)     25%,
-    var(--glass-bg-mid) 50%,
-    var(--glass-bg)     75%
-  );
+  background: var(--color-surface);
   background-size: 100% 100%;
-  animation:       none;
 }

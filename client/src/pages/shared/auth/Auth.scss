@@ -63,16 +63,14 @@
   background: #0F172A !important;
   border-radius: 32px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--color-border);
   overflow: hidden;
   position: relative;
-  backdrop-filter: none !important;
 
   [data-theme='light'] & {
     background: #ffffff !important;
     border: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06);
-    backdrop-filter: none !important;
+  border: 1px solid var(--color-border);
   }
 
   &::after {
@@ -118,10 +116,9 @@
     border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
     font-weight: 950; font-size: 1.2rem; color: #fff;
-    box-shadow: var(--shadow-btn-primary);
+  border: 1px solid var(--color-border);
     margin: 0 auto 0.6rem;
     transform: rotate(-6deg);
-    transition: 0.3s;
     &:hover { transform: rotate(0deg) scale(1.1); }
   }
   
@@ -215,14 +212,13 @@
   font-weight: 800; font-size: 0.95rem; text-decoration: none;
   display: flex; align-items: center; justify-content: center;
   position: relative; overflow: hidden;
-  box-shadow: var(--shadow-btn-primary);
-  transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 1px solid var(--color-border);
   border: 1px solid rgba(255, 255, 255, 0.12);
   cursor: pointer;
 
   [data-theme="light"] & {
     color: #FFFFFF; // Stick to white text for primary amber buttons
-    box-shadow: var(--shadow-btn-primary);
+  border: 1px solid var(--color-border);
   }
 
   .btn-content { display: flex; align-items: center; gap: 0.75rem; z-index: 2; }
@@ -230,14 +226,13 @@
 
   .shimmer-effect {
     position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
-    animation: none;
+  background: var(--color-surface);
     z-index: 1;
   }
 
   &:hover {
     transform: translateY(-4px) scale(1.02);
-    box-shadow: var(--shadow-btn-hover);
+  border: 1px solid var(--color-border);
   }
 }
 
@@ -249,19 +244,20 @@
   border: 1.5px solid rgba(255, 255, 255, 0.15);
   color: var(--auth-text); border-radius: 14px;
   font-weight: 700; font-size: 0.95rem;
-  cursor: pointer; transition: 0.3s;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;  border: 1px solid var(--color-border);
 
   [data-theme="light"] & {
     background: #ffffff;
     border-color: rgba(0, 0, 0, 0.08);
     color: #0f172a;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    &:hover { background: #fafafa; border-color: var(--color-primary); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); }
+  border: 1px solid var(--color-border);
+    &:hover { background: #fafafa; border-color: var(--color-primary); transform: translateY(-2px);  border: 1px solid var(--color-border);
+}
   }
 
   [data-theme="dark"] & {
-    &:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3); }
+    &:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); transform: translateY(-2px);  border: 1px solid var(--color-border);
+}
   }
 }
 
@@ -289,7 +285,7 @@
       color: #B45309 !important;
       background: #FEF3C7 !important; 
       border: 1.5px solid #F59E0B !important;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+  border: 1px solid var(--color-border);
       font-weight: 900 !important;
     }
   }
@@ -327,14 +323,13 @@
     border-radius: 16px;
     background: #27344D; 
     border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.3s ease;
     position: relative;
     z-index: 1;
 
     html[data-theme="light"] & {
       background: #FFFFFF !important; 
       border: 1px solid rgba(0, 0, 0, 0.06) !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+  border: 1px solid var(--color-border);
     }
 
     &:hover {
@@ -345,12 +340,12 @@
       [data-theme="light"] & {
         background: #FAFAFA !important; 
         border-color: #FCD34D !important;
-        box-shadow: 0 8px 24px rgba(234, 179, 8, 0.15) !important;
+  border: 1px solid var(--color-border);
       }
 
       .step-orb {
         transform: rotate(10deg) scale(1.1);
-        box-shadow: var(--shadow-btn-hover);
+  border: 1px solid var(--color-border);
       }
     }
 
@@ -363,14 +358,13 @@
       border-radius: 12px;
       font-weight: 900;
       font-size: 0.95rem;
-      box-shadow: var(--shadow-btn-primary);
+  border: 1px solid var(--color-border);
       flex-shrink: 0;
-      transition: all 0.4s var(--ease-spring);
       position: relative;
       z-index: 2;
 
       html[data-theme="light"] & {
-        box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35) !important;
+  border: 1px solid var(--color-border);
         border: 1.5px solid #d97706 !important; 
         background: var(--gradient-primary) !important;
       }
@@ -409,7 +403,7 @@
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(var(--color-primary-glow), 0.2), transparent 70%);
+    background: transparent;
     pointer-events: none;
   }
 
@@ -448,7 +442,6 @@
       color: var(--color-text);
       font-size: 1rem;
       font-weight: 500;
-      transition: 0.25s ease;
       outline: none;
 
       &::placeholder { color: var(--color-subtle); }
@@ -458,7 +451,7 @@
       &:focus {
         border-color: var(--color-primary);
         background: var(--glass-bg-mid);
-        box-shadow: 0 0 0 4px var(--color-primary-glow);
+  border: 1px solid var(--color-border);
       }
 
       [data-theme="light"] & {
@@ -467,7 +460,7 @@
         color: var(--color-text);
         &:focus {
           border-color: var(--color-primary);
-          box-shadow: 0 0 0 4px var(--color-primary-glow);
+  border: 1px solid var(--color-border);
           background: #FFFFFF;
         }
       }
@@ -509,7 +502,6 @@
   .btn-ghost-sm {
     background: none; border: none; color: var(--auth-text-muted);
     font-size: 0.85rem; font-weight: 600; cursor: pointer;
-    transition: color 0.2s;
     &:hover { color: var(--color-primary); }
   }
 }

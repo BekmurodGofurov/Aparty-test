@@ -35,14 +35,8 @@
     border: 1px solid var(--glass-border);
     border-radius: 18px;
     color: var(--color-text);
-    background:
-      linear-gradient(135deg, color-mix(in srgb, var(--glass-bg-high) 76%, transparent), transparent),
-      color-mix(in srgb, var(--bg-elevated) 88%, transparent);
-    box-shadow:
-      var(--glass-highlight),
-      0 18px 42px rgba(0, 0, 0, 0.18);
-    backdrop-filter: blur(var(--glass-blur-heavy));
-    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
     cursor: pointer;
     font-weight: 880;
     letter-spacing: 0;
@@ -59,7 +53,7 @@
   padding: 0 7px;
   color: #fff;
   background: var(--gradient-primary);
-  box-shadow: 0 0 22px var(--color-primary-glow);
+  border: 1px solid var(--color-border);
   font-size: 0.75rem;
   font-weight: 900;
 }
@@ -91,11 +85,7 @@
   .drawer-backdrop {
     position: absolute;
     inset: 0;
-    background:
-      radial-gradient(circle at 70% 10%, color-mix(in srgb, var(--color-primary-glow) 42%, transparent), transparent 30%),
-      rgba(0, 0, 0, 0.68);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: transparent;
   }
 
   .drawer-content {
@@ -125,15 +115,8 @@
   padding: 1.05rem 1.25rem;
   border: 1px solid var(--glass-border);
   border-radius: 22px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--glass-bg-high) 70%, transparent), transparent),
-    color-mix(in srgb, var(--bg-elevated) 88%, transparent);
-  box-shadow:
-    var(--glass-highlight),
-    0 14px 34px rgba(0, 0, 0, 0.14);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  transition: background var(--transition-theme), border-color var(--transition-theme), color var(--transition-theme);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   scroll-margin-top: 112px;
 
   &::before {
@@ -141,9 +124,8 @@
     position: absolute;
     inset: 0;
     opacity: 0.55;
-    background: linear-gradient(110deg, transparent 0 40%, color-mix(in srgb, var(--color-primary-glow) 34%, transparent), transparent 68%);
+  background: var(--color-surface);
     transform: translateX(-100%);
-    animation: resultsSweep 7s ease-in-out infinite;
     pointer-events: none;
   }
 
@@ -200,11 +182,6 @@
     background: var(--glass-bg-mid);
     cursor: pointer;
     font-weight: 820;
-    transition:
-      transform var(--transition-base),
-      color var(--transition-base),
-      border-color var(--transition-base),
-      background var(--transition-base);
 
     &:hover {
       transform: translateY(-2px);

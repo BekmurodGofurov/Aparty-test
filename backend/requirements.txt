@@ -4,9 +4,15 @@ sqlalchemy
 asyncpg
 greenlet
 alembic
+psycopg[binary]
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
 pydantic-settings
 email-validator
-google-generativeai
+groq
+bcrypt
+pytest
+pytest-asyncio
+httpx
+aiosqlite

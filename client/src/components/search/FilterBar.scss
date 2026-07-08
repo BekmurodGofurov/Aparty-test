@@ -16,22 +16,17 @@
   border: 1px solid #e2e8f0;
   border-radius: 999px; // Pill shape
   padding: 8px 8px 8px 24px;
-  box-shadow: 
-    0 10px 25px -5px rgba(0, 0, 0, 0.05),
-    0 8px 10px -6px rgba(0, 0, 0, 0.05);
-  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  border: 1px solid var(--color-border);
   position: relative;
 
   [data-theme="dark"] & {
     background-color: #121a2b !important;
     border-color: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--color-border);
   }
 
   &:hover {
-    box-shadow: 
-      0 20px 40px -10px rgba(0, 0, 0, 0.1),
-      0 10px 20px -10px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border);
     transform: translateY(-2px);
   }
 
@@ -53,7 +48,6 @@
   padding: 10px 16px;
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.3s;
   position: relative;
 
   &:hover {
@@ -97,7 +91,6 @@
 
   .chevron {
     color: #cbd5e1;
-    transition: transform 0.3s;
     margin-left: auto;
   }
 }
@@ -106,7 +99,7 @@
 .search-trigger-btn {
   height: 52px;
   padding: 0 24px;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  background: var(--color-surface);
   border: none;
   border-radius: 999px;
   color: #fff;
@@ -115,13 +108,12 @@
   gap: 10px;
   cursor: pointer;
   margin-left: 8px;
-  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+  border: 1px solid var(--color-border);
 
   &:hover {
     transform: scale(1.05);
-    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
-    filter: brightness(1.1);
+  border: 1px solid var(--color-border);
+    filter: none;
   }
 
   &:active { transform: scale(0.98); }
@@ -146,13 +138,13 @@
   border: 1px solid #e2e8f0;
   border-radius: 28px;
   padding: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
   z-index: 1000;
 
   [data-theme="dark"] & {
     background-color: #121a2b;
     border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--color-border);
   }
 
   .dropdown-content {
@@ -180,7 +172,6 @@
     color: #475569;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s;
 
     &:hover { background-color: #f1f5f9; color: #1e293b; }
 
@@ -188,7 +179,7 @@
       background-color: #2563eb;
       color: #fff;
       border-color: #2563eb;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  border: 1px solid var(--color-border);
     }
 
     [data-theme="dark"] & {

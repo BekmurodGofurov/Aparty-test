@@ -13,24 +13,13 @@
 .skeleton {
   border-radius: 8px;
   background-size: 100% 100%;
-  animation: none;
 
   // Dark mode — subtle blue-gray shimmer
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.04) 25%,
-    rgba(255, 255, 255, 0.09) 50%,
-    rgba(255, 255, 255, 0.04) 75%
-  );
+  background: var(--color-surface);
 
   [data-theme="light"] & {
     // Light mode — warm cream shimmer with amber mid-tone
-    background: linear-gradient(
-      90deg,
-      #F3F4F6 25%,
-      #E9EAEC 50%,
-      #F3F4F6 75%
-    );
+  background: var(--color-surface);
   }
 }
 
@@ -44,7 +33,7 @@
   [data-theme="light"] & {
     background: #FFFFFF;
     border-color: #E5E7EB;
-    box-shadow: 0 2px 8px rgba(17, 24, 39, 0.05);
+  border: 1px solid var(--color-border);
   }
 
   .skeleton-image {

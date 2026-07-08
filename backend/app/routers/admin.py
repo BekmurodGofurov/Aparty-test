@@ -1,19 +1,22 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies.auth import require_roles
 from app.models.listing import Listing
-from app.models.payment import Payment
-from app.models.review import Review
 from app.models.user import User, UserRole
 from app.schemas.listing import ListingOut
 from app.schemas.user import UserOut
 from app.services.listing_limits import get_listing_limit_for_role
+from database.operations.delete import reviews as delete_reviews
+from database.operations.select import listings as select_listings
+from database.operations.select import payments as select_payments
+from database.operations.select import reviews as select_reviews
+from database.operations.select import users as select_users
+from database.operations.update import listings as update_listings
+from database.operations.update import users as update_users
 
-# role=admin
 router = APIRouter(dependencies=[Depends(require_roles("admin"))])
 
 
@@ -56,18 +59,11 @@ def _listing_payload(listing: Listing, reviews_count: int = 0) -> dict:
 
 @router.get("/dashboard")
 async def dashboard(db: AsyncSession = Depends(get_db)) -> dict:
-    users_count = (await db.execute(select(func.count(User.id)))).scalar_one()
-    listings_count = (await db.execute(select(func.count(Listing.id)))).scalar_one()
-    revenue = (await db.execute(select(func.coalesce(func.sum(Payment.amount), 0)))).scalar_one()
-    verified_users = (
-        await db.execute(select(func.count(User.id)).where(User.is_verified.is_(True)))
-    ).scalar_one()
-    role_rows = (
-        await db.execute(
-            select(User.role, func.count(User.id))
-            .group_by(User.role)
-        )
-    ).all()
+    users_count = await select_users.count_all(db)
+    listings_count = await select_listings.count_all(db)
+    revenue = await select_payments.sum_total_revenue(db)
+    verified_users = await select_users.count_verified(db)
+    role_rows = await select_users.count_by_role(db)
 
     role_limits = {
         role_name: {
@@ -81,7 +77,7 @@ async def dashboard(db: AsyncSession = Depends(get_db)) -> dict:
         "users": users_count,
         "verified_users": verified_users,
         "listings": listings_count,
-        "revenue": float(revenue or 0),
+        "revenue": revenue,
         "complaints": 0,
         "role_counts": {role.value if role else "student": count for role, count in role_rows},
         "limits": role_limits,
@@ -90,27 +86,17 @@ async def dashboard(db: AsyncSession = Depends(get_db)) -> dict:
 
 @router.get("/users", response_model=list[UserOut])
 async def all_users(db: AsyncSession = Depends(get_db)):
-    return list((await db.execute(select(User).order_by(User.created_at.desc()))).scalars().all())
+    return await select_users.get_all(db)
 
 
 @router.get("/users/{user_id}/detail")
 async def user_detail(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> dict:
-    user = await db.scalar(select(User).where(User.id == user_id))
+    user = await select_users.get_by_id(db, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
 
-    review_counts = (
-        select(Review.listing_id, func.count(Review.id).label("reviews_count"))
-        .group_by(Review.listing_id)
-        .subquery()
-    )
-    rows = await db.execute(
-        select(Listing, func.coalesce(review_counts.c.reviews_count, 0))
-        .outerjoin(review_counts, review_counts.c.listing_id == Listing.id)
-        .where(Listing.owner_id == user.id)
-        .order_by(Listing.created_at.desc())
-    )
-    listings = [_listing_payload(listing, int(reviews_count or 0)) for listing, reviews_count in rows.all()]
+    listing_rows = await select_listings.get_owner_listings_with_review_counts(db, user.id)
+    listings = [_listing_payload(listing, reviews_count) for listing, reviews_count in listing_rows]
 
     return {
         "user": _user_payload(user),
@@ -121,36 +107,31 @@ async def user_detail(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) ->
 
 @router.patch("/users/{user_id}/status")
 async def set_user_status(user_id: uuid.UUID, payload: dict, db: AsyncSession = Depends(get_db)) -> dict:
-    user = await db.scalar(select(User).where(User.id == user_id))
+    user = await select_users.get_by_id(db, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
     if user.role == UserRole.admin:
         raise HTTPException(status_code=400, detail="Admin statusini bu yerdan o'zgartirib bo'lmaydi")
 
-    user.is_verified = bool(payload.get("is_verified"))
-    await db.commit()
-    await db.refresh(user)
-    return {"user": _user_payload(user)}
+    updated = await update_users.set_verified(db, user_id, is_verified=bool(payload.get("is_verified")))
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+    return {"user": _user_payload(updated)}
 
 
 @router.get("/listings", response_model=list[ListingOut])
 async def all_listings(db: AsyncSession = Depends(get_db)):
-    return list((await db.execute(select(Listing).order_by(Listing.created_at.desc()))).scalars().all())
+    return await select_listings.get_all(db)
 
 
 @router.get("/listings/{listing_id}/detail")
 async def listing_detail(listing_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> dict:
-    listing = await db.scalar(select(Listing).where(Listing.id == listing_id))
+    listing = await select_listings.get_by_id(db, listing_id)
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing topilmadi")
 
-    owner = await db.scalar(select(User).where(User.id == listing.owner_id))
-    review_rows = await db.execute(
-        select(Review, User)
-        .join(User, User.id == Review.author_id)
-        .where(Review.listing_id == listing.id)
-        .order_by(Review.created_at.desc())
-    )
+    owner = await select_users.get_by_id(db, listing.owner_id)
+    review_rows = await select_reviews.get_listing_reviews_with_authors(db, listing.id)
     reviews = [
         {
             "id": review.id,
@@ -162,7 +143,7 @@ async def listing_detail(listing_id: uuid.UUID, db: AsyncSession = Depends(get_d
             "text": review.review_text,
             "created_at": review.created_at,
         }
-        for review, author in review_rows.all()
+        for review, author in review_rows
     ]
 
     return {
@@ -175,23 +156,20 @@ async def listing_detail(listing_id: uuid.UUID, db: AsyncSession = Depends(get_d
 
 @router.patch("/listings/{listing_id}/status")
 async def set_listing_status(listing_id: uuid.UUID, payload: dict, db: AsyncSession = Depends(get_db)) -> dict:
-    listing = await db.scalar(select(Listing).where(Listing.id == listing_id))
+    listing = await select_listings.get_by_id(db, listing_id)
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing topilmadi")
 
-    listing.is_active = bool(payload.get("is_active"))
-    await db.commit()
-    await db.refresh(listing)
-    reviews_count = await db.scalar(select(func.count(Review.id)).where(Review.listing_id == listing.id))
-    return {"listing": _listing_payload(listing, int(reviews_count or 0))}
+    updated = await update_listings.set_active_status(db, listing, is_active=bool(payload.get("is_active")))
+    reviews_count = await select_reviews.count_by_listing(db, listing.id)
+    return {"listing": _listing_payload(updated, reviews_count)}
 
 
 @router.delete("/reviews/{review_id}", status_code=204)
 async def delete_review(review_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    review = await db.scalar(select(Review).where(Review.id == review_id))
+    review = await select_reviews.get_by_id(db, review_id)
     if review is None:
         raise HTTPException(status_code=404, detail="Comment topilmadi")
 
-    await db.delete(review)
-    await db.commit()
+    await delete_reviews.delete(db, review)
     return None

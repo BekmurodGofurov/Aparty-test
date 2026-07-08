@@ -6,7 +6,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   MapPin, Home, Users, Star, Shield,
   CheckCircle, Sparkles, ChevronRight, Zap,
@@ -18,27 +17,6 @@ import { HomeSearchBar } from '../../../components/search/HomeSearchBar'
 import { useAuthStore } from '../../../store/authStore'
 import { useThemeStore } from '../../../store/themeStore'
 import './HomePremium.scss'
-
-// ── ANIMATION VARIANTS ──────────────────────────────────────────────────────
-const smoothEase = [0.16, 1, 0.3, 1]
-
-const fadeUp = {
-  hidden:  { opacity: 0, y: 12 },
-  visible: (delay = 0) => ({
-    opacity: 1, y: 0,
-    transition: { duration: 0.58, ease: smoothEase, delay }
-  })
-}
-
-const stagger = {
-  hidden:  {},
-  visible: { transition: { staggerChildren: 0.075, delayChildren: 0.04 } }
-}
-
-const cardItem = {
-  hidden:  { opacity: 0, y: 14, scale: 0.985 },
-  visible: { opacity: 1, y: 0,  scale: 1, transition: { duration: 0.48, ease: smoothEase } }
-}
 
 // ── CONSTANTS & FAKE DATA (Backend Offline Fallback) ─────────────────────────
 const DISTRICTS = [
@@ -80,9 +58,9 @@ const ADVANTAGES = [
 ]
 
 const LOCATIONS = [
-  { name: 'Andijon shahar markazi', count: '340+ e\'lon', img: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=2070&auto=format&fit=crop' },
-  { name: 'ADU atrofi', count: '120+ e\'lon', img: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=2070&auto=format&fit=crop' },
-  { name: 'Asaka tumani', count: '85+ e\'lon', img: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?q=80&w=2065&auto=format&fit=crop' },
+  { name: 'Andijon shahar markazi', count: '340+ e\'lon', img: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=75&w=1200&auto=format&fit=crop' },
+  { name: 'ADU atrofi', count: '120+ e\'lon', img: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=75&w=1200&auto=format&fit=crop' },
+  { name: 'Asaka tumani', count: '85+ e\'lon', img: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?q=75&w=1200&auto=format&fit=crop' },
 ]
 
 // Realistic Demo Listings
@@ -98,64 +76,7 @@ const DEMO_LISTINGS = [
 ]
 
 // ── DECORATIVE BACKGROUND COMPONENT (REDESIGNED) ─────────────────────────────
-const SectionDecor = ({ count = 8 }) => {
-  const icons = useMemo(() => {
-    const iconPool = [Home, MapPin, Building, Key, Grid, Compass, Box, Ruler];
-    return Array.from({ length: Math.min(count, 8) }).map((_, i) => ({
-      id: i,
-      Icon: iconPool[i % iconPool.length],
-      size: Math.random() * 18 + 28,
-      top: `${Math.random() * 70 + 15}%`,
-      left: `${Math.random() * 70 + 15}%`,
-      rotate: Math.random() * 45,
-      opacity: Math.random() * 0.06 + 0.04
-    }));
-  }, [count]);
-
-  const orbs = useMemo(() => [
-    { id: 0, size: 320, top: '10%', left: '10%', color: 'rgba(245, 158, 11, 0.08)' },
-    { id: 1, size: 260, top: '55%', left: '75%', color: 'rgba(59, 130, 246, 0.08)' }
-  ], []);
-
-  return (
-    <div className="section-decor-layer" aria-hidden="true">
-      {orbs.map(orb => (
-        <div
-          key={orb.id}
-          className="ambient-orb"
-          style={{
-            position: 'absolute',
-            width: orb.size,
-            height: orb.size,
-            top: orb.top,
-            left: orb.left,
-            background: orb.color,
-            borderRadius: '50%',
-            zIndex: 0,
-            opacity: 0.9
-          }}
-        />
-      ))}
-
-      {icons.map((item) => (
-        <div
-          key={item.id}
-          className="decor-icon-wrapper"
-          style={{
-            position: 'absolute',
-            top: item.top,
-            left: item.left,
-            opacity: item.opacity,
-            transform: `translate(-50%, -50%) rotate(${item.rotate}deg)`,
-            zIndex: 1,
-          }}
-        >
-          <item.Icon size={item.size} strokeWidth={1.2} />
-        </div>
-      ))}
-    </div>
-  );
-};
+const SectionDecor = ({ count = 8 }) => null;
 
 // ── COMPONENT ────────────────────────────────────────────────────────────────
 export function HomePremium() {
@@ -199,70 +120,48 @@ export function HomePremium() {
       <section className="hero relative overflow-hidden">
         {/* Background image layer - static for performance */}
         <div className="hero-bg absolute inset-0 z-0" aria-hidden>
-          <div className="absolute inset-0 z-10 bg-transparent" />
-          
-          {/* Static Mesh Gradients for performance */}
-          <div 
-            className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full opacity-40 bg-[#F59E0B]"
-            style={{ pointerEvents: 'none' }}
-          />
-          <div 
-            className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full opacity-30 bg-[#D97706]"
-            style={{ pointerEvents: 'none' }}
-          />
-          
           <img
             src="/premium_dark_interior_hero_1777829975835.png"
             alt=""
-            className="hero-bg-img opacity-50 mix-blend-luminosity"
+            className="hero-bg-img"
           />
-          <div className="hero-bg-overlay" />
         </div>
 
         {/* Hero content */}
         <div className="hero-content">
-          <motion.div
-            className="hero-inner"
-            variants={stagger}
-            initial="hidden"
-            animate="visible"
-          >
+          <div className="hero-inner">
             {/* Trust badges row */}
-            <motion.div className="trust-row" variants={fadeUp} custom={0}>
+            <div className="trust-row">
               {TRUST_BADGES.map(({ icon: Icon, label, key }) => (
                 <span key={key} className="trust-badge">
                   <Icon size={13} />
                   {t(label)}
                 </span>
               ))}
-            </motion.div>
+            </div>
 
             {/* Main heading */}
-            <motion.h1 className="hero-title" variants={fadeUp} custom={0.1}>
+            <h1 className="hero-title">
               {t('home.hero_title_prefix', 'Andijonda')}{' '}
               <span className="gradient-text">
                 {t('home.hero_title_accent', 'kvartira toping')}
               </span>
-            </motion.h1>
+            </h1>
 
             {/* Subtitle */}
-            <motion.p className="hero-subtitle" variants={fadeUp} custom={0.2}>
+            <p className="hero-subtitle">
               {t('home.hero_subtitle', 'Talabalar, oilalar va yoshlar uchun ishonchli va qulay ijaralar — hech qanday komissiyasiz')}
-            </motion.p>
+            </p>
 
             {/* ── SEARCH BAR ───────────────────────────────────────────── */}
-            <motion.div 
-              className="hero-search-wrap" 
-              variants={fadeUp} 
-              custom={0.35}
-            >
+            <div className="hero-search-wrap">
               <HomeSearchBar />
-            </motion.div>
+            </div>
 
 
 
             {/* ── QUICK STATS ──────────────────────────────────────────── */}
-            <motion.div className="hero-stats" variants={fadeUp} custom={0.45}>
+            <div className="hero-stats">
               {STATS.map(({ icon: Icon, value, label }) => (
                 <div key={label} className="hero-stat">
                   <div className="stat-icon"><Icon size={18} /></div>
@@ -272,8 +171,8 @@ export function HomePremium() {
                   </div>
                 </div>
               ))}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
 
         {/* Scroll indicator */}
@@ -319,18 +218,10 @@ export function HomePremium() {
           </div>
 
           {/* Grid */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeFilter}
-              className="listings-grid"
-              variants={stagger}
-              initial="hidden"
-              animate="visible"
-              exit={{ opacity: 0, y: -8, transition: { duration: 0.22, ease: [0.4, 0, 1, 1] } }}
-            >
+          <div key={activeFilter} className="listings-grid">
               {displayListings.length > 0 ? (
                     displayListings.map(listing => (
-                      <motion.div key={listing.id} variants={cardItem}>
+                      <div key={listing.id}>
                         <PremiumListingCard
                           id={listing.id}
                           image={listing.rasmlar?.[0] || '/placeholder-apartment.jpg'}
@@ -342,7 +233,7 @@ export function HomePremium() {
                           isVerified={listing.egasi_verified}
                           onClick={() => navigate(`/listing/${listing.id}`)}
                         />
-                      </motion.div>
+                      </div>
                     ))
                   ) : (
                     <div className="empty-filter-state" style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
@@ -350,22 +241,15 @@ export function HomePremium() {
                     </div>
                   )
               }
-            </motion.div>
-          </AnimatePresence>
+          </div>
 
           {/* View all CTA */}
-          <motion.div
-            className="section-cta"
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: smoothEase }}
-          >
+          <div className="section-cta">
             <button className="btn-outline" onClick={() => navigate('/search')}>
               {t('home.view_all', "Barcha e'lonlar")}
               <ChevronRight size={18} />
             </button>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -382,23 +266,18 @@ export function HomePremium() {
           </div>
 
           <div className="locations-grid">
-            {LOCATIONS.map((loc, i) => (
-              <motion.div 
-                key={loc.name} 
+            {LOCATIONS.map((loc) => (
+              <div
+                key={loc.name}
                 className="location-card"
-                initial={{ opacity: 0, y: 10, scale: 0.985 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.58, delay: i * 0.08, ease: smoothEase }}
                 onClick={() => navigate(`/search?tuman=${loc.name}`)}
               >
-                <img src={loc.img} alt={loc.name} className="loc-img" loading="lazy" />
-                <div className="loc-overlay" />
+                <img src={loc.img} alt={loc.name} className="loc-img" loading="lazy" decoding="async" />
                 <div className="loc-content">
                   <h3>{loc.name}</h3>
                   <span>{loc.count}</span>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -409,13 +288,7 @@ export function HomePremium() {
       ══════════════════════════════════════════════════════════════════ */}
       <section className="home-section ai-recommendation">
         <div className="section-container">
-          <motion.div 
-            className="ai-banner-card"
-            initial={{ opacity: 0, y: 12, scale: 0.985 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.62, ease: smoothEase }}
-          >
+          <div className="ai-banner-card">
             <div className="ai-content">
               <div className="ai-badge"><Zap size={16} /> AI Tavsiya</div>
               <h2>O'zingizga mos uyni topishga qiynalyapsizmi?</h2>
@@ -435,7 +308,7 @@ export function HomePremium() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -451,22 +324,16 @@ export function HomePremium() {
             <p className="section-sub" style={subStyle}>{t('home.how_subtitle', "Kvartira topish hech qachon bu qadar oson bo'lmagan")}</p>
           </div>
 
-          <motion.div
-            className="how-grid"
-            variants={stagger}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-40px' }}
-          >
+          <div className="how-grid">
             {HOW_STEPS.map(step => (
-              <motion.div key={step.num} className="how-card" variants={cardItem}>
+              <div key={step.num} className="how-card">
                 <div className="how-num">{step.num}</div>
                 <div className="how-emoji">{step.emoji}</div>
                 <h3>{t(step.title)}</h3>
                 <p>{t(step.desc)}</p>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -481,26 +348,20 @@ export function HomePremium() {
             <p className="section-sub" style={subStyle}>Biz ijarachilar va uy egalari o'rtasida ishonchli va zamonaviy ko'prik vazifasini bajaramiz.</p>
           </div>
 
-          <motion.div
-            className="advantages-grid"
-            variants={stagger}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-40px' }}
-          >
+          <div className="advantages-grid">
             {ADVANTAGES.map((adv) => {
               const Icon = adv.icon
               return (
-                <motion.div key={adv.title} className="advantage-card" variants={cardItem}>
+                <div key={adv.title} className="advantage-card">
                   <div className="adv-icon-wrapper">
                     <Icon size={24} />
                   </div>
                   <h3>{adv.title}</h3>
                   <p>{adv.desc}</p>
-                </motion.div>
+                </div>
               )
             })}
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -514,15 +375,9 @@ export function HomePremium() {
             <h2 className="section-title" style={titleStyle}>{t('home.testimonials_title', 'Foydalanuvchilar nima deydi')}</h2>
           </div>
 
-          <motion.div
-            className="testimonials-grid"
-            variants={stagger}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
+          <div className="testimonials-grid">
             {TESTIMONIALS.map(t_ => (
-              <motion.div key={t_.name} className="testimonial-card" variants={cardItem}>
+              <div key={t_.name} className="testimonial-card">
                 <div className="t-stars">{'⭐'.repeat(t_.rating)}</div>
                 <p className="t-quote">"{t(t_.quote)}"</p>
                 <div className="t-author">
@@ -532,9 +387,9 @@ export function HomePremium() {
                     <span>{t(t_.role)}</span>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -543,13 +398,7 @@ export function HomePremium() {
       ══════════════════════════════════════════════════════════════════ */}
       <section className="home-section owner-cta-section">
         <div className="section-container">
-          <motion.div
-            className="owner-cta-card"
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.62, ease: smoothEase }}
-          >
+          <div className="owner-cta-card">
             <div className="owner-cta-glow" aria-hidden />
             <div className="owner-cta-content">
               <p className="section-eyebrow" style={eyebrowStyle}><Zap size={14} /> {t('home.owner_label', 'Uy egalari uchun')}</p>
@@ -576,7 +425,7 @@ export function HomePremium() {
                 <ArrowRight size={18} />
               </button>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 

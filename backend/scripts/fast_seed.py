@@ -1,12 +1,16 @@
 import asyncio
-import json
 import random
 import uuid
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import text
-from app.database import engine
 
-# Demo data constants
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from app.database import engine
+from app.models.listing import Listing, ListingSource, ListingTargetGender
+from app.models.user import User, UserRole
+from app.utils.security import hash_password
+
 REGIONS = {
     "Toshkent shahri": ["Yunusobod", "Chilonzor", "Mirzo Ulug'bek", "Yashnobod", "Mirobod", "Shayxontohur", "Uchtepa", "Olmazor", "Yakkasaroy", "Sergeli"],
     "Toshkent viloyati": ["Zangiota", "Qibray", "Chirchiq", "Angren", "Olmaliq", "Bekobod", "Yangiyo'l"],
@@ -19,7 +23,7 @@ REGIONS = {
     "Surxondaryo": ["Termiz", "Denov", "Sherobod", "Jarqo'rg'on", "Sho'rchi"],
     "Xorazm": ["Urganch", "Xiva", "Gurlan", "Shovot", "Bog'ot"],
     "Navoiy": ["Navoiy shahar", "Zarafshon", "Uchquduq", "Karmana"],
-    "Jizzax": ["Jizzax shahar", "Zomin", "G'allaorol", "Paxtakor"]
+    "Jizzax": ["Jizzax shahar", "Zomin", "G'allaorol", "Paxtakor"],
 }
 
 REGION_COORDS = {
@@ -37,94 +41,126 @@ REGION_COORDS = {
     "Jizzax": (40.1250, 67.8808),
 }
 
-AMENITIES_LIST = ["wifi", "gaz", "suv", "tv", "konditsioner", "kir_mashina", "holodilnik", "oshxona_jihozi"]
+AMENITIES_LIST = ["wifi", "gas", "water", "tv", "ac", "washing_machine", "refrigerator", "kitchen_appliances"]
 
-async def seed():
-    async with engine.begin() as conn:
-        print("Cleaning up old demo data...")
-        # Optional: clear existing data if desired, but here we just append
-        
+SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+
+async def _get_or_create_user(
+    session: AsyncSession,
+    *,
+    phone: str,
+    full_name: str,
+    role: UserRole,
+    password: str = "password123",
+) -> User:
+    result = await session.execute(select(User).where(User.phone == phone))
+    existing = result.scalar_one_or_none()
+    if existing is not None:
+        return existing
+
+    user = User(
+        full_name=full_name,
+        phone=phone,
+        role=role,
+        hashed_password=hash_password(password),
+        is_verified=True,
+    )
+    session.add(user)
+    await session.flush()
+    return user
+
+
+async def seed() -> None:
+    async with SessionLocal() as session:
         print("Creating users...")
-        # Roles: 1:student, 2:owner, 3:makler, 4:admin
-        # Password hash for 'password123'
-        pwd_hash = "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6L2GdgGbgCl6.uXG" 
-        
-        # Admins
-        for i in range(5):
-            await conn.execute(text("""
-                INSERT INTO users (user_id, full_name, phone, role_id, password_hash, verified)
-                VALUES (:uid, :name, :phone, 4, :pwd, true)
-                ON CONFLICT (user_id) DO NOTHING
-            """), {"uid": 1000+i, "name": f"Admin {i+1}", "phone": f"+99890111000{i}", "pwd": pwd_hash})
-            
-        # Brokers (100)
-        broker_ids = []
-        for i in range(100):
-            uid = 2000+i
-            broker_ids.append(uid)
-            await conn.execute(text("""
-                INSERT INTO users (user_id, full_name, phone, role_id, password_hash, verified)
-                VALUES (:uid, :name, :phone, 3, :pwd, true)
-                ON CONFLICT (user_id) DO NOTHING
-            """), {"uid": uid, "name": f"Broker {i+1}", "phone": f"+9989022200{i:02d}", "pwd": pwd_hash})
-            
-        # Owners (30)
-        owner_ids = []
-        for i in range(30):
-            uid = 3000+i
-            owner_ids.append(uid)
-            await conn.execute(text("""
-                INSERT INTO users (user_id, full_name, phone, role_id, password_hash, verified)
-                VALUES (:uid, :name, :phone, 2, :pwd, true)
-                ON CONFLICT (user_id) DO NOTHING
-            """), {"uid": uid, "name": f"Owner {i+1}", "phone": f"+9989033300{i:02d}", "pwd": pwd_hash})
-            
-        # Students (70)
-        for i in range(70):
-            await conn.execute(text("""
-                INSERT INTO users (user_id, full_name, phone, role_id, password_hash, verified)
-                VALUES (:uid, :name, :phone, 1, :pwd, true)
-                ON CONFLICT (user_id) DO NOTHING
-            """), {"uid": 4000+i, "name": f"Student {i+1}", "phone": f"+9989044400{i:02d}", "pwd": pwd_hash})
 
-        print("Creating 2000 listings...")
+        for i in range(5):
+            await _get_or_create_user(
+                session,
+                phone=f"+99890111000{i}",
+                full_name=f"Admin {i + 1}",
+                role=UserRole.admin,
+            )
+
+        broker_ids: list[uuid.UUID] = []
+        for i in range(100):
+            user = await _get_or_create_user(
+                session,
+                phone=f"+9989022200{i:02d}",
+                full_name=f"Broker {i + 1}",
+                role=UserRole.makler,
+            )
+            broker_ids.append(user.id)
+
+        owner_ids: list[uuid.UUID] = []
+        for i in range(30):
+            user = await _get_or_create_user(
+                session,
+                phone=f"+9989033300{i:02d}",
+                full_name=f"Owner {i + 1}",
+                role=UserRole.owner,
+            )
+            owner_ids.append(user.id)
+
+        for i in range(70):
+            await _get_or_create_user(
+                session,
+                phone=f"+9989044400{i:02d}",
+                full_name=f"Student {i + 1}",
+                role=UserRole.student,
+            )
+
+        await session.commit()
+
         creators = broker_ids + owner_ids
         now = datetime.now(timezone.utc)
-        
+
+        print("Creating 2000 listings...")
         for i in range(2000):
-            lid = uuid.uuid4()
             region = random.choice(list(REGIONS.keys()))
             district = random.choice(REGIONS[region])
             center_lat, center_lon = REGION_COORDS.get(region, (40.7821, 72.3442))
             owner_id = random.choice(creators)
-            is_premium = i < 200 # First 200 are premium
-            expires = now + timedelta(days=30) if is_premium else None
-            
-            amenities = {a: random.choice([True, False]) for a in AMENITIES_LIST}
+            is_premium = i < 200
+            premium_expires_at = now + timedelta(days=30) if is_premium else None
+
+            amenities = {amenity: random.choice([True, False]) for amenity in AMENITIES_LIST}
             images = ["https://picsum.photos/800/600", "https://picsum.photos/801/601"]
-            
-            await conn.execute(text("""
-                INSERT INTO listings (id, owner_id, region, district, address, latitude, longitude, 
-                                     rooms_count, price_usd, target_gender, source, max_occupants, 
-                                     available_spaces, amenities, images, description, is_premium, 
-                                     premium_expires_at, is_active, view_count, created_at)
-                VALUES (:id, :oid, :reg, :dist, :addr, :lat, :lon, :rooms, :price, :gen, :src, :max_occ, 
-                        :avail, CAST(:amen AS JSON), :imgs, :desc, :prem, :exp, true, :views, :cat)
-            """), {
-                "id": lid, "oid": owner_id, "reg": region, "dist": district, "addr": f"Ko'cha {i}",
-                "lat": center_lat + random.uniform(-0.08, 0.08), "lon": center_lon + random.uniform(-0.08, 0.08),
-                "rooms": random.randint(1, 5), "price": random.randint(200, 2000), 
-                "gen": random.choice(["male", "female", "mixed"]), 
-                "src": "makler" if owner_id in broker_ids else "owner",
-                "max_occ": 4, "avail": random.randint(1, 4), "amen": json.dumps(amenities),
-                "imgs": images, "desc": "Demo listing", "prem": is_premium, "views": random.randint(20, 2500),
-                "exp": expires, "cat": now
-            })
-            
+            source = ListingSource.makler if owner_id in broker_ids else ListingSource.owner
+
+            listing = Listing(
+                owner_id=owner_id,
+                region=region,
+                district=district,
+                address=f"Street {i}",
+                latitude=center_lat + random.uniform(-0.08, 0.08),
+                longitude=center_lon + random.uniform(-0.08, 0.08),
+                rooms_count=random.randint(1, 5),
+                price_usd=random.randint(200, 2000),
+                target_gender=random.choice(list(ListingTargetGender)),
+                source=source,
+                max_guests=4,
+                available_spaces=random.randint(1, 4),
+                amenities=amenities,
+                images=images,
+                description="Demo listing",
+                is_premium=is_premium,
+                premium_expires_at=premium_expires_at,
+                is_active=True,
+                views_count=random.randint(20, 2500),
+                created_at=now,
+            )
+            session.add(listing)
+
             if (i + 1) % 500 == 0:
-                print(f"Inserted {i+1} listings...")
+                await session.commit()
+                print(f"Inserted {i + 1} listings...")
+
+        await session.commit()
 
     print("Seeding complete!")
+
 
 if __name__ == "__main__":
     asyncio.run(seed())

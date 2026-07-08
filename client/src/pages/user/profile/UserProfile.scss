@@ -9,7 +9,6 @@
   position: relative;
   overflow-x: hidden;
   font-family: 'Inter', system-ui, sans-serif;
-  transition: background 0.3s ease;
 
   &[data-theme="light"], [data-theme="light"] & {
     background: transparent;
@@ -31,7 +30,7 @@
 
     .unified-profile-card {
       @include glass-elevated;
-      background: rgba(15, 23, 42, 0.85); 
+      background: transparent; 
       border-radius: 32px;
       padding: 3rem;
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -41,14 +40,14 @@
       [data-theme="light"] & {
         background: #ffffff;
         border-color: #e2e8f0;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+  border: 1px solid var(--color-border);
       }
 
       &::after {
         content: '';
         position: absolute;
         inset: 0;
-        background: radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.1), transparent 40%);
+        background: transparent;
         pointer-events: none;
       }
 
@@ -75,7 +74,7 @@
           padding: 6px;
           background: var(--gradient-primary); // Amber in Light mode
           border-radius: 50%;
-          box-shadow: 0 0 40px var(--color-primary-glow);
+  border: 1px solid var(--color-border);
           position: relative;
           overflow: hidden;
           display: flex;
@@ -94,7 +93,6 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 4rem; font-weight: 800; 
             color: #38bdf8; // Blue in Dark Mode
-            transition: 0.3s ease;
 
             [data-theme="light"] & { 
               border-color: #ffffff; 
@@ -108,11 +106,10 @@
           position: absolute;
           inset: 6px;
           border-radius: 50%;
-          background: rgba(15, 23, 42, 0.6);
+          background: transparent;
           display: flex; align-items: center; justify-content: center;
           color: white;
           opacity: 0;
-          transition: 0.3s ease;
           z-index: 2;
         }
 
@@ -162,13 +159,14 @@
       @include glass-base;
       padding: 2.5rem; border-radius: 28px; display: flex; flex-direction: column; gap: 1.5rem;
       border: 1px solid rgba(255, 255, 255, 0.05); position: relative; overflow: hidden;
-      transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
-      [data-theme="light"] & { background: #ffffff; border-color: #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+      [data-theme="light"] & { background: #ffffff; border-color: #f1f5f9;  border: 1px solid var(--color-border);
+}
 
       &:hover {
-        transform: translateY(-8px); border-color: var(--color-primary); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        [data-theme="light"] & { box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        transform: translateY(-8px); border-color: var(--color-primary);  border: 1px solid var(--color-border);
+        [data-theme="light"] & {  border: 1px solid var(--color-border);
+}
         .card-glow { opacity: 0.15; }
       }
 
@@ -182,7 +180,7 @@
         .label { margin: 0; color: #64748b; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
       }
 
-      .card-glow { position: absolute; bottom: -30px; right: -30px; width: 150px; height: 150px; opacity: 0.05; transition: 0.5s; }
+      .card-glow { position: absolute; bottom: -30px; right: -30px; width: 150px; height: 150px; opacity: 0.05;}
       &.neon-blue { .icon-box svg { color: var(--color-primary); } .card-glow { background: var(--color-primary); } }
       &.neon-purple { .icon-box svg { color: var(--color-secondary); } .card-glow { background: var(--color-secondary); } }
       &.neon-cyan { .icon-box svg { color: var(--color-cyan); } .card-glow { background: var(--color-cyan); } }
@@ -194,7 +192,7 @@
         &:hover {
           transform: none;
           border-color: rgba(255, 255, 255, 0.05);
-          box-shadow: none;
+  border: 1px solid var(--color-border);
         }
       }
     }
@@ -223,15 +221,14 @@
   }
 
   .session-card {
-    padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1.5rem; border-radius: 20px; transition: 0.3s;
-    &:hover { border-color: var(--color-primary); background: rgba(255,255,255,0.02); [data-theme="light"] & { background: #f8fafc; } }
+    padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1.5rem; border-radius: 20px;    &:hover { border-color: var(--color-primary); background: rgba(255,255,255,0.02); [data-theme="light"] & { background: #f8fafc; } }
     .session-icon { width: 48px; height: 48px; border-radius: 14px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; color: var(--color-primary); [data-theme="light"] & { background: #f1f5f9; } }
     .session-body {
       flex: 1;
       .top { display: flex; align-items: center; gap: 1rem; .device-name { font-weight: 700; font-size: 1.05rem; } .status-badge { font-size: 0.75rem; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 2px 10px; border-radius: 10px; font-weight: 700; } }
       .meta { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #64748b; font-weight: 500; }
     }
-    .btn-terminate { background: transparent; border: 1px solid #334155; color: #94a3b8; padding: 0.5rem 1rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.3s; [data-theme="light"] & { border-color: #e2e8f0; } &:hover { border-color: #ef4444; color: #ef4444; } }
+    .btn-terminate { background: transparent; border: 1px solid #334155; color: #94a3b8; padding: 0.5rem 1rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer;[data-theme="light"] & { border-color: #e2e8f0; } &:hover { border-color: #ef4444; color: #ef4444; } }
   }
 
   .profile-empty-card {
@@ -363,29 +360,29 @@
     .sidebar-group { margin-bottom: 2.5rem; .sidebar-title { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 1rem; } }
     
     .setting-action-card {
-      @include glass-base; padding: 1rem 1.25rem; border-radius: 18px; display: flex; align-items: center; gap: 1rem; cursor: pointer; transition: 0.3s;
-      [data-theme="light"] & { background: #ffffff; border-color: #f1f5f9; }
+      @include glass-base; padding: 1rem 1.25rem; border-radius: 18px; display: flex; align-items: center; gap: 1rem; cursor: pointer;      [data-theme="light"] & { background: #ffffff; border-color: #f1f5f9; }
       &:hover { border-color: var(--color-primary); transform: translateX(5px); [data-theme="light"] & { background: #f8fafc; } }
       .icon-wrap { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; color: #64748b; [data-theme="light"] & { background: #f1f5f9; } }
       .text-wrap { flex: 1; span { display: block; font-weight: 700; font-size: 0.95rem; } p { margin: 0; font-size: 0.75rem; color: #64748b; } }
     }
 
     .support-card-premium {
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6); 
+  background: var(--color-surface);
       [data-theme="light"] & { background: var(--gradient-primary); } // Amber gradient
       padding: 2.25rem; border-radius: 28px; color: white; position: relative; overflow: hidden;
       
       h4 { margin: 0 0 0.5rem; font-size: 1.4rem; font-weight: 800; position: relative; z-index: 2; }
       p { font-size: 0.9rem; opacity: 0.9; line-height: 1.5; margin-bottom: 1.5rem; position: relative; z-index: 2; }
-      .btn-chat-ai { width: 100%; padding: 1rem; border-radius: 16px; background: #ffffff; color: #030712; border: none; font-weight: 800; cursor: pointer; transition: 0.3s; position: relative; z-index: 2; &:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); } }
+      .btn-chat-ai { width: 100%; padding: 1rem; border-radius: 16px; background: #ffffff; color: #030712; border: none; font-weight: 800; cursor: pointer;position: relative; z-index: 2; &:hover { transform: translateY(-3px);  border: 1px solid var(--color-border);
+} }
       
-      &::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at top right, rgba(255,255,255,0.3), transparent); }
+      &::before { content: ''; position: absolute; inset: 0; background: transparent; }
     }
 
     .danger-zone-card {
       @include glass-base; background: rgba(239, 68, 68, 0.03); border: 1px solid rgba(239, 68, 68, 0.1); border-radius: 24px; padding: 1.25rem;
       [data-theme="light"] & { background: rgba(239, 68, 68, 0.02); }
-      .danger-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; border-radius: 14px; cursor: pointer; font-size: 0.95rem; font-weight: 700; color: #94a3b8; transition: 0.2s; [data-theme="light"] & { color: #475569; } &:hover { color: white; background: rgba(255,255,255,0.03); [data-theme="light"] & { color: #ef4444; background: #fee2e2; } } &.delete { color: #ef4444; } }
+      .danger-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; border-radius: 14px; cursor: pointer; font-size: 0.95rem; font-weight: 700; color: #94a3b8;[data-theme="light"] & { color: #475569; } &:hover { color: white; background: rgba(255,255,255,0.03); [data-theme="light"] & { color: #ef4444; background: #fee2e2; } } &.delete { color: #ef4444; } }
       .warning-note { margin-top: 1rem; display: flex; align-items: flex-start; gap: 0.5rem; color: #64748b; font-size: 0.75rem; }
     }
   }

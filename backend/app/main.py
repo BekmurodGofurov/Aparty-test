@@ -14,11 +14,10 @@ from app.tasks.expire_premium import premium_expiry_loop
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    from app.database import Base, engine
-    # Dastur yoqilganda bazada jadvallar yo'q bo'lsa, o'zi avtomatik yaratadi
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        
+    from app.db_migrations import run_migrations
+
+    await asyncio.to_thread(run_migrations)
+
     task = asyncio.create_task(premium_expiry_loop())
     try:
         yield

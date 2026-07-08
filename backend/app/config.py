@@ -20,8 +20,9 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_minutes: int = 60 * 24 * 7
     db_connect_timeout_seconds: int = 5
+    auto_migrate_on_startup: bool = True
     cookie_secure: bool = False
-    gemini_api_key: str = ""
+    groq_api_key: str = ""
     cors_origins: str = (
         "http://localhost:3000,"
         "http://localhost:5173,"

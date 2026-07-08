@@ -1,19 +1,22 @@
 import uuid
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, delete, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
-from datetime import datetime, timezone
 
 from app.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models.favorite import Favorite
-from app.models.listing import Listing
-from app.models.review import Review
 from app.models.user import User
 from app.schemas.listing import ListingCard
+from database.operations.delete import favorites as delete_favorites
+from database.operations.insert import favorites as insert_favorites
+from database.operations.select import favorites as select_favorites
+from database.operations.select import listings as select_listings
 
 router = APIRouter()
+
 
 def _is_premium_active(is_premium: bool, premium_expires_at, now: datetime) -> bool:
     if not is_premium or premium_expires_at is None:
@@ -22,60 +25,37 @@ def _is_premium_active(is_premium: bool, premium_expires_at, now: datetime) -> b
         premium_expires_at = premium_expires_at.replace(tzinfo=timezone.utc)
     return premium_expires_at > now
 
+
 @router.post("/{listing_id}", status_code=status.HTTP_201_CREATED)
 async def toggle_favorite(
     listing_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(
-        select(Favorite).where(
-            Favorite.user_id == current_user.id,
-            Favorite.listing_id == listing_id
-        )
-    )
-    existing = result.scalar_one_or_none()
+    existing = await select_favorites.get_by_user_and_listing(db, current_user.id, listing_id)
 
     if existing:
-        await db.delete(existing)
-        await db.commit()
+        await delete_favorites.delete(db, existing)
         return {"status": "removed"}
-    
-    listing = await db.get(Listing, listing_id)
+
+    listing = await select_listings.get_by_id(db, listing_id)
     if not listing:
         raise HTTPException(status_code=404, detail="Listing topilmadi")
 
-    new_fav = Favorite(user_id=current_user.id, listing_id=listing_id)
-    db.add(new_fav)
-    await db.commit()
+    await insert_favorites.create(db, Favorite(user_id=current_user.id, listing_id=listing_id))
     return {"status": "added"}
+
 
 @router.get("/me", response_model=List[ListingCard])
 async def get_my_favorites(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     now = datetime.now(timezone.utc)
-    
-    result = await db.execute(
-        select(
-            Listing,
-            User.role.label("owner_role"),
-            User.full_name.label("owner_name"),
-            User.is_verified.label("owner_verified"),
-            func.avg(Review.rating).label("rating"),
-            func.count(Review.id).label("review_count")
-        )
-        .join(User, User.id == Listing.owner_id)
-        .join(Favorite, Favorite.listing_id == Listing.id)
-        .outerjoin(Review, Review.listing_id == Listing.id)
-        .where(Favorite.user_id == current_user.id)
-        .group_by(Listing.id, User.id)
-        .order_by(desc(Listing.created_at))
-    )
-    
+    rows = await select_favorites.get_my_favorites_rows(db, current_user.id)
+
     cards: list[ListingCard] = []
-    for listing, owner_role, owner_name, owner_verified, rating, review_count in result.all():
+    for listing, owner_role, owner_name, owner_verified, rating, review_count in rows:
         cards.append(
             ListingCard(
                 id=listing.id,

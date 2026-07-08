@@ -33,33 +33,29 @@
 
 // Base glass — subtle translucent surface
 @mixin glass-base {
-  background:      rgba(15, 23, 42, 0.15); // Dark mode biroz quyuqroq
-  backdrop-filter: blur(var(--glass-blur));
+  background: transparent; // Dark mode biroz quyuqroq
   border:          1px solid var(--glass-border);
   border-radius:   $radius-lg;
 
   [data-theme="light"] & {
     background:      rgba(255, 255, 255, 0.80);
-    backdrop-filter: blur(var(--glass-blur));
     border:          1px solid rgba(120, 80, 20, 0.10);
-    box-shadow:      var(--shadow-sm);
+  border: 1px solid var(--color-border);
   }
 }
 
 // Premium glass — layered depth for cards & panels
 @mixin glass-premium {
   background:      var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur-heavy));
   border:          1px solid var(--glass-border);
   border-radius:   $radius-lg;
-  box-shadow:      var(--glass-shadow);
+  border: 1px solid var(--color-border);
   position:        relative;
 
   [data-theme="light"] & {
     background:      rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
     border:          1px solid rgba(120, 80, 20, 0.09);
-    box-shadow:      var(--shadow-md);
+  border: 1px solid var(--color-border);
   }
 
   &::before {
@@ -86,7 +82,7 @@
 
   [data-theme="light"] & {
     background: #FFFFFF;
-    box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
     border:     1px solid rgba(120, 80, 20, 0.09);
   }
 }
@@ -95,12 +91,11 @@
 @mixin glass-interactive {
   @include glass-premium;
   cursor: pointer;
-  transition: all var(--transition-base);
 
   &:hover {
     background:   var(--glass-bg-mid);
     border-color: var(--glass-border-hover);
-    box-shadow:   var(--shadow-hover);
+  border: 1px solid var(--color-border);
     transform:    translateY(-6px) scale(1.01);
   }
 
@@ -108,7 +103,7 @@
 
   [data-theme="light"] & {
     &:hover {
-      box-shadow:   var(--shadow-hover);
+  border: 1px solid var(--color-border);
       border-color: rgba(56, 189, 248, 0.40);
     }
   }
@@ -117,7 +112,6 @@
 // Navbar glass
 @mixin glass-nav {
   background:      var(--bg-nav);
-  backdrop-filter: blur(16px);
   border-bottom:   1px solid var(--glass-border);
 }
 
@@ -144,7 +138,6 @@
   font-weight: 600;
   font-size: 0.95rem;
   border-radius: $radius-md;
-  transition: all var(--transition-base);
   white-space: nowrap;
   user-select: none;
   position: relative;
@@ -156,10 +149,8 @@
     position: absolute;
     inset: 0;
     opacity: 0;
-    transition: opacity var(--transition-fast);
-    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: var(--color-surface);
     background-size: 200% 100%;
-    animation: waveGleam 3s infinite linear;
     border-radius: inherit;
   }
   &:hover:not(:disabled)::after { opacity: 1; }
@@ -175,12 +166,12 @@
   background:  var(--gradient-primary);
   background-size: 200% auto;
   color:       #fff;
-  box-shadow:  var(--shadow-btn-primary);
+  border: 1px solid var(--color-border);
   border: 1px solid rgba(255, 255, 255, 0.1);
 
   &:hover:not(:disabled) {
     transform:  translateY(-2px) scale(1.02);
-    box-shadow: var(--shadow-btn-hover);
+  border: 1px solid var(--color-border);
     background-position: right center;
   }
   &:active:not(:disabled) { transform: translateY(0) scale(0.98); }
@@ -189,7 +180,6 @@
 @mixin button-secondary {
   @include button-base;
   background:      var(--glass-bg);
-  backdrop-filter: blur(8px);
   border:          1px solid var(--glass-border);
   color:           var(--color-text);
 
@@ -280,18 +270,17 @@
 // ANIMATION HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 @mixin float-orb {
-  animation: orbFloat 18s ease-in-out infinite;
 }
 
 @mixin shimmer-pulse {
-  animation: shimmerPulse 2.5s ease-in-out infinite;
 }
 
 @mixin pulse-glow($color: rgba(37, 99, 235, 0.4)) {
-  animation: glowPulse 2.4s ease-in-out infinite;
   @keyframes glowPulse {
-    0%, 100% { box-shadow: 0 0 20px $color; }
-    50%       { box-shadow: 0 0 40px $color, 0 0 60px rgba(37,99,235,0.2); }
+    0%, 100% {  border: 1px solid var(--color-border);
+}
+    50%       {  border: 1px solid var(--color-border);
+}
   }
 }
 
@@ -302,5 +291,5 @@
   background:    var(--bg-card);
   border:        1px solid var(--glass-border);
   border-radius: $radius-lg;
-  box-shadow:    var(--shadow-sm);
+  border: 1px solid var(--color-border);
 }

@@ -1,0 +1,1 @@
+"""Record deletion database operations."""

@@ -1,13 +1,16 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user, require_role, require_roles
+from app.dependencies.auth import get_current_user, require_roles
 from app.models.payment import Payment
 from app.models.user import User, UserRole
 from app.schemas.payment import PaymentCreate, PaymentOut, PaymentStatusUpdate, PaymentUpdate
+from database.operations.delete import payments as delete_payments
+from database.operations.insert import payments as insert_payments
+from database.operations.select import payments as select_payments
+from database.operations.update import payments as update_payments
 
 router = APIRouter()
 
@@ -22,10 +25,7 @@ async def create_payment(
     if payload.payer_id != current_user.id and current_user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Boshqa foydalanuvchi nomidan to'lov yaratib bo'lmaydi")
     payment = Payment(**payload.model_dump())
-    db.add(payment)
-    await db.commit()
-    await db.refresh(payment)
-    return payment
+    return await insert_payments.create(db, payment)
 
 
 @router.get("/", response_model=list[PaymentOut])
@@ -36,13 +36,7 @@ async def list_payments(
     db: AsyncSession = Depends(get_db),
 ) -> list[Payment]:
     """List payments for current user"""
-    result = await db.execute(
-        select(Payment)
-        .where(Payment.payer_id == current_user.id)
-        .offset(skip)
-        .limit(limit)
-    )
-    return result.scalars().all()
+    return await select_payments.list_by_payer(db, current_user.id, skip=skip, limit=limit)
 
 
 @router.get("/user/{user_id}", response_model=list[PaymentOut])
@@ -54,8 +48,7 @@ async def get_user_payments(
     """Get payments for a user"""
     if user_id != current_user.id and current_user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Bu tolovlarga kirish ruxsati yo'q")
-    result = await db.execute(select(Payment).where(Payment.payer_id == user_id))
-    return result.scalars().all()
+    return await select_payments.get_by_payer_id(db, user_id)
 
 
 @router.get("/{payment_id}", response_model=PaymentOut)
@@ -65,15 +58,13 @@ async def get_payment(
     db: AsyncSession = Depends(get_db),
 ) -> Payment:
     """Get payment details"""
-    result = await db.execute(select(Payment).where(Payment.id == payment_id))
-    payment = result.scalar_one_or_none()
+    payment = await select_payments.get_by_id(db, payment_id)
     if payment is None:
         raise HTTPException(status_code=404, detail="Tolov topilmadi")
-    
-    # Check authorization
+
     if payment.payer_id != current_user.id and current_user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Bu tolovga kirish ruxsati yo'q")
-    
+
     return payment
 
 
@@ -85,17 +76,14 @@ async def update_payment_status(
     db: AsyncSession = Depends(get_db),
 ) -> Payment:
     """Update payment status (admin and broker only)"""
-    result = await db.execute(select(Payment).where(Payment.id == payment_id))
-    payment = result.scalar_one_or_none()
+    payment = await select_payments.get_by_id(db, payment_id)
     if payment is None:
         raise HTTPException(status_code=404, detail="Tolov topilmadi")
-    
-    stmt = update(Payment).where(Payment.id == payment_id).values(status=payload.status)
-    await db.execute(stmt)
-    await db.commit()
-    
-    result = await db.execute(select(Payment).where(Payment.id == payment_id))
-    return result.scalar_one()
+
+    updated = await update_payments.update_status(db, payment_id, payload.status)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Tolov topilmadi")
+    return updated
 
 
 @router.patch("/{payment_id}", response_model=PaymentOut)
@@ -106,25 +94,20 @@ async def edit_payment(
     db: AsyncSession = Depends(get_db),
 ) -> Payment:
     """Edit payment details (admin and broker only)"""
-    result = await db.execute(select(Payment).where(Payment.id == payment_id))
-    payment = result.scalar_one_or_none()
+    payment = await select_payments.get_by_id(db, payment_id)
     if payment is None:
         raise HTTPException(status_code=404, detail="Tolov topilmadi")
-    
-    stmt = (
-        update(Payment)
-        .where(Payment.id == payment_id)
-        .values(
-            amount=payload.amount,
-            billing_month=payload.billing_month,
-            status=payload.status
-        )
+
+    updated = await update_payments.update_fields(
+        db,
+        payment_id,
+        amount=payload.amount,
+        billing_month=payload.billing_month,
+        status=payload.status,
     )
-    await db.execute(stmt)
-    await db.commit()
-    
-    result = await db.execute(select(Payment).where(Payment.id == payment_id))
-    return result.scalar_one()
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Tolov topilmadi")
+    return updated
 
 
 @router.delete("/{payment_id}")
@@ -134,13 +117,9 @@ async def delete_payment(
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Delete payment (admin and broker only)"""
-    result = await db.execute(select(Payment).where(Payment.id == payment_id))
-    payment = result.scalar_one_or_none()
+    payment = await select_payments.get_by_id(db, payment_id)
     if payment is None:
         raise HTTPException(status_code=404, detail="Tolov topilmadi")
-    
-    stmt = delete(Payment).where(Payment.id == payment_id)
-    await db.execute(stmt)
-    await db.commit()
-    
+
+    await delete_payments.delete_by_id(db, payment_id)
     return {"message": "Tolov muvaffaqiyatli o'chirildi", "payment_id": str(payment_id)}

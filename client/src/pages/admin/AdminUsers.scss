@@ -64,7 +64,7 @@
     border: 1px solid var(--glass-border);
     border-radius: 8px;
     background: var(--glass-bg-mid);
-    box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
   }
 
   .search-box,
@@ -126,7 +126,7 @@
     border: 1px solid var(--glass-border);
     border-radius: 8px;
     background: var(--glass-bg-mid);
-    box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
   }
 
   .users-loading {
@@ -160,7 +160,6 @@
     }
 
     tbody tr {
-      transition: background 0.15s ease;
 
       &:hover {
         background: var(--glass-hover);
@@ -265,7 +264,6 @@
     padding: 0.35rem 0.7rem;
     font-weight: 800;
     cursor: pointer;
-    transition: border-color 0.15s ease, background 0.15s ease;
 
     &:hover {
       border-color: var(--glass-border-hover);
@@ -312,7 +310,7 @@
     border: 1px solid var(--glass-border);
     border-radius: 999px;
     background: var(--glass-bg-mid);
-    box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
 
     button,
     .pagination-dots {
@@ -330,9 +328,8 @@
       border: 1px solid var(--glass-border);
       background: var(--glass-bg-high);
       color: var(--color-text);
-      box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
       cursor: pointer;
-      transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
 
       &:hover:not(:disabled) {
         transform: translateY(-1px);

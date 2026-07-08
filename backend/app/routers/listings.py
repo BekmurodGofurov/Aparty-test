@@ -1,22 +1,18 @@
 from __future__ import annotations
 
-import math
+import uuid
 from typing import Optional
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import and_, case, delete, desc, func, or_, select, update
+from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies.auth import get_current_user, get_optional_current_user, require_role
-from app.models.listing import Listing, ListingSource, ListingTargetGender
+from app.models.listing import Listing, ListingSource
 from app.models.listing_payment import ListingPayment, ListingPaymentStatus, ListingPaymentType
-from app.models.favorite import Favorite
-from app.models.rental import Rental, RentalRequest, RentalRequestMessage
-from app.models.review import Review
-from app.models.subscription import Subscription
 from app.models.user import User, UserRole
 from app.services.listing_limits import TRIAL_MONTHS, get_listing_limit_for_role
 from app.schemas.listing import (
@@ -28,19 +24,21 @@ from app.schemas.listing import (
     ActivateListingResponse,
     UpgradeToPremiumResponse,
 )
+from database.operations.delete import listings as delete_listings
+from database.operations.insert import listings as insert_listings
+from database.operations.select import listings as select_listings
+from database.operations.select import subscriptions as select_subscriptions
+from database.operations.update import listings as update_listings
+from database.operations.update import subscriptions as update_subscriptions
 
 router = APIRouter()
 
-ESSENTIAL_AMENITIES = {
-    "wifi",
-    "gas",
-    "water",
-    "tv",
-    "ac",
-    "washing_machine",
-    "refrigerator",
-    "kitchen_appliances",
-}
+
+def _parse_listing_id(listing_id: str) -> uuid.UUID:
+    try:
+        return uuid.UUID(listing_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Listing not found") from exc
 
 
 def _is_premium_active(is_premium: bool, premium_expires_at: Optional[datetime], now: datetime) -> bool:
@@ -65,6 +63,38 @@ def _source_for_role(role: UserRole):
     return None
 
 
+def _row_to_card(row, now: datetime) -> ListingCard:
+    listing, owner_role, owner_name, owner_phone, owner_verified, rating, review_count = row
+    return ListingCard(
+        id=listing.id,
+        region=listing.region,
+        district=listing.district,
+        address=listing.address,
+        latitude=listing.latitude,
+        longitude=listing.longitude,
+        rooms_count=listing.rooms_count,
+        area_m2=listing.area_m2,
+        floor=listing.floor,
+        price_usd=listing.price_usd,
+        target_gender=listing.target_gender,
+        available_spaces=listing.available_spaces,
+        amenities=listing.amenities or {},
+        images=listing.images[:1] if listing.images else [],
+        description=listing.description,
+        is_premium=_is_premium_active(listing.is_premium, listing.premium_expires_at, now),
+        is_active=listing.is_active,
+        views_count=listing.views_count,
+        premium_expires_at=listing.premium_expires_at,
+        owner_role=owner_role.value if owner_role else "student",
+        owner_full_name=owner_name,
+        owner_phone=owner_phone,
+        owner_verified=bool(owner_verified),
+        rating=round(float(rating), 1) if rating is not None else None,
+        reviews_count=int(review_count or 0),
+        created_at=listing.created_at,
+    )
+
+
 async def _enforce_listing_limits(
     db: AsyncSession,
     current_user: User,
@@ -83,27 +113,13 @@ async def _enforce_listing_limits(
     if now > trial_ends_at:
         raise HTTPException(status_code=403, detail="Bepul trial muddati tugagan")
 
-    simple_count = await db.scalar(
-        select(func.count(Listing.id)).where(
-            Listing.owner_id == current_user.id,
-            Listing.is_active.is_(True),
-            Listing.is_premium.is_(False),
-        )
-    )
-    premium_count = await db.scalar(
-        select(func.count(Listing.id)).where(
-            Listing.owner_id == current_user.id,
-            Listing.is_active.is_(True),
-            Listing.is_premium.is_(True),
-            Listing.premium_expires_at.is_not(None),
-            Listing.premium_expires_at > now,
-        )
-    )
+    simple_count = await select_listings.count_active_simple(db, current_user.id)
+    premium_count = await select_listings.count_active_premium(db, current_user.id, now)
 
     if wants_premium:
-        if (premium_count or 0) >= limits.premium_limit:
+        if premium_count >= limits.premium_limit:
             raise HTTPException(status_code=403, detail="Premium listing limiti tugagan")
-    elif (simple_count or 0) >= limits.simple_limit:
+    elif simple_count >= limits.simple_limit:
         raise HTTPException(status_code=403, detail="Simple listing limiti tugagan")
 
 
@@ -112,21 +128,11 @@ async def _maybe_consume_subscription(db: AsyncSession, user: User, is_premium: 
         return False
 
     today = datetime.now(timezone.utc).date()
-    sub = await db.scalar(
-        select(Subscription)
-        .where(
-            Subscription.user_id == user.id,
-            Subscription.is_active.is_(True),
-            Subscription.start_date <= today,
-            Subscription.end_date >= today,
-            Subscription.used_count < Subscription.listing_limit,
-        )
-        .order_by(Subscription.created_at.desc())
-    )
+    sub = await select_subscriptions.get_active_subscription(db, user.id, today)
     if sub is None:
         return False
 
-    sub.used_count += 1
+    await update_subscriptions.increment_used_count(db, sub.id)
     return True
 
 
@@ -149,23 +155,21 @@ async def create_listing(
     if current_user.role == UserRole.owner:
         listing_data["is_active"] = False
     listing = Listing(**listing_data, owner_id=current_user.id, premium_expires_at=premium_expires_at)
-    db.add(listing)
-    await db.flush()
+    await insert_listings.create_listing(db, listing)
 
     used_subscription = await _maybe_consume_subscription(db, current_user, payload.is_premium)
     payment_amount = 0 if used_subscription else _get_listing_fee(current_user.role, payload.is_premium)
-    payment = ListingPayment(
-        listing_id=listing.id,
-        user_id=current_user.id,
-        amount=payment_amount,
-        type=ListingPaymentType.premium if payload.is_premium else ListingPaymentType.regular,
-        status=ListingPaymentStatus.paid if payment_amount == 0 else ListingPaymentStatus.pending,
+    await insert_listings.create_listing_payment(
+        db,
+        ListingPayment(
+            listing_id=listing.id,
+            user_id=current_user.id,
+            amount=payment_amount,
+            type=ListingPaymentType.premium if payload.is_premium else ListingPaymentType.regular,
+            status=ListingPaymentStatus.paid if payment_amount == 0 else ListingPaymentStatus.pending,
+        ),
     )
-    db.add(payment)
-
-    await db.commit()
-    await db.refresh(listing)
-    return listing
+    return await insert_listings.commit_listing(db, listing)
 
 
 @router.get("/search", response_model=ListingSearchResponse)
@@ -192,17 +196,10 @@ async def search_listings(
     limit: int = Query(default=12, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ) -> ListingSearchResponse:
-    now = datetime.now(timezone.utc)
-    review_stats = (
-        select(
-            Review.listing_id.label("listing_id"),
-            func.avg(Review.rating).label("rating"),
-            func.count(Review.id).label("reviews_count"),
-        )
-        .group_by(Review.listing_id)
-        .subquery()
-    )
+    from app.models.listing import Listing
+    from app.models.user import User
 
+    now = datetime.now(timezone.utc)
     filters = [Listing.is_active.is_(True)]
 
     if region:
@@ -255,38 +252,10 @@ async def search_listings(
             ]
         )
 
-    premium_sort = case(
-        (and_(Listing.is_premium.is_(True), Listing.premium_expires_at.is_not(None), Listing.premium_expires_at > now), 1),
-        else_=0,
-    )
-
-    base_query = (
-        select(
-            Listing,
-            User.role.label("owner_role"),
-            User.full_name.label("owner_full_name"),
-            User.phone.label("owner_phone"),
-            User.is_verified.label("owner_verified"),
-            review_stats.c.rating,
-            func.coalesce(review_stats.c.reviews_count, 0).label("reviews_count"),
-        )
-        .join(User, Listing.owner_id == User.id)
-        .outerjoin(review_stats, review_stats.c.listing_id == Listing.id)
-        .where(and_(*filters))
-    )
     try:
-        total = await db.scalar(select(func.count()).select_from(base_query.subquery()))
-        total = total or 0
-        pages = max(1, math.ceil(total / limit)) if total else 1
-        offset = (page - 1) * limit
-
-        rows = await db.execute(
-            base_query
-            .order_by(desc(premium_sort), desc(Listing.created_at))
-            .offset(offset)
-            .limit(limit)
+        result_rows, total, pages = await select_listings.search_with_cards(
+            db, filters=filters, page=page, limit=limit, now=now
         )
-        result_rows = rows.all()
     except (TimeoutError, OSError, SQLAlchemyError):
         return ListingSearchResponse(
             success=False,
@@ -297,39 +266,7 @@ async def search_listings(
             pages=1,
         )
 
-    cards: list[ListingCard] = []
-    for listing, owner_role, owner_name, owner_phone, owner_verified, rating, review_count in result_rows:
-        cards.append(
-            ListingCard(
-                id=listing.id,
-                region=listing.region,
-                district=listing.district,
-                address=listing.address,
-                latitude=listing.latitude,
-                longitude=listing.longitude,
-                rooms_count=listing.rooms_count,
-                area_m2=listing.area_m2,
-                floor=listing.floor,
-                price_usd=listing.price_usd,
-                target_gender=listing.target_gender,
-                available_spaces=listing.available_spaces,
-                amenities=listing.amenities or {},
-                images=listing.images[:1] if listing.images else [],
-                description=listing.description,
-                is_premium=_is_premium_active(listing.is_premium, listing.premium_expires_at, now),
-                is_active=listing.is_active,
-                views_count=listing.views_count,
-                premium_expires_at=listing.premium_expires_at,
-                owner_role=owner_role.value if owner_role else "student",
-                owner_full_name=owner_name,
-                owner_phone=owner_phone,
-                owner_verified=bool(owner_verified),
-                rating=round(float(rating), 1) if rating is not None else None,
-                reviews_count=int(review_count or 0),
-                created_at=listing.created_at,
-            )
-        )
-
+    cards = [_row_to_card(row, now) for row in result_rows]
     return ListingSearchResponse(listings=cards, total=total, page=page, pages=pages)
 
 
@@ -341,66 +278,8 @@ async def get_my_listings(
     current_user: User = Depends(get_current_user),
 ) -> list[ListingCard]:
     now = datetime.now(timezone.utc)
-    review_stats = (
-        select(
-            Review.listing_id.label("listing_id"),
-            func.avg(Review.rating).label("rating"),
-            func.count(Review.id).label("reviews_count"),
-        )
-        .group_by(Review.listing_id)
-        .subquery()
-    )
-    rows = await db.execute(
-        select(
-            Listing,
-            User.role.label("owner_role"),
-            User.full_name.label("owner_full_name"),
-            User.phone.label("owner_phone"),
-            User.is_verified.label("owner_verified"),
-            review_stats.c.rating,
-            func.coalesce(review_stats.c.reviews_count, 0).label("reviews_count"),
-        )
-        .join(User, Listing.owner_id == User.id)
-        .outerjoin(review_stats, review_stats.c.listing_id == Listing.id)
-        .where(Listing.owner_id == current_user.id)
-        .order_by(desc(Listing.created_at))
-        .offset((page - 1) * limit)
-        .limit(limit)
-    )
-
-    cards: list[ListingCard] = []
-    for listing, owner_role, owner_name, owner_phone, owner_verified, rating, review_count in rows.all():
-        cards.append(
-            ListingCard(
-                id=listing.id,
-                region=listing.region,
-                district=listing.district,
-                address=listing.address,
-                latitude=listing.latitude,
-                longitude=listing.longitude,
-                rooms_count=listing.rooms_count,
-                area_m2=listing.area_m2,
-                floor=listing.floor,
-                price_usd=listing.price_usd,
-                target_gender=listing.target_gender,
-                available_spaces=listing.available_spaces,
-                amenities=listing.amenities or {},
-                images=listing.images[:1] if listing.images else [],
-                description=listing.description,
-                is_premium=_is_premium_active(listing.is_premium, listing.premium_expires_at, now),
-                is_active=listing.is_active,
-                views_count=listing.views_count,
-                premium_expires_at=listing.premium_expires_at,
-                owner_role=owner_role.value if owner_role else "student",
-                owner_full_name=owner_name,
-                owner_phone=owner_phone,
-                owner_verified=bool(owner_verified),
-                rating=round(float(rating), 1) if rating is not None else None,
-                reviews_count=int(review_count or 0),
-                created_at=listing.created_at,
-            )
-        )
-    return cards
+    rows = await select_listings.get_my_listing_rows(db, current_user.id, page=page, limit=limit)
+    return [_row_to_card(row, now) for row in rows]
 
 
 @router.get("/{listing_id}", response_model=ListingOut)
@@ -409,12 +288,7 @@ async def get_listing(
     db: AsyncSession = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> dict:
-    result = await db.execute(
-        select(Listing, User)
-        .join(User, Listing.owner_id == User.id)
-        .where(Listing.id == listing_id)
-    )
-    row = result.one_or_none()
+    row = await select_listings.get_with_owner(db, _parse_listing_id(listing_id))
     if row is None:
         raise HTTPException(status_code=404, detail="Listing topilmadi")
     listing, owner = row
@@ -462,8 +336,7 @@ async def update_listing(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Listing:
-    result = await db.execute(select(Listing).where(Listing.id == listing_id))
-    listing = result.scalar_one_or_none()
+    listing = await select_listings.get_by_id(db, _parse_listing_id(listing_id))
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing topilmadi")
 
@@ -480,15 +353,10 @@ async def update_listing(
     if wants_premium and not listing.is_premium:
         await _enforce_listing_limits(db=db, current_user=current_user, wants_premium=True)
 
-    for key, value in updates.items():
-        setattr(listing, key, value)
-
     if payload.is_premium is True and listing.premium_expires_at is None:
-        listing.premium_expires_at = datetime.now(timezone.utc) + timedelta(days=30)
+        updates["premium_expires_at"] = datetime.now(timezone.utc) + timedelta(days=30)
 
-    await db.commit()
-    await db.refresh(listing)
-    return listing
+    return await update_listings.apply_fields(db, listing, **updates)
 
 
 @router.put("/{listing_id}", response_model=ListingOut)
@@ -507,24 +375,16 @@ async def delete_listing(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ActivateListingResponse:
-    listing = await db.scalar(select(Listing).where(Listing.id == listing_id))
+    listing = await select_listings.get_by_id(db, _parse_listing_id(listing_id))
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing topilmadi")
     if listing.owner_id != current_user.id and current_user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Faqat listing egasi o'chira oladi")
 
-    has_rental = await db.scalar(select(Rental.id).where(Rental.listing_id == listing.id).limit(1))
-    if has_rental:
+    if await select_listings.has_rental_history(db, listing.id):
         raise HTTPException(status_code=409, detail="Bu e'londa ijara tarixi bor. Avval uni nofaol qiling yoki admin orqali arxivlang.")
 
-    request_ids = select(RentalRequest.id).where(RentalRequest.listing_id == listing.id)
-    await db.execute(delete(RentalRequestMessage).where(RentalRequestMessage.request_id.in_(request_ids)))
-    await db.execute(delete(RentalRequest).where(RentalRequest.listing_id == listing.id))
-    await db.execute(delete(Favorite).where(Favorite.listing_id == listing.id))
-    await db.execute(delete(Review).where(Review.listing_id == listing.id))
-    await db.execute(delete(ListingPayment).where(ListingPayment.listing_id == listing.id))
-    await db.delete(listing)
-    await db.commit()
+    await delete_listings.delete_listing(db, listing)
     return ActivateListingResponse(message="Listing o'chirildi")
 
 
@@ -534,25 +394,22 @@ async def activate_basic_listing(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ActivateListingResponse:
-    listing = await db.scalar(select(Listing).where(Listing.id == listing_id))
+    listing = await select_listings.get_by_id(db, _parse_listing_id(listing_id))
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing topilmadi")
     if listing.owner_id != current_user.id and current_user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Faqat listing egasi reklamaga chiqara oladi")
 
-    await db.execute(
-        update(Listing)
-        .where(Listing.id == listing.id)
-        .values(is_active=True, is_premium=False, premium_expires_at=None)
-    )
-    db.add(
+    await update_listings.activate_basic(db, listing.id)
+    await insert_listings.create_listing_payment(
+        db,
         ListingPayment(
             listing_id=listing.id,
             user_id=current_user.id,
             amount=_get_listing_fee(current_user.role, False),
             type=ListingPaymentType.regular,
             status=ListingPaymentStatus.pending,
-        )
+        ),
     )
     await db.commit()
     return ActivateListingResponse()
@@ -564,26 +421,23 @@ async def upgrade_to_premium(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> UpgradeToPremiumResponse:
-    listing = await db.scalar(select(Listing).where(Listing.id == listing_id))
+    listing = await select_listings.get_by_id(db, _parse_listing_id(listing_id))
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing topilmadi")
     if listing.owner_id != current_user.id and current_user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Faqat listing egasi premiumga ko'tara oladi")
 
     premium_expires_at = datetime.now(timezone.utc) + timedelta(days=30)
-    await db.execute(
-        update(Listing)
-        .where(Listing.id == listing.id)
-        .values(is_premium=True, is_active=True, premium_expires_at=premium_expires_at)
-    )
-    db.add(
+    await update_listings.upgrade_to_premium(db, listing.id, premium_expires_at)
+    await insert_listings.create_listing_payment(
+        db,
         ListingPayment(
             listing_id=listing.id,
             user_id=current_user.id,
             amount=_get_listing_fee(current_user.role, True),
             type=ListingPaymentType.premium,
             status=ListingPaymentStatus.pending,
-        )
+        ),
     )
     await db.commit()
     return UpgradeToPremiumResponse(premium_expires_at=premium_expires_at)
@@ -595,15 +449,13 @@ async def mark_listing_occupied(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ActivateListingResponse:
-    listing = await db.scalar(select(Listing).where(Listing.id == listing_id))
+    listing = await select_listings.get_by_id(db, _parse_listing_id(listing_id))
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing topilmadi")
     if listing.owner_id != current_user.id and current_user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Faqat listing egasi holatni o'zgartira oladi")
 
-    listing.available_spaces = 0
-    listing.is_active = False
-    await db.commit()
+    await update_listings.mark_occupied(db, listing)
     return ActivateListingResponse(message="Listing band qilindi")
 
 
@@ -613,13 +465,11 @@ async def mark_listing_available(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ActivateListingResponse:
-    listing = await db.scalar(select(Listing).where(Listing.id == listing_id))
+    listing = await select_listings.get_by_id(db, _parse_listing_id(listing_id))
     if listing is None:
         raise HTTPException(status_code=404, detail="Listing topilmadi")
     if listing.owner_id != current_user.id and current_user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Faqat listing egasi holatni o'zgartira oladi")
 
-    listing.available_spaces = max(1, listing.max_guests)
-    listing.is_active = True
-    await db.commit()
+    await update_listings.mark_available(db, listing)
     return ActivateListingResponse(message="Listing yana bo'sh qilindi")

@@ -1,8 +1,6 @@
 .makler-payments {
   min-height: 100vh;
-  background:
-    linear-gradient(180deg, rgba(20, 184, 166, 0.07), transparent 270px),
-    transparent;
+  background: var(--color-surface);
   color: var(--color-text);
   padding: 32px 18px 56px;
 
@@ -30,7 +28,6 @@
     background: var(--bg-card);
     color: var(--color-text);
     cursor: pointer;
-    transition: all 0.2s;
 
     &:hover {
       background: var(--glass-bg);
@@ -91,7 +88,6 @@
   color: var(--color-muted);
 
   .spinner {
-    animation: spin 1s linear infinite;
   }
 
   p {
@@ -123,11 +119,10 @@
   border-radius: 8px;
   background: var(--bg-card);
   overflow: hidden;
-  transition: all 0.2s;
 
   &:hover {
     border-color: var(--glass-border-hover);
-    box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
   }
 }
 
@@ -262,7 +257,6 @@
   background: var(--bg-input);
   color: var(--color-text);
   cursor: pointer;
-  transition: all 0.2s;
 
   &:hover {
     background: var(--glass-bg);
@@ -319,7 +313,7 @@
     &:focus {
       outline: none;
       border-color: var(--color-primary-light);
-      box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.1);
+  border: 1px solid var(--color-border);
     }
   }
 }
@@ -338,7 +332,6 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
 
   &.btn-primary {
     background: var(--color-primary-light);
@@ -372,7 +365,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -387,7 +380,7 @@
   padding: 32px;
   max-width: 400px;
   width: 100%;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-border);
 
   h2 {
     margin: 0 0 12px;

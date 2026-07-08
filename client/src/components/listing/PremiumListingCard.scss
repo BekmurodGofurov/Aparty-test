@@ -14,25 +14,21 @@
   // SOLID BACKGROUND (Ensures icons don't bleed through text/images)
   [data-theme="dark"] & {
     background: #0B1020 !important; // Deep navy solid
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--color-border);
   }
   
   border:        1px solid var(--glass-border);
-  backdrop-filter: none !important;
-  box-shadow:    var(--shadow-sm);
-  transition:    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-                 box-shadow 0.5s ease,
-                 border-color 0.3s ease;
+  border: 1px solid var(--color-border);
   position:      relative;
   cursor:        pointer;
 
   [data-theme="light"] & {
     background: #ffffff;
     border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--color-border);
     
     &:hover {
-      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--color-border);
       border-color: rgba(0, 0, 0, 0.12);
     }
   }
@@ -47,12 +43,11 @@
     pointer-events: none;
     z-index:    0;
     opacity:    0;
-    transition: opacity 0.3s ease;
   }
 
   &:hover {
     transform:    translateY(-5px);
-    box-shadow:   var(--shadow-card-hover);
+  border: 1px solid var(--color-border);
     border-color: var(--glass-border-hover);
 
     &::before { opacity: 1; }
@@ -78,7 +73,6 @@
     width:      100%;
     height:     100%;
     object-fit: cover;
-    transition: transform 0.78s cubic-bezier(0.16, 1, 0.3, 1);
     display:    block;
   }
 
@@ -92,7 +86,6 @@
     z-index:         5;
     opacity:         0;
     pointer-events:  none;
-    transition:      opacity 0.36s ease;
 
     .overlay-btn {
       @include glass-base;
@@ -101,7 +94,6 @@
       font-size:     0.82rem;
       border-radius: $radius-sm;
       color:         #fff;
-      backdrop-filter: none;
 
       &:hover { background: rgba(255, 255, 255, 0.15); }
     }
@@ -135,11 +127,6 @@
     background:      rgba(5, 9, 26, 0.36);
     border:          1px solid rgba(255, 255, 255, 0.10);
     color:           rgba(255, 255, 255, 0.85);
-    backdrop-filter: none;
-    transition:      color 0.28s ease,
-                     background 0.28s ease,
-                     border-color 0.28s ease,
-                     transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
     z-index:         11;
 
     [data-theme="light"] & {
@@ -257,11 +244,10 @@
     border-radius: $radius-md;
     background:    var(--gradient-primary);
     color:         #fff;
-    box-shadow:    var(--shadow-btn-primary);
-    transition:    transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
-                   box-shadow 0.34s ease;
+  border: 1px solid var(--color-border);
     flex-shrink:   0;
 
-    &:hover { box-shadow: var(--shadow-btn-hover); }
+    &:hover {  border: 1px solid var(--color-border);
+}
   }
 }

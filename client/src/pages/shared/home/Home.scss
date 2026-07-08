@@ -21,7 +21,7 @@
     top: -100px; left: 50%;
     transform: translateX(-50%);
     width: 800px; height: 400px;
-    background: radial-gradient(ellipse, rgba(22,139,255,0.09) 0%, transparent 70%);
+    background: transparent;
     pointer-events: none;
   }
 }
@@ -59,7 +59,6 @@
   background: var(--glass-hover);
   border: 1px solid var(--glass-border);
   color: var(--color-muted);
-  transition: all 0.2s;
 
   &:hover { border-color: rgba(22,139,255,0.3); color: var(--color-text); }
 }
@@ -108,10 +107,9 @@
 .hero-glow {
   position: absolute;
   inset: -30px;
-  background: radial-gradient(circle at 50% 50%, rgba(22,139,255,0.08) 0%, transparent 70%);
+  background: transparent;
   pointer-events: none;
   border-radius: 50%;
-  animation: none;
 }
 
 @keyframes glowPulse {
@@ -127,8 +125,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  box-shadow: var(--glass-shadow);
-  transition: transform 0.3s ease, border-color 0.3s ease;
+  border: 1px solid var(--color-border);
   cursor: default;
 
   &:hover {
@@ -138,7 +135,7 @@
 
   &--1,
   &--2,
-  &--3 { animation: none; }
+  &--3 {}
 
   .stat-icon   { font-size: 1.4rem; }
   .stat-number { font-size: 1.5rem; font-weight: 800; color: var(--color-text); letter-spacing: -0.03em; }
@@ -180,7 +177,6 @@
   color: var(--color-primary);
   white-space: nowrap;
   padding-top: 0.2rem;
-  transition: opacity 0.2s;
 
   &:hover { opacity: 0.75; }
 }
@@ -234,7 +230,7 @@
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: $radius-lg;
-  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--color-border);
 
   .how-num {
     position: absolute;
@@ -272,13 +268,13 @@ html[data-theme="light"] .stat-float,
 html[data-theme="light"] .trust-badge {
   background: transparent !important;
   border: 0 !important;
-  box-shadow: none !important;
+  border: 1px solid var(--color-border);
 }
 
 html[data-theme="light"] .horizontal-cards > *,
 html[data-theme="light"] .listings-grid > * {
   background: transparent !important;
-  box-shadow: none !important;
+  border: 1px solid var(--color-border);
   border: 0 !important;
 }
 
@@ -303,12 +299,11 @@ html[data-theme="light"] .listings-grid > * {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: $radius-lg;
-  box-shadow: var(--glass-shadow);
-  transition: all 0.35s ease;
+  border: 1px solid var(--color-border);
 
   &:hover {
     border-color: var(--role-color, rgba(22,139,255,0.4));
-    box-shadow: 0 0 30px rgba(22,139,255,0.06);
+  border: 1px solid var(--color-border);
     transform: translateY(-4px);
   }
 
@@ -339,7 +334,6 @@ html[data-theme="light"] .listings-grid > * {
     font-weight: 600;
     color: var(--role-color, var(--color-primary));
     margin-top: 0.5rem;
-    transition: gap 0.2s;
 
     &:hover { gap: 8px; }
   }
@@ -360,7 +354,7 @@ html[data-theme="light"] .listings-grid > * {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: $radius-lg;
-  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--color-border);
   padding: 2.5rem;
 
   @include tablet {
@@ -377,7 +371,7 @@ html[data-theme="light"] .listings-grid > * {
     font-size: 2rem;
     font-weight: 800;
     letter-spacing: -0.04em;
-    background: linear-gradient(135deg, #168BFF, #00D4FF);
+  background: var(--color-surface);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -412,7 +406,7 @@ html[data-theme="light"] .listings-grid > * {
   gap: 2rem;
   padding: 3rem;
   border-radius: $radius-lg;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(147, 51, 234, 0.1) 100%);
+  background: var(--color-surface);
   border: 1px solid rgba(147, 51, 234, 0.2);
   align-items: center;
 
@@ -481,7 +475,6 @@ html[data-theme="light"] .listings-grid > * {
       display: flex;
       align-items: center;
       justify-content: center;
-      animation: none;
     }
   }
 }
@@ -509,7 +502,6 @@ html[data-theme="light"] .listings-grid > * {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: $radius-lg;
-  transition: all 0.3s;
 
   &:hover {
     transform: translateY(-4px);

@@ -10,7 +10,6 @@
   pointer-events: none;
   overflow: hidden;
   background: var(--bg-app);
-  transition: background 0.6s ease;
   contain: layout paint style;
 
   .mesh-layer {
@@ -32,17 +31,17 @@
 
       &.blob-1 {
         width: 48vw; height: 48vw;
-        background: radial-gradient(circle, var(--blob-primary), transparent 70%);
+        background: transparent;
         top: -20%; right: -10%;
       }
       &.blob-2 {
         width: 42vw; height: 42vw;
-        background: radial-gradient(circle, var(--blob-secondary), transparent 70%);
+        background: transparent;
         bottom: -10%; left: -10%;
       }
       &.blob-3 {
         width: 34vw; height: 34vw;
-        background: radial-gradient(circle, var(--blob-tertiary), transparent 70%);
+        background: transparent;
         top: 20%; left: 10%;
       }
     }

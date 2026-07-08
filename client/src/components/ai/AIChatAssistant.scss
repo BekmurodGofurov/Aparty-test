@@ -31,14 +31,13 @@
   height: 56px;
   padding: 0 1.5rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, #0ea5e9, #8b5cf6) !important;
+  background: var(--color-surface);
   color: #fff;
   display: flex;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.4);
+  border: 1px solid var(--color-border);
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   overflow: hidden;
 
@@ -52,20 +51,19 @@
   .btn-glow-effect {
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%);
+    background: transparent;
     opacity: 0;
-    transition: opacity 0.3s;
   }
 
   &:hover {
     transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 15px 40px rgba(14, 165, 233, 0.5);
+  border: 1px solid var(--color-border);
     .btn-glow-effect { opacity: 1; }
   }
 
   [data-theme="light"] & {
-    background: linear-gradient(135deg, #f59e0b, #ea580c) !important;
-    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   }
 
   svg { flex-shrink: 0; }
@@ -78,17 +76,10 @@
   right: 0; // Aligned to RIGHT
   width: 380px;
   height: 560px;
-  background:
-    linear-gradient(160deg, rgba(15, 23, 42, 0.96), rgba(2, 8, 23, 0.9)),
-    radial-gradient(circle at 18% 0%, rgba(14, 165, 233, 0.18), transparent 34%) !important;
-  backdrop-filter: blur(28px) saturate(1.24);
-  -webkit-backdrop-filter: blur(28px) saturate(1.24);
+  background: var(--color-surface);
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow:
-    0 34px 90px rgba(0, 0, 0, 0.52),
-    0 0 0 1px rgba(125, 211, 252, 0.06),
-    inset 0 1px 0 rgba(255,255,255,0.18);
+  border: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -99,9 +90,7 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background:
-      linear-gradient(120deg, rgba(255,255,255,0.12), transparent 32%),
-      radial-gradient(circle at 88% 12%, rgba(124, 58, 237, 0.18), transparent 28%);
+  background: var(--color-surface);
     opacity: 0.72;
   }
 
@@ -166,13 +155,9 @@
   }
 
   [data-theme="light"] & {
-    background:
-      linear-gradient(160deg, rgba(255,255,255,0.96), rgba(255, 247, 237, 0.9)),
-      radial-gradient(circle at 12% 0%, rgba(245, 158, 11, 0.14), transparent 36%) !important;
+  background: var(--color-surface);
     border-color: rgba(180, 83, 9, 0.14);
-    box-shadow:
-      0 25px 65px rgba(120, 53, 15, 0.16),
-      inset 0 1px 0 rgba(255,255,255,0.9);
+  border: 1px solid var(--color-border);
   }
 
   @include tablet {
@@ -199,7 +184,7 @@
     justify-content: space-between;
 
     [data-theme="light"] & {
-      background: rgba(0, 0, 0, 0.02);
+      background: transparent;
       border-bottom-color: #f1f5f9;
     }
 
@@ -210,10 +195,10 @@
 
       .avatar {
         width: 42px; height: 42px; border-radius: 14px;
-        background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  background: var(--color-surface);
         display: flex; align-items: center; justify-content: center;
         color: #fff;
-        box-shadow: 0 12px 30px rgba(14,165,233,0.34);
+  border: 1px solid var(--color-border);
       }
       
       .status-dot {
@@ -226,7 +211,8 @@
       
       [data-theme="light"] & {
         h3 { color: #0f172a; }
-        .avatar { background: linear-gradient(135deg, #f59e0b, #ea580c); }
+        .avatar {  background: var(--color-surface);
+}
         .status-dot { border-color: #fff; }
       }
     }
@@ -244,7 +230,6 @@
       display: flex; align-items: center; justify-content: center;
       color: #94a3b8;
       border: 1px solid rgba(255,255,255,0.08);
-      transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
       &:hover { background: rgba(255,255,255,0.1); color: #fff; transform: translateY(-1px); border-color: rgba(255,255,255,0.18); }
 
       [data-theme="light"] & {
@@ -286,7 +271,7 @@
         border-radius: 18px;
         font-size: 0.9rem;
         line-height: 1.5;
-        box-shadow: 0 10px 24px rgba(2, 6, 23, 0.12);
+  border: 1px solid var(--color-border);
 
         &.has-listings {
           width: min(280px, 100%);
@@ -294,18 +279,18 @@
       }
 
       &.ai .message-bubble {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(125, 211, 252, 0.045));
+  background: var(--color-surface);
         color: #e2e8f0;
         border: 1px solid rgba(148, 163, 184, 0.12);
         border-top-left-radius: 2px;
       }
 
       &.user .message-bubble {
-        background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  background: var(--color-surface);
         color: #fff;
         font-weight: 500;
         border-top-right-radius: 2px;
-        box-shadow: 0 14px 34px rgba(14, 165, 233, 0.26);
+  border: 1px solid var(--color-border);
       }
 
       [data-theme="light"] & {
@@ -333,19 +318,17 @@
       display: block;
       padding: 12px;
       border-radius: 16px;
-      background:
-        linear-gradient(145deg, rgba(15, 23, 42, 0.82), rgba(30, 41, 59, 0.66));
+  background: var(--color-surface);
       border: 1px solid rgba(125, 211, 252, 0.2);
       color: inherit;
       text-decoration: none;
-      box-shadow: 0 14px 30px rgba(2, 6, 23, 0.18);
-      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  border: 1px solid var(--color-border);
 
       &:hover {
         transform: translateY(-3px);
         border-color: rgba(14, 165, 233, 0.75);
-        background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(14, 116, 144, 0.42));
-        box-shadow: 0 18px 42px rgba(14, 165, 233, 0.14);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
       }
 
       .listing-card-top {
@@ -436,7 +419,7 @@
       [data-theme="light"] & {
         background: #ffffff;
         border-color: #e2e8f0;
-        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+  border: 1px solid var(--color-border);
 
         &:hover {
           background: #f8fafc;
@@ -489,7 +472,6 @@
       color: #7dd3fc;
       font-size: 0.78rem;
       font-weight: 700;
-      transition: all 0.2s;
 
       &:hover { 
         background: rgba(14, 165, 233, 0.2); 
@@ -524,7 +506,6 @@
       color: #fff;
       font-size: 0.9rem;
       outline: none;
-      transition: border-color 0.2s;
       &:focus { border-color: #0ea5e9; }
       
       [data-theme="light"] & {
@@ -538,11 +519,10 @@
     .send-btn {
       @include btn-reset;
       width: 44px; height: 44px;
-      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  background: var(--color-surface);
       color: #fff;
       border-radius: 16px;
       display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
       &:disabled { opacity: 0.5; cursor: not-allowed; }
       &:not(:disabled):hover { 
         background: #ea580c; 
@@ -563,7 +543,6 @@
   gap: 4px;
   span {
     width: 6px; height: 6px; background: #94a3b8; border-radius: 50%;
-    animation: typing-bounce 1s infinite;
     &:nth-child(2) { animation-delay: 0.2s; }
     &:nth-child(3) { animation-delay: 0.4s; }
   }
@@ -593,9 +572,9 @@
       box-sizing: border-box;
       padding: 18px;
       border-radius: 20px;
-      background: rgba(15, 23, 42, 0.06);
+      background: transparent;
       border: 1px solid rgba(148, 163, 184, 0.18);
-      box-shadow: 0 22px 50px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--color-border);
 
       > div:first-child {
         max-width: 720px;
@@ -618,14 +597,14 @@
     min-height: 176px;
     padding: 16px;
     border-radius: 16px;
-    background: rgba(15, 23, 42, 0.78);
+    background: transparent;
     border-color: rgba(125, 211, 252, 0.24);
-    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.14);
+  border: 1px solid var(--color-border);
 
     &:hover {
       transform: translateY(-3px);
       border-color: rgba(14, 165, 233, 0.85);
-      box-shadow: 0 20px 42px rgba(14, 165, 233, 0.14);
+  border: 1px solid var(--color-border);
     }
 
     .listing-price {
@@ -646,7 +625,7 @@
     .message-row.has-listings-row .message-bubble.has-listings {
       background: rgba(248, 250, 252, 0.92);
       border-color: #dbeafe;
-      box-shadow: 0 22px 50px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--color-border);
 
       > div:first-child {
         color: #1e293b;
@@ -656,11 +635,11 @@
     .chat-messages .ai-listing-card {
       background: #ffffff;
       border-color: #dbeafe;
-      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--color-border);
 
       &:hover {
         border-color: #38bdf8;
-        box-shadow: 0 20px 42px rgba(14, 165, 233, 0.16);
+  border: 1px solid var(--color-border);
       }
     }
   }

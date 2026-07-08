@@ -20,7 +20,7 @@
     border: 1px solid var(--glass-border);
     background: var(--glass-bg-mid);
     border-radius: 8px;
-    box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
   }
 
   .admin-hero {
@@ -103,7 +103,6 @@
     padding: 0.65rem 0.95rem;
     font-weight: 800;
     cursor: pointer;
-    transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
 
     &:hover {
       border-color: var(--glass-border-hover);

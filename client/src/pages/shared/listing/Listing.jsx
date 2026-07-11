@@ -35,7 +35,7 @@ import { favoritesService } from '../../../services/favoritesService'
 import { useAuthStore } from '../../../store/authStore'
 import { ListingMap } from '../../../components/listing/ListingMap'
 import { ReviewSection } from '../../../components/listing/ReviewSection'
-import { ListingSkeleton } from '../../../components/ui/ListingSkeleton'
+import { ListingDetailSkeleton } from '../../../components/ui/ListingDetailSkeleton.jsx'
 import './Listing.scss'
 
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&q=82'
@@ -103,7 +103,7 @@ export function Listing() {
     ['kir_mashina', t('search.washer'), <WashingMachine size={19} />],
   ]), [t])
 
-  if (loading) return <ListingSkeleton />
+  if (loading) return <ListingDetailSkeleton />
 
   if (error || !listing) {
     return (

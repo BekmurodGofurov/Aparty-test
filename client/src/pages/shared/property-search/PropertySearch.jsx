@@ -6,7 +6,7 @@ import { SlidersHorizontal } from 'lucide-react'
 import { ListingCard } from '../../../components/ListingCard/ListingCard.jsx'
 import { FilterPanel } from '../../../components/search/FilterPanel'
 import { EmptyState } from '../../../components/ui/EmptyState'
-import { SkeletonCard } from '../../../components/ui/SkeletonCard'
+import { ListingCardSkeleton } from '../../../components/ui/ListingCardSkeleton.jsx'
 import { useListingStore } from '../../../store/listingStore'
 import './PropertySearch.scss'
 
@@ -136,20 +136,20 @@ export function PropertySearch() {
       </AnimatePresence>
 
       <section className="results-area">
-
-
-        <div className="results-top">
-          <p>
-            <span className="results-count-num">{total || results.length}</span>
-            {' '}{t('search.results')}
-          </p>
-          <div className="mono">{t('search.premium_top')}</div>
-        </div>
         {loading && (
           <div className="listings-grid">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <SkeletonCard key={i} />
+              <ListingCardSkeleton key={i} />
             ))}
+          </div>
+        )}
+        {!loading && (
+          <div className="results-top">
+            <p>
+              <span className="results-count-num">{total || results.length}</span>
+              {' '}{t('search.results')}
+            </p>
+            <div className="mono">{t('search.premium_top')}</div>
           </div>
         )}
         {!loading && error && (
@@ -178,14 +178,18 @@ export function PropertySearch() {
             }}
           />
         )}
-        <div className="listings-grid">
-          {results.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
-          ))}
-        </div>
-        <div className="pagination-wrap">
-          <button className="button-secondary" type="button" onClick={() => void fetchResults(1)}>{t('search.show_10')}</button>
-        </div>
+        {!loading && (
+          <div className="listings-grid">
+            {results.map((listing) => (
+              <ListingCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        )}
+        {!loading && (
+          <div className="pagination-wrap">
+            <button className="button-secondary" type="button" onClick={() => void fetchResults(1)}>{t('search.show_10')}</button>
+          </div>
+        )}
 
         {/* Bottom count summary */}
         {!loading && results.length > 0 && (

@@ -57,6 +57,12 @@ export function MapPage() {
         setProperties(data)
         setSelectedProperty(current => current && !data.some(item => item.id === current.id) ? null : current)
       })
+      .catch(error => {
+        console.error('Map listings load failed:', error)
+        if (!active) return
+        setProperties([])
+        setSelectedProperty(null)
+      })
       .finally(() => active && setLoading(false))
 
     return () => { active = false }

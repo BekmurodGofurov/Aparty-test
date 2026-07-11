@@ -30,6 +30,7 @@ import {
   X,
 } from 'lucide-react'
 import { createRentalRequest, getListingById } from '../../../services/listingService'
+import { adaptListing } from '../../../utils/adaptListing'
 import { favoritesService } from '../../../services/favoritesService'
 import { useAuthStore } from '../../../store/authStore'
 import { ListingMap } from '../../../components/listing/ListingMap'
@@ -57,68 +58,33 @@ export function Listing() {
 
   useEffect(() => {
     if (!id) return
-
     let cancelled = false
     setLoading(true)
     setError(null)
     setListing(null)
     setActiveImage(0)
-
     void getListingById(id)
-      .then((data) => {
-        if (cancelled) return
-        setListing(data)
-      })
-      .catch((err) => {
-        if (cancelled) return
-        const status = err?.response?.status
-        setError(status === 404 || status === 422 ? 'not_found' : 'load_failed')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
+      .then((data) => { if (cancelled) return; setListing(adaptListing(data)) })
+      .catch((err) => { if (cancelled) return; const status = err?.response?.status; setError(status === 404 || status === 422 ? 'not_found' : 'load_failed') })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [id])
 
   useEffect(() => {
-    if (!id || !accessToken) {
-      setSaved(false)
-      return
-    }
-
+    if (!id || !accessToken) { setSaved(false); return }
     let active = true
     void favoritesService.getMyFavorites()
-      .then((items) => {
-        if (active) setSaved(Array.isArray(items) && items.some((item) => String(item.id) === String(id)))
-      })
-      .catch(() => {
-        if (active) setSaved(false)
-      })
-
-    return () => {
-      active = false
-    }
+      .then((items) => { if (active) setSaved(Array.isArray(items) && items.some((item) => String(item.id) === String(id))) })
+      .catch(() => { if (active) setSaved(false) })
+    return () => { active = false }
   }, [accessToken, id])
 
   useEffect(() => {
     if (!previewOpen) return undefined
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        setPreviewOpen(false)
-      }
-    }
-
+    const handleKeyDown = (event) => { if (event.key === 'Escape') setPreviewOpen(false) }
     document.body.classList.add('listing-preview-lock')
     window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      document.body.classList.remove('listing-preview-lock')
-      window.removeEventListener('keydown', handleKeyDown)
-    }
+    return () => { document.body.classList.remove('listing-preview-lock'); window.removeEventListener('keydown', handleKeyDown) }
   }, [previewOpen])
 
   const images = useMemo(() => {
@@ -137,9 +103,7 @@ export function Listing() {
     ['kir_mashina', t('search.washer'), <WashingMachine size={19} />],
   ]), [t])
 
-  if (loading) {
-    return <ListingSkeleton />
-  }
+  if (loading) return <ListingSkeleton />
 
   if (error || !listing) {
     return (
@@ -147,11 +111,11 @@ export function Listing() {
         <section className="listing-error-card">
           <span className="listing-error-icon"><Home size={28} /></span>
           <span className="eyebrow">{t('listing.not_found_label', 'Listing')}</span>
-          <h1>{t('listing.not_found_title', 'E’lon topilmadi')}</h1>
+          <h1>{t('listing.not_found_title', 'E\u2019lon topilmadi')}</h1>
           <p>
             {error === 'not_found'
-              ? t('listing.not_found_desc', 'Bu e’lon o‘chirilgan, aktiv emas yoki havola eskirgan bo‘lishi mumkin.')
-              : t('listing.load_failed_desc', 'E’lonni yuklashda xatolik bo‘ldi. Backend ishga tushganini tekshiring.')}
+              ? t('listing.not_found_desc', 'Bu e\u2019lon o\u2018chirilgan, aktiv emas yoki havola eskirgan bo\u2018lishi mumkin.')
+              : t('listing.load_failed_desc', 'E\u2019lonni yuklashda xatolik bo\u2018ldi. Backend ishga tushganini tekshiring.')}
           </p>
           <div className="listing-error-actions">
             <Link to="/search" className="booking-primary">{t('home.view_all', "Barcha e'lonlar")}</Link>
@@ -174,74 +138,41 @@ export function Listing() {
     price: Math.max(Number(listing.narx_usd || 0) - index * 35, 0),
   }))
 
-  const nextImage = () => setActiveImage((value) => (value + 1) % images.length)
-  const prevImage = () => setActiveImage((value) => (value - 1 + images.length) % images.length)
-  const handleGalleryNav = (event, action) => {
-    event.stopPropagation()
-    action()
-  }
+  const nextImage = () => setActiveImage((v) => (v + 1) % images.length)
+  const prevImage = () => setActiveImage((v) => (v - 1 + images.length) % images.length)
+  const handleGalleryNav = (event, action) => { event.stopPropagation(); action() }
+
   const handleBookingRequest = async () => {
-    if (!accessToken) {
-      setRequestStatus('Avval tizimga kiring, keyin band qilish so\'rovini yuborasiz.')
-      return
-    }
-
+    if (!accessToken) { setRequestStatus("Avval tizimga kiring, keyin band qilish so'rovini yuborasiz."); return }
     try {
-      setRequestLoading(true)
-      setRequestStatus('')
-      await createRentalRequest({
-        listing_id: listing.id,
-        message: requestMessage || `Salom, ${title} bo'yicha kelishmoqchiman.`,
-      })
-      setRequestStatus('So\'rov yuborildi. Egasi yoki broker dashboardida ko\'radi.')
+      setRequestLoading(true); setRequestStatus('')
+      await createRentalRequest({ listing_id: listing.id, message: requestMessage || `Salom, ${title} bo'yicha kelishmoqchiman.` })
+      setRequestStatus("So'rov yuborildi. Egasi yoki broker dashboardida ko'radi.")
       setRequestMessage('')
-    } catch (error) {
-      setRequestStatus(error.response?.data?.detail || 'So\'rov yuborishda xatolik bo\'ldi.')
-    } finally {
-      setRequestLoading(false)
-    }
+    } catch (err) {
+      setRequestStatus(err.response?.data?.detail || "So'rov yuborishda xatolik bo'ldi.")
+    } finally { setRequestLoading(false) }
   }
-  const handleSave = async () => {
-    if (!accessToken) {
-      navigate('/login')
-      return
-    }
 
-    const previous = saved
-    setSaved(!previous)
-    try {
-      const result = await favoritesService.toggleFavorite(listing.id)
-      setSaved(result.status === 'added')
-    } catch (error) {
-      setSaved(previous)
-      setRequestStatus(error.response?.data?.detail || 'Saqlashda xatolik bo\'ldi.')
-    }
+  const handleSave = async () => {
+    if (!accessToken) { navigate('/login'); return }
+    const previous = saved; setSaved(!previous)
+    try { const result = await favoritesService.toggleFavorite(listing.id); setSaved(result.status === 'added') }
+    catch (err) { setSaved(previous); setRequestStatus(err.response?.data?.detail || "Saqlashda xatolik bo'ldi.") }
   }
 
   const handleTelegramContact = async () => {
-    if (ownerTelegramLink) {
-      window.location.assign(ownerTelegramLink)
-      return
-    }
-
-    if (!accessToken) {
-      navigate('/login')
-      return
-    }
-
+    if (ownerTelegramLink) { window.location.assign(ownerTelegramLink); return }
+    if (!accessToken) { navigate('/login'); return }
     try {
       setRequestLoading(true)
-      const request = await createRentalRequest({
-        listing_id: listing.id,
-        message: requestMessage || `Salom, ${title} bo'yicha Telegram o'rniga shu chatda bog'lanmoqchiman.`,
-      })
+      const request = await createRentalRequest({ listing_id: listing.id, message: requestMessage || `Salom, ${title} bo'yicha Telegram o'rniga shu chatda bog'lanmoqchiman.` })
       navigate(`/messages?request=${request.id}`)
-    } catch (error) {
-      setRequestStatus(error.response?.data?.detail || 'Chat ochishda xatolik bo\'ldi.')
-    } finally {
-      setRequestLoading(false)
-    }
+    } catch (err) {
+      setRequestStatus(err.response?.data?.detail || "Chat ochishda xatolik bo'ldi.")
+    } finally { setRequestLoading(false) }
   }
+
   const ownerPhoneLink = listing.egasi_telefon ? `tel:${String(listing.egasi_telefon).replace(/\s/g, '')}` : null
   const ownerTelegramId = Number(listing.egasi_telegram_id)
   const hasLikelyTelegramId = Number.isFinite(ownerTelegramId) && ownerTelegramId >= 10000 && ownerTelegramId < 10000000000
@@ -249,214 +180,195 @@ export function Listing() {
 
   return (
     <main className="listing-page">
-      <section className="listing-hero-shell">
-        <motion.div
-          className="listing-gallery"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <div className="gallery-main">
-            <button
-              type="button"
-              className="gallery-image-button"
-              onClick={() => setPreviewOpen(true)}
-              aria-label={t('listing.open_gallery')}
+
+      {/*
+       * ═══════════════════════════════════════════════════════════════════
+       *  OUTER 2-COL LAYOUT
+       *  Left  (.listing-left)  — gallery (main + 2 thumbs) + detail panels
+       *  Right (.right-col)     — booking card, position:sticky
+       *  Both inside .listing-two-col  →  sticky stops when this div ends.
+       *  O'xshash e'lonlar is OUTSIDE this wrapper → sticky releases there.
+       * ═══════════════════════════════════════════════════════════════════
+       */}
+      <div className="listing-two-col">
+
+        {/* ───── LEFT COLUMN ───── */}
+        <div className="listing-left">
+
+          {/* Gallery: main image + 2 thumbnails */}
+          <section className="listing-hero-shell">
+            <motion.div
+              className="listing-gallery"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="gallery-image-backdrop" style={{ backgroundImage: `url(${activeSrc})` }} />
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={activeSrc}
-                  src={activeSrc}
-                  alt={listing.manzil || 'Listing'}
-                  initial={{ opacity: 0, scale: 1.03 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                  onError={(event) => { event.currentTarget.src = FALLBACK_IMG }}
-                />
-              </AnimatePresence>
-              <span className="image-open-hint">
-                <Maximize2 size={14} />
-                {t('listing.view')}
-              </span>
-            </button>
+              {/* Main image */}
+              <div className="gallery-main">
+                <button
+                  type="button"
+                  className="gallery-image-button"
+                  onClick={() => setPreviewOpen(true)}
+                  aria-label={t('listing.open_gallery')}
+                >
+                  <span className="gallery-image-backdrop" style={{ backgroundImage: `url(${activeSrc})` }} />
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={activeSrc}
+                      src={activeSrc}
+                      alt={listing.manzil || 'Listing'}
+                      initial={{ opacity: 0, scale: 1.03 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                      onError={(e) => { e.currentTarget.src = FALLBACK_IMG }}
+                    />
+                  </AnimatePresence>
+                  <span className="image-open-hint">
+                    <Maximize2 size={14} />
+                    {t('listing.view')}
+                  </span>
+                </button>
 
-            <div className="gallery-gradient" />
-            <div className="gallery-topbar">
-              <div className="hero-chips">
-                {listing.premium && (
-                  <span className="hero-chip premium"><Sparkles size={13} /> {t('listing.premium')}</span>
+                <div className="gallery-gradient" />
+
+                <div className="gallery-topbar">
+                  <div className="hero-chips">
+                    {listing.premium && (
+                      <span className="hero-chip premium"><Sparkles size={13} /> {t('listing.premium')}</span>
+                    )}
+                    <span className="hero-chip"><Star size={13} fill="currentColor" /> {rating}</span>
+                    <span className="hero-chip">{t('listing.new')}</span>
+                  </div>
+                  <div className="hero-actions">
+                    <button type="button" aria-label={t('listing.share')}><Share2 size={16} /></button>
+                    <button type="button" onClick={handleSave} className={saved ? 'saved' : ''}>
+                      <Heart size={16} fill={saved ? 'currentColor' : 'none'} />
+                    </button>
+                    <button type="button" onClick={() => setPreviewOpen(true)}><Maximize2 size={16} /></button>
+                  </div>
+                </div>
+
+                {images.length > 1 && (
+                  <>
+                    <button className="listing-gallery-arrow listing-gallery-arrow--prev" type="button"
+                      onClick={(e) => handleGalleryNav(e, prevImage)} aria-label={t('listing.previous_image')}>
+                      <ChevronLeft size={22} />
+                    </button>
+                    <button className="listing-gallery-arrow listing-gallery-arrow--next" type="button"
+                      onClick={(e) => handleGalleryNav(e, nextImage)} aria-label={t('listing.next_image')}>
+                      <ChevronRight size={22} />
+                    </button>
+                  </>
                 )}
-                <span className="hero-chip"><Star size={13} fill="currentColor" /> {rating}</span>
-                <span className="hero-chip">{t('listing.new')}</span>
+
+                <div className="hero-copy">
+                  <span className="location-kicker"><MapPin size={14} /> {fullAddress}</span>
+                  <h1>{title}</h1>
+                  <p>
+                    {listing.dom_raqami ? `${t('listing.dom')} ${listing.dom_raqami}` : t('listing.street')}
+                    {listing.xona_raqami ? `, ${t('listing.room')} ${listing.xona_raqami}` : ''}
+                  </p>
+                </div>
               </div>
-              <div className="hero-actions">
-                <button type="button" aria-label={t('listing.share')}>
-                  <Share2 size={16} />
-                </button>
-                <button type="button" onClick={handleSave} className={saved ? 'saved' : ''}>
-                  <Heart size={16} fill={saved ? 'currentColor' : 'none'} />
-                </button>
-                <button type="button" onClick={() => setPreviewOpen(true)}>
-                  <Maximize2 size={16} />
-                </button>
+
+              {/* 2 thumbnails — right of main image, inside the same gallery box */}
+              <div className="gallery-thumbs">
+                {images.slice(0, 2).map((src, index) => (
+                  <motion.button
+                    key={`${src}-${index}`}
+                    type="button"
+                    className={activeImage === index ? 'active' : ''}
+                    onClick={(e) => { e.stopPropagation(); setActiveImage(index) }}
+                    whileHover={{ y: -3 }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={spring}
+                  >
+                    <img src={src} alt={`${index + 1}`} onError={(e) => { e.currentTarget.src = FALLBACK_IMG }} />
+                  </motion.button>
+                ))}
               </div>
-            </div>
+            </motion.div>
+          </section>
 
-            {images.length > 1 && (
-              <>
-                <button
-                  className="listing-gallery-arrow listing-gallery-arrow--prev"
-                  type="button"
-                  onClick={(event) => handleGalleryNav(event, prevImage)}
-                  aria-label={t('listing.previous_image')}
-                >
-                  <ChevronLeft size={22} />
-                </button>
-                <button
-                  className="listing-gallery-arrow listing-gallery-arrow--next"
-                  type="button"
-                  onClick={(event) => handleGalleryNav(event, nextImage)}
-                  aria-label={t('listing.next_image')}
-                >
-                  <ChevronRight size={22} />
-                </button>
-              </>
-            )}
+          {/* ── Detail panels (scrollable) ── */}
+          <div className="left-col">
 
-            <div className="hero-copy">
-              <span className="location-kicker"><MapPin size={14} /> {fullAddress}</span>
-              <h1>{title}</h1>
-              <p>
-                {listing.dom_raqami ? `${t('listing.dom')} ${listing.dom_raqami}` : t('listing.street')}
-                {listing.xona_raqami ? `, ${t('listing.room')} ${listing.xona_raqami}` : ''}
-              </p>
-            </div>
-          </div>
-
-          <div className="gallery-thumbs">
-            {images.slice(0, 2).map((src, index) => (
-              <motion.button
-                key={`${src}-${index}`}
-                type="button"
-                className={activeImage === index ? 'active' : ''}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  setActiveImage(index)
-                }}
-                whileHover={{ y: -3 }}
-                whileTap={{ scale: 0.96 }}
-                transition={spring}
-              >
-                <img src={src} alt={`${index + 1}`} onError={(e) => { e.currentTarget.src = FALLBACK_IMG }} />
-              </motion.button>
-            ))}
-          </div>
-        </motion.div>
-      </section>
-
-      <section className="listing-content-grid">
-        <div className="left-col">
-          <motion.section className="property-intro" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring}>
-            <div>
-              <span className="eyebrow">{t('listing.property_details')}</span>
-              <h2>{title}</h2>
-              <p><MapPin size={16} /> {fullAddress}</p>
-            </div>
-            <div className="intro-price">
-              <span>${listing.narx_usd}</span>
-              <small>/ {t('listing.per_month')}</small>
-            </div>
-          </motion.section>
-
-          <motion.section className="overview-panel" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring}>
-            <div className="overview-metrics">
-              <span><Home size={20} /> <strong>{listing.xonalar_soni}</strong><small>{t('listing.rooms_count')}</small></span>
-              <span><Users size={20} /> <strong>{listing.bosh_joy ?? '-'}</strong><small>{t('listing.free_spots')}</small></span>
-              <span><Building2 size={20} /> <strong>{listing.qavat ?? '-'}/{listing.jami_qavat ?? '-'}</strong><small>{t('listing.floor')}</small></span>
-              <span><Eye size={20} /> <strong>{listing.korishlar ?? 0}</strong><small>{t('listing.views')}</small></span>
-            </div>
-
-            <div className="address-card">
-              <MapPin size={20} />
-              <div>
-                <strong>{fullAddress}</strong>
-                <p>{t('listing.street')}: {listing.manzil ?? '-'} {listing.maydon_m2 ? `, ${listing.maydon_m2} m2` : ''}</p>
+            {/* Overview: xona, qavat, maydon, ko'rishlar */}
+            <motion.section className="overview-panel" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring}>
+              <div className="overview-metrics">
+                <span><Home size={20} /> <strong>{listing.xonalar_soni}</strong><small>{t('listing.rooms_count')}</small></span>
+                <span><Users size={20} /> <strong>{listing.bosh_joy ?? '-'}</strong><small>{t('listing.free_spots')}</small></span>
+                <span><Building2 size={20} /> <strong>{listing.qavat ?? '-'}/{listing.jami_qavat ?? '-'}</strong><small>{t('listing.floor')}</small></span>
+                <span><Eye size={20} /> <strong>{listing.korishlar ?? 0}</strong><small>{t('listing.views')}</small></span>
               </div>
-            </div>
-
-            {isSharedRoom && (
-              <div className="shared-note">
-                <Users size={18} />
-                <span>{t('listing.free_spots')}: {listing.bosh_joy} / {listing.max_kishi} {t('listing.people')}</span>
+              <div className="address-card">
+                <MapPin size={20} />
+                <div>
+                  <strong>{fullAddress}</strong>
+                  <p>{t('listing.street')}: {listing.manzil ?? '-'} {listing.maydon_m2 ? `, ${listing.maydon_m2} m2` : ''}</p>
+                </div>
               </div>
-            )}
-          </motion.section>
+              {isSharedRoom && (
+                <div className="shared-note">
+                  <Users size={18} />
+                  <span>{t('listing.free_spots')}: {listing.bosh_joy} / {listing.max_kishi} {t('listing.people')}</span>
+                </div>
+              )}
+            </motion.section>
 
-          <motion.section className="desc panel-card" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring}>
-            <div className="section-heading">
-              <span>{t('listing.overview')}</span>
-              <h2>{t('listing.description')}</h2>
-            </div>
-            <p>{listing.tavsif ?? t('listing.no_description')}</p>
-          </motion.section>
+            {/* Description */}
+            <motion.section className="desc panel-card" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring}>
+              <div className="section-heading">
+                <span>{t('listing.overview')}</span>
+                <h2>{t('listing.description')}</h2>
+              </div>
+              <p>{listing.tavsif ?? t('listing.no_description')}</p>
+            </motion.section>
 
-          <motion.section className="amenities-panel panel-card" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring}>
-            <div className="section-heading">
-              <span>{t('listing.comfort')}</span>
-              <h2>{t('listing.amenities') || t('search.amenities')}</h2>
-            </div>
-            <div className="amenities-grid">
-              {amenityRows.map(([key, label, icon]) => {
-                const active = Boolean(listing.qulayliklar?.[key])
-                return (
-                  <div key={key} className={`amenity-tile ${active ? 'active' : 'muted'}`}>
-                    <span>{icon}</span>
-                    <strong>{label}</strong>
-                    <small>{active ? t('listing.included') : t('listing.not_listed')}</small>
-                  </div>
-                )
-              })}
-            </div>
-          </motion.section>
+            {/* Amenities */}
+            <motion.section className="amenities-panel panel-card" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring}>
+              <div className="section-heading">
+                <span>{t('listing.comfort')}</span>
+                <h2>{t('listing.amenities') || t('search.amenities')}</h2>
+              </div>
+              <div className="amenities-grid">
+                {amenityRows.map(([key, label, icon]) => {
+                  const active = Boolean(listing.qulayliklar?.[key])
+                  return (
+                    <div key={key} className={`amenity-tile ${active ? 'active' : 'muted'}`}>
+                      <span>{icon}</span>
+                      <strong>{label}</strong>
+                      <small>{active ? t('listing.included') : t('listing.not_listed')}</small>
+                    </div>
+                  )
+                })}
+              </div>
+            </motion.section>
 
-          <motion.section className="location-section panel-card" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring}>
-            <div className="section-heading">
-              <span>{t('listing.location')}</span>
-              <h2>{t('listing.location')}</h2>
-            </div>
-            <ListingMap
-              lat={listing.latitude}
-              lng={listing.longitude}
-              address={listing.manzil}
-            />
-          </motion.section>
+            {/* Map */}
+            <motion.section className="location-section panel-card" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring}>
+              <div className="section-heading">
+                <span>{t('listing.location')}</span>
+                <h2>{t('listing.location')}</h2>
+              </div>
+              <ListingMap lat={listing.latitude} lng={listing.longitude} address={listing.manzil} />
+            </motion.section>
 
-          <ReviewSection listingId={listing.id} />
+            {/* Reviews */}
+            <ReviewSection listingId={listing.id} />
 
-          <motion.section className="similar-section" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring}>
-            <div className="section-heading">
-              <span>{t('listing.explore')}</span>
-              <h2>{t('listing.similar_listings')}</h2>
-            </div>
-            <div className="similar-grid">
-              {similarListings.map((item, index) => (
-                <article className="similar-card" key={`${item.src}-${index}`}>
-                  <img src={item.src} alt={item.title} />
-                  <div>
-                    <strong>{item.title}</strong>
-                    <small>{item.meta}</small>
-                    <span>${item.price} / oy</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </motion.section>
-        </div>
+          </div>{/* /left-col */}
+        </div>{/* /listing-left */}
 
+        {/* ───── RIGHT COLUMN: sticky booking card ───── */}
         <aside className="right-col">
-          <motion.div className="booking-card" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
+          <motion.div
+            className="booking-card sticky-booking"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={spring}
+          >
             <div className="booking-price">
               <span>${listing.narx_usd}</span>
               <small>/ {t('listing.per_month')}</small>
@@ -487,37 +399,59 @@ export function Listing() {
                 <textarea
                   className="booking-request-text"
                   value={requestMessage}
-                  onChange={(event) => setRequestMessage(event.target.value)}
+                  onChange={(e) => setRequestMessage(e.target.value)}
                   placeholder="Egasi yoki brokerga qisqa xabar..."
                   rows={3}
                 />
                 <button className="booking-primary" type="button" onClick={handleBookingRequest} disabled={requestLoading}>
                   <MessageCircle size={18} />
-                  {requestLoading ? 'Yuborilmoqda...' : 'Band qilish so\'rovi'}
+                  {requestLoading ? 'Yuborilmoqda...' : "Band qilish so'rovi"}
                 </button>
                 {requestStatus && <p className="booking-request-status">{requestStatus}</p>}
               </>
             )}
-            <button
-              className="booking-secondary"
-              type="button"
+            <button className="booking-secondary" type="button"
               onClick={() => ownerPhoneLink && window.location.assign(ownerPhoneLink)}
-              disabled={!ownerPhoneLink}
-            >
+              disabled={!ownerPhoneLink}>
               {t('listing.contact')}
             </button>
-            <button
-              className="booking-secondary"
-              type="button"
+            <button className="booking-secondary" type="button"
               onClick={handleTelegramContact}
-              disabled={requestLoading}
-            >
+              disabled={requestLoading}>
               {t('listing.telegram')}
             </button>
           </motion.div>
         </aside>
-      </section>
 
+      </div>{/* /listing-two-col  ← sticky releases here */}
+
+      {/* ══ O'xshash e'lonlar — 100% kenglik, sticky shu yerda to'xtaydi ══ */}
+      <motion.section
+        className="similar-section similar-section--full"
+        initial={{ opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={spring}
+      >
+        <div className="section-heading">
+          <span>{t('listing.explore')}</span>
+          <h2>{t('listing.similar_listings')}</h2>
+        </div>
+        <div className="similar-grid">
+          {similarListings.map((item, index) => (
+            <article className="similar-card" key={`${item.src}-${index}`}>
+              <img src={item.src} alt={item.title} />
+              <div>
+                <strong>{item.title}</strong>
+                <small>{item.meta}</small>
+                <span>${item.price} / oy</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* Fullscreen gallery preview */}
       <AnimatePresence>
         {previewOpen && (
           <motion.div
@@ -541,7 +475,7 @@ export function Listing() {
               </button>
             </div>
             {images.length > 1 && (
-              <button className="preview-nav left" type="button" onClick={(event) => { event.stopPropagation(); prevImage() }}>
+              <button className="preview-nav left" type="button" onClick={(e) => { e.stopPropagation(); prevImage() }}>
                 <ChevronLeft size={28} />
               </button>
             )}
@@ -553,10 +487,10 @@ export function Listing() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.35 }}
-              onClick={(event) => event.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             />
             {images.length > 1 && (
-              <button className="preview-nav right" type="button" onClick={(event) => { event.stopPropagation(); nextImage() }}>
+              <button className="preview-nav right" type="button" onClick={(e) => { e.stopPropagation(); nextImage() }}>
                 <ChevronRight size={28} />
               </button>
             )}

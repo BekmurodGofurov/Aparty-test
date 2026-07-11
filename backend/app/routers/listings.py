@@ -302,6 +302,8 @@ async def get_listing(
         "owner_id": listing.owner_id,
         "owner_full_name": owner.full_name,
         "owner_phone": owner.phone,
+        "owner_role": owner.role.value if owner.role else "owner",
+        "owner_verified": owner.is_verified,
         "region": listing.region,
         "district": listing.district,
         "address": listing.address,

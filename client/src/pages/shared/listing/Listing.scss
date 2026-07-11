@@ -56,11 +56,37 @@
   background: transparent;
 }
 
-.listing-hero-shell {
-  position: relative;
+/*
+ * OUTER 2-COL LAYOUT
+ * .listing-two-col  — grid: [left] [right sticky booking]
+ * sticky releases naturally when .listing-two-col ends
+ * (similar-section is placed AFTER this element)
+ */
+.listing-two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(310px, 400px);
+  gap: clamp(16px, 2.4vw, 28px);
+  align-items: start;
   width: min(100%, 1400px);
   margin-inline: auto;
-  margin: 0 0 clamp(16px, 2.4vw, 28px);
+  margin-bottom: clamp(24px, 3vw, 40px);
+
+  @include tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Left column: gallery + detail panels, stacked vertically */
+.listing-left {
+  display: grid;
+  gap: clamp(14px, 1.8vw, 22px);
+  min-width: 0;
+  align-self: start;
+}
+
+/* Hero shell: just a visual wrapper for the gallery — no grid */
+.listing-hero-shell {
+  position: relative;
 }
 
 /* Light theme: remove hero background/decoration so page doesn't look 'boxed' */
@@ -84,7 +110,7 @@ html[data-theme="light"] .listing-hero-bg {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(160px, 22%);
-  gap: clamp(10px, 1.2vw, 16px);
+  gap: clamp(10px, 1.2vw, 14px);
   padding: clamp(8px, 1vw, 12px);
   border: 1px solid var(--listing-gallery-border);
   border-radius: 28px;
@@ -94,7 +120,6 @@ html[data-theme="light"] .listing-hero-bg {
 
   @include tablet {
     grid-template-columns: minmax(0, 1fr) minmax(120px, 20%);
-    height: auto;
     border-radius: 26px;
   }
 
@@ -111,7 +136,7 @@ html[data-theme="light"] .listing-hero-bg {
   aspect-ratio: 16 / 9;
   min-height: 0;
   height: auto;
-  max-height: 540px;
+  max-height: 580px;
   overflow: hidden;
   border-radius: 20px;
   background: #111827;
@@ -169,10 +194,20 @@ html[data-theme="light"] .listing-hero-bg {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: var(--color-surface);
+  /* gradient only at the bottom so the title text stays legible */
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.72) 0%,
+    rgba(0, 0, 0, 0.28) 30%,
+    transparent 62%
+  );
 
   @include mobile {
-  background: var(--color-surface);
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.65) 0%,
+      transparent 55%
+    );
   }
 }
 
@@ -433,6 +468,7 @@ html[data-theme="light"] .listing-hero-bg {
 }
 
 .listing-content-grid {
+  /* kept for backward compat — now unused in detail page */
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(330px, 410px);
   gap: clamp(18px, 3vw, 34px);
@@ -441,6 +477,27 @@ html[data-theme="light"] .listing-hero-bg {
   @include tablet {
     grid-template-columns: 1fr;
   }
+}
+
+/* Sticky booking card — sticks while scrolling details/reviews,
+   naturally releases when similar-section (outside .listing-two-col) begins */
+.sticky-booking {
+  position: sticky;
+  top: clamp(82px, 9vh, 100px);
+  align-self: start;
+
+  @include tablet {
+    position: static;
+  }
+}
+
+/* O'xshash e'lonlar — full page width, outside the 2-col grid */
+.similar-section--full {
+  margin-top: clamp(24px, 3vw, 40px);
+  padding: clamp(16px, 2vw, 28px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--listing-radius);
+  background: var(--listing-surface);
 }
 
 .listing-error-page {
@@ -507,6 +564,11 @@ html[data-theme="light"] .listing-hero-bg {
   display: grid;
   gap: clamp(16px, 2vw, 24px);
   min-width: 0;
+}
+
+.right-col {
+  min-width: 0;
+  align-self: start;
 }
 
 .property-intro,

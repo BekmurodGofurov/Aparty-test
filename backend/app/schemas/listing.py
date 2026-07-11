@@ -67,6 +67,8 @@ class ListingOut(ListingBase):
     owner_id: uuid.UUID
     owner_full_name: Optional[str] = None
     owner_phone: Optional[str] = None
+    owner_role: Optional[str] = None
+    owner_verified: bool = False
     premium_expires_at: Optional[datetime] = None
     is_active: bool
     views_count: int

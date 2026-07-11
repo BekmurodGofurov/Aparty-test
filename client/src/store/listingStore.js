@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { searchListings } from '../services/listingService'
+import { adaptListing } from '../utils/adaptListing'
 
 const initialFilters = {
   viloyat: '',
@@ -24,16 +25,37 @@ const initialFilters = {
   },
 }
 
-const normalizeSearchValue = (key, value) => {
-  if (key === 'jins') {
-    return {
-      erkak: 'male',
-      ayol: 'female',
-      aralash: 'mixed',
-    }[value] || value
+
+
+/**
+ * Maps Uzbek filter key names → backend English query param names,
+ * and converts Uzbek gender values → backend English values.
+ * Returns { key, value } so the caller can set the correct param name.
+ */
+const normalizeFilter = (key, value) => {
+  // key rename map: frontend → backend
+  const KEY_MAP = {
+    viloyat:      'region',
+    tuman:        'district',
+    narx_min:     'price_min',
+    narx_max:     'price_max',
+    jins:         'target_gender',
+    xonalar_soni: 'rooms_count',
+    bosh_joy:     'available_spaces',
+    egasi_turi:   'owner_role',
   }
 
-  return value
+  // gender value map
+  const GENDER_MAP = { erkak: 'male', ayol: 'female', aralash: 'mixed' }
+
+  const mappedKey = KEY_MAP[key] ?? key
+  let mappedValue = value
+
+  if (key === 'jins') {
+    mappedValue = GENDER_MAP[value] ?? value
+  }
+
+  return { key: mappedKey, value: mappedValue }
 }
 
 export const useListingStore = create((set, get) => ({
@@ -78,14 +100,15 @@ export const useListingStore = create((set, get) => ({
           return
         }
         if (value === '' || value === null || value === false) return
-        normalized[key] = normalizeSearchValue(key, value)
+        const { key: mappedKey, value: mappedValue } = normalizeFilter(key, value)
+        normalized[mappedKey] = mappedValue
       })
       const data = await searchListings(normalized, page)
       if (data.success === false) {
         throw new Error(data.message || 'Listings load failed')
       }
       set({
-        results: Array.isArray(data.listings) ? data.listings : [],
+        results: Array.isArray(data.listings) ? data.listings.map(adaptListing) : [],
         total: data.total ?? 0,
         page: data.page ?? page,
         pages: data.pages ?? 1,

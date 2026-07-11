@@ -73,7 +73,14 @@
 .media-vignette {
   position: absolute;
   inset: 0;
-  background: var(--color-surface);
+  /* gradient: transparent at top, dark at bottom so price is readable */
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.65) 0%,
+    rgba(0, 0, 0, 0.18) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
 }
 
 .media-reflection {
@@ -81,7 +88,7 @@
   inset: -24% auto -24% -36%;
   width: 28%;
   opacity: 0;
-  background: var(--color-surface);
+  background: linear-gradient(to right, rgba(255,255,255,0.06), transparent);
   transform: translateX(-20%) rotate(10deg);
   pointer-events: none;
 }

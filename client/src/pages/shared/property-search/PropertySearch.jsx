@@ -17,6 +17,7 @@ export function PropertySearch() {
   const {
     filters,
     results,
+    total,
     loading,
     error,
     setFilter,
@@ -138,7 +139,10 @@ export function PropertySearch() {
 
 
         <div className="results-top">
-          <p>{results.length} / {results.length ? t('search.results') : t('search.no_results')}</p>
+          <p>
+            <span className="results-count-num">{total || results.length}</span>
+            {' '}{t('search.results')}
+          </p>
           <div className="mono">{t('search.premium_top')}</div>
         </div>
         {loading && (
@@ -182,6 +186,16 @@ export function PropertySearch() {
         <div className="pagination-wrap">
           <button className="button-secondary" type="button" onClick={() => void fetchResults(1)}>{t('search.show_10')}</button>
         </div>
+
+        {/* Bottom count summary */}
+        {!loading && results.length > 0 && (
+          <div className="results-footer-count">
+            <span className="results-footer-icon">🏠</span>
+            <span>
+              Jami <strong>{total || results.length}</strong> ta kvartira topildi
+            </span>
+          </div>
+        )}
       </section>
     </main>
   )

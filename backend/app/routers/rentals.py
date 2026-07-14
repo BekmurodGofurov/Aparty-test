@@ -2,6 +2,7 @@ import uuid
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -330,7 +331,11 @@ async def accept_rental_request(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> dict:
-    request = await select_rentals.get_request_by_id(db, request_id)
+    request = await db.scalar(
+        select(RentalRequest)
+        .where(RentalRequest.id == request_id)
+        .with_for_update()
+    )
     if request is None:
         raise HTTPException(status_code=404, detail="So'rov topilmadi")
     if request.recipient_id != current_user.id and current_user.role != UserRole.admin:
@@ -338,8 +343,30 @@ async def accept_rental_request(
     if request.status != RentalRequestStatus.pending:
         raise HTTPException(status_code=400, detail="Bu so'rov allaqachon ko'rib chiqilgan")
 
-    listing = await select_listings.get_by_id(db, request.listing_id)
-    if listing is None or listing.available_spaces <= 0:
+    listing = await db.scalar(
+        select(Listing)
+        .where(Listing.id == request.listing_id)
+        .with_for_update()
+    )
+    if listing is None:
+        raise HTTPException(status_code=404, detail="Kvartira topilmadi")
+    if listing.available_spaces <= 0:
+        await update_rentals.reject_request(db, request)
+        await _add_notification(
+            db,
+            user_id=request.requester_id,
+            actor_id=current_user.id,
+            type=NotificationType.request_rejected,
+            title="So'rovingiz avtomatik rad etildi",
+            body="Bu kvartirada bo'sh joy qolmadi",
+            request_id=request.id,
+            listing_id=listing.id,
+        )
+        await db.commit()
+        await db.refresh(request)
+        return await _request_payload(db, request)
+
+    if not listing.is_active:
         raise HTTPException(status_code=400, detail="Bu kvartirada bo'sh joy qolmagan")
 
     rental = Rental(

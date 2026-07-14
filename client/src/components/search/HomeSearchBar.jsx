@@ -8,24 +8,24 @@ import './HomeSearchBar.scss'
 export function HomeSearchBar() {
   const navigate = useNavigate()
   const [form, setForm] = useState({
-    viloyat: '',
-    tuman: '',
-    xonalar_soni: '',
-    narx_min: '',
-    narx_max: ''
+    region: '',
+    district: '',
+    rooms_count: '',
+    price_min: '',
+    price_max: ''
   })
 
   const handleSearch = () => {
     const p = new URLSearchParams()
-    if (form.viloyat) p.append('viloyat', form.viloyat)
-    if (form.tuman) p.append('tuman', form.tuman)
-    if (form.xonalar_soni) p.append('xonalar_soni', form.xonalar_soni)
-    if (form.narx_min) p.append('narx_min', form.narx_min)
-    if (form.narx_max) p.append('narx_max', form.narx_max)
+    if (form.region) p.append('region', form.region)
+    if (form.district) p.append('district', form.district)
+    if (form.rooms_count) p.append('rooms_count', form.rooms_count)
+    if (form.price_min) p.append('price_min', form.price_min)
+    if (form.price_max) p.append('price_max', form.price_max)
     navigate(`/search?${p}`)
   }
 
-  const districts = form.viloyat ? REGIONS_DATA[form.viloyat] || [] : []
+  const districts = form.region ? REGIONS_DATA[form.region] || [] : []
 
   return (
     <div className="home-search-container">
@@ -38,8 +38,8 @@ export function HomeSearchBar() {
           </div>
           <div className="box-input">
             <PremiumSelect
-              value={form.viloyat}
-              onChange={(val) => setForm({ ...form, viloyat: val, tuman: '' })}
+              value={form.region}
+              onChange={(val) => setForm({ ...form, region: val, district: '' })}
               placeholder="Barcha viloyatlar"
               options={[
                 { value: '', label: 'Barcha viloyatlar' },
@@ -57,12 +57,12 @@ export function HomeSearchBar() {
           </div>
           <div className="box-input">
             <PremiumSelect
-              value={form.tuman}
-              onChange={(val) => setForm({ ...form, tuman: val })}
-              disabled={!form.viloyat}
-              placeholder={form.viloyat ? 'Barcha tumanlar' : 'Avval viloyat tanlang'}
+              value={form.district}
+              onChange={(val) => setForm({ ...form, district: val })}
+              disabled={!form.region}
+              placeholder={form.region ? 'Barcha tumanlar' : 'Avval viloyat tanlang'}
               options={[
-                { value: '', label: form.viloyat ? 'Barcha tumanlar' : 'Avval viloyat tanlang' },
+                { value: '', label: form.region ? 'Barcha tumanlar' : 'Avval viloyat tanlang' },
                 ...districts.map(d => ({ value: d, label: d }))
               ]}
             />
@@ -77,8 +77,8 @@ export function HomeSearchBar() {
           </div>
           <div className="box-input">
             <PremiumSelect
-              value={form.xonalar_soni}
-              onChange={(val) => setForm({ ...form, xonalar_soni: val })}
+              value={form.rooms_count}
+              onChange={(val) => setForm({ ...form, rooms_count: val })}
               placeholder="Istalgan"
               options={[
                 { value: '', label: 'Istalgan' },
@@ -101,15 +101,15 @@ export function HomeSearchBar() {
             <input 
               type="number" 
               placeholder="Min" 
-              value={form.narx_min}
-              onChange={(e) => setForm({...form, narx_min: e.target.value})}
+              value={form.price_min}
+              onChange={(e) => setForm({...form, price_min: e.target.value})}
             />
             <span className="separator">—</span>
             <input 
               type="number" 
               placeholder="Max" 
-              value={form.narx_max}
-              onChange={(e) => setForm({...form, narx_max: e.target.value})}
+              value={form.price_max}
+              onChange={(e) => setForm({...form, price_max: e.target.value})}
             />
           </div>
         </div>

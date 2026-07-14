@@ -36,13 +36,13 @@ function getPageItems(currentPage, pageCount) {
 }
 
 function listingTitle(listing) {
-  return listing.manzil || listing.address || [listing.tuman || listing.district, listing.viloyat || listing.region]
+  return listing.address || [listing.district, listing.region]
     .filter(Boolean)
     .join(', ') || 'Manzil kiritilmagan'
 }
 
 function listingLocation(listing) {
-  return [listing.tuman || listing.district, listing.viloyat || listing.region].filter(Boolean).join(', ') || '-'
+  return [listing.district, listing.region].filter(Boolean).join(', ') || '-'
 }
 
 export function AdminListings() {
@@ -72,9 +72,9 @@ export function AdminListings() {
     const query = searchTerm.trim().toLowerCase()
 
     return listings.filter((listing) => {
-      const isActive = listing.faol ?? listing.is_active ?? false
-      const isPremium = listing.premium ?? listing.is_premium ?? false
-      const price = listing.narx_usd ?? listing.price_usd
+      const isActive = listing.is_active ?? false
+      const isPremium = listing.is_premium ?? false
+      const price = listing.price_usd
 
       const matchesQuery = !query || [
         listing.id,
@@ -124,7 +124,7 @@ export function AdminListings() {
 
   const toggleListingStatus = async (event, listing) => {
     event.stopPropagation()
-    const current = listing.faol ?? listing.is_active ?? false
+    const current = listing.is_active ?? false
     const { data } = await api.patch(`/admin/listings/${listing.id}/status`, { is_active: !current })
     const updated = data.listing
     setListings((items) => items.map((item) => String(item.id) === String(updated.id) ? updated : item))
@@ -196,9 +196,9 @@ export function AdminListings() {
                     <tr><td colSpan="7" className="empty">E'lon topilmadi</td></tr>
                   ) : (
                     paginatedListings.map((listing) => {
-                      const isActive = listing.faol ?? listing.is_active ?? false
-                      const isPremium = listing.premium ?? listing.is_premium ?? false
-                      const price = listing.narx_usd ?? listing.price_usd ?? 0
+                      const isActive = listing.is_active ?? false
+                      const isPremium = listing.is_premium ?? false
+                      const price = listing.price_usd ?? 0
 
                       return (
                         <tr key={listing.id} onClick={() => navigate(`/admin/listings/${listing.id}`)} className="clickable-row">

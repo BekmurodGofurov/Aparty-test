@@ -30,7 +30,7 @@ const formatDate = (value) => {
 }
 
 const getListingTitle = (listing = {}) => (
-  [listing.manzil || listing.address, listing.tuman || listing.district, listing.viloyat || listing.region]
+  [listing.address, listing.district, listing.region]
     .filter(Boolean)
     .join(', ') || 'Manzil kiritilmagan'
 )
@@ -303,19 +303,19 @@ export function UserProfile() {
                 ) : savedHomesPreview.map((listing) => (
                   <GlassCard className="session-card profile-listing-card" key={listing.id} onClick={() => navigate(`/listing/${listing.id}`)}>
                     <div className="session-icon listing-thumb">
-                      {listing.rasmlar?.[0] ? <img src={listing.rasmlar[0]} alt="" /> : <Home size={20}/>}
+                      {listing.images?.[0] ? <img src={listing.images[0]} alt="" /> : <Home size={20}/>}
                     </div>
                     <div className="session-body">
                       <div className="top">
                         <span className="device-name">{getListingTitle(listing)}</span>
-                        {listing.premium && <span className="status-badge">Premium</span>}
+                        {listing.is_premium && <span className="status-badge">Premium</span>}
                       </div>
                       <div className="meta">
-                        <span>{listing.xonalar_soni} xona</span>
+                        <span>{listing.rooms_count} xona</span>
                         <span className="sep">•</span>
-                        <span>{listing.bosh_joy} bo'sh joy</span>
+                        <span>{listing.available_spaces} bo'sh joy</span>
                         <span className="sep">•</span>
-                        <span className="time">${listing.narx_usd}/oy</span>
+                        <span className="time">${listing.price_usd}/oy</span>
                       </div>
                     </div>
                     <ChevronRight size={18} />

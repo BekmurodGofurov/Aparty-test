@@ -92,9 +92,9 @@ export function AdminUserDetail() {
                   <tr><td colSpan="5" className="empty">Bu foydalanuvchida e'lon yo'q</td></tr>
                 ) : listings.map((listing) => (
                   <tr key={listing.id} onClick={() => navigate(`/admin/listings/${listing.id}`)}>
-                    <td>{listing.manzil || `${listing.tuman}, ${listing.viloyat}`}</td>
-                    <td>{Number(listing.narx_usd || 0).toLocaleString('uz-UZ')} USD</td>
-                    <td><span className={`pill ${listing.faol ? 'active' : 'inactive'}`}>{listing.faol ? 'Faol' : 'Nofaol'}</span></td>
+                    <td>{listing.address || `${listing.district}, ${listing.region}`}</td>
+                    <td>{Number(listing.price_usd || 0).toLocaleString('uz-UZ')} USD</td>
+                    <td><span className={`pill ${listing.is_active ? 'active' : 'inactive'}`}>{listing.is_active ? 'Faol' : 'Nofaol'}</span></td>
                     <td>{listing.reviews_count || 0}</td>
                     <td>{formatDate(listing.created_at)}</td>
                   </tr>

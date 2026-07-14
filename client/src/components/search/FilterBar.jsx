@@ -1,15 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { MapPin, DollarSign, Home, Users, Search, ChevronDown } from 'lucide-react'
+import { MapPin, DollarSign, Home, Search, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './FilterBar.scss'
 
 export function FilterBar({ onSearch, initialFilters = {} }) {
   const { t } = useTranslation()
   const [filters, setFilters] = useState({
-    viloyat: initialFilters.viloyat || '',
-    narx_max: initialFilters.narx_max || '',
-    xonalar_soni: initialFilters.xonalar_soni || '',
+    region: initialFilters.region || '',
+    price_max: initialFilters.price_max || '',
+    rooms_count: initialFilters.rooms_count || '',
     apartmentType: initialFilters.apartmentType || '',
   })
   
@@ -45,7 +45,7 @@ export function FilterBar({ onSearch, initialFilters = {} }) {
           <div className="filter-icon-box"><MapPin size={18} /></div>
           <div className="filter-text">
             <span className="filter-label">{t('search.location')}</span>
-            <span className="filter-value">{filters.viloyat || t('search.anywhere')}</span>
+            <span className="filter-value">{filters.region || t('search.anywhere')}</span>
           </div>
           <ChevronDown size={14} className="chevron" />
         </div>
@@ -57,7 +57,7 @@ export function FilterBar({ onSearch, initialFilters = {} }) {
           <div className="filter-icon-box"><DollarSign size={18} /></div>
           <div className="filter-text">
             <span className="filter-label">{t('search.price')}</span>
-            <span className="filter-value">{filters.narx_max ? `$${filters.narx_max}` : t('search.any_price')}</span>
+            <span className="filter-value">{filters.price_max ? `$${filters.price_max}` : t('search.any_price')}</span>
           </div>
           <ChevronDown size={14} className="chevron" />
         </div>
@@ -69,7 +69,7 @@ export function FilterBar({ onSearch, initialFilters = {} }) {
           <div className="filter-icon-box"><Home size={18} /></div>
           <div className="filter-text">
             <span className="filter-label">{t('search.rooms')}</span>
-            <span className="filter-value">{filters.xonalar_soni ? `${filters.xonalar_soni} ${t('search.rooms')}` : t('search.any_rooms')}</span>
+            <span className="filter-value">{filters.rooms_count ? `${filters.rooms_count} ${t('search.rooms')}` : t('search.any_rooms')}</span>
           </div>
           <ChevronDown size={14} className="chevron" />
         </div>
@@ -97,8 +97,8 @@ export function FilterBar({ onSearch, initialFilters = {} }) {
                     {['Toshkent', 'Samarqand', 'Andijon', 'Farg\'ona'].map(loc => (
                       <button 
                         key={loc} 
-                        className={`opt-btn ${filters.viloyat === loc ? 'selected' : ''}`}
-                        onClick={() => setFilters({...filters, viloyat: loc})}
+                        className={`opt-btn ${filters.region === loc ? 'selected' : ''}`}
+                        onClick={() => setFilters({...filters, region: loc})}
                       >
                         {loc}
                       </button>
@@ -114,8 +114,8 @@ export function FilterBar({ onSearch, initialFilters = {} }) {
                     {[200, 500, 1000, 2000].map(p => (
                       <button 
                         key={p} 
-                        className={`opt-btn ${filters.narx_max === String(p) ? 'selected' : ''}`}
-                        onClick={() => setFilters({...filters, narx_max: String(p)})}
+                        className={`opt-btn ${filters.price_max === String(p) ? 'selected' : ''}`}
+                        onClick={() => setFilters({...filters, price_max: String(p)})}
                       >
                         ${p}
                       </button>
@@ -131,8 +131,8 @@ export function FilterBar({ onSearch, initialFilters = {} }) {
                     {['1', '2', '3', '4+'].map(r => (
                       <button 
                         key={r} 
-                        className={`opt-btn ${filters.xonalar_soni === r ? 'selected' : ''}`}
-                        onClick={() => setFilters({...filters, xonalar_soni: r})}
+                        className={`opt-btn ${filters.rooms_count === r ? 'selected' : ''}`}
+                        onClick={() => setFilters({...filters, rooms_count: r})}
                       >
                         {r}
                       </button>

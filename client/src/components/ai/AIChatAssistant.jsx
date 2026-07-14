@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, MapPin, Maximize2, MessageSquare, Minimize2, Snowflake, Wifi, X, Send, Sparkles, User } from 'lucide-react';
+import { ChefHat, Droplets, Flame, Home, MapPin, Maximize2, MessageSquare, Minimize2, Refrigerator, Send, Snowflake, Sparkles, Tv, User, WashingMachine, Wifi, X } from 'lucide-react';
 import { api } from '../../services/api';
 import './AIChatAssistant.scss';
 
@@ -36,7 +36,13 @@ export const AIChatAssistant = () => {
 
   const getAmenityIcon = (amenity) => {
     if (amenity === 'wifi') return <Wifi size={12} />;
-    if (amenity === 'konditsioner') return <Snowflake size={12} />;
+    if (amenity === 'ac') return <Snowflake size={12} />;
+    if (amenity === 'gas') return <Flame size={12} />;
+    if (amenity === 'water') return <Droplets size={12} />;
+    if (amenity === 'washer') return <WashingMachine size={12} />;
+    if (amenity === 'fridge') return <Refrigerator size={12} />;
+    if (amenity === 'kitchenware') return <ChefHat size={12} />;
+    if (amenity === 'tv') return <Tv size={12} />;
     return <Home size={12} />;
   };
 
@@ -176,7 +182,7 @@ export const AIChatAssistant = () => {
                                 {listing.amenities.slice(0, 4).map((amenity) => (
                                   <span key={amenity}>
                                     {getAmenityIcon(amenity)}
-                                    {amenity === 'konditsioner' ? 'AC' : amenity}
+                                    {amenity === 'ac' ? 'AC' : amenity}
                                   </span>
                                 ))}
                               </div>

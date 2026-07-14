@@ -204,13 +204,13 @@ REGION_COORDS: dict[str, tuple[float, float]] = {
 
 AMENITIES = [
     "wifi",
-    "gaz",
-    "suv",
+    "gas",
+    "water",
     "tv",
-    "konditsioner",
-    "kir_mashina",
-    "holodilnik",
-    "oshxona_jihozi",
+    "ac",
+    "washer",
+    "fridge",
+    "kitchenware",
 ]
 
 IMAGES = [
@@ -342,7 +342,7 @@ def listing_payload(index: int, is_premium: bool, region: str, district: str) ->
     images = [IMAGES[image_start], IMAGES[(image_start + 1) % len(IMAGES)]]
     amenities = {name: random.random() < 0.68 for name in AMENITIES}
     if is_premium:
-        amenities.update({"wifi": True, "suv": True, "gaz": True, "oshxona_jihozi": True})
+        amenities.update({"wifi": True, "water": True, "gas": True, "kitchenware": True})
     center_lat, center_lng = REGION_COORDS.get(region, REGION_COORDS["Andijon"])
 
     return {

@@ -31,7 +31,7 @@ export function AdminListingDetail() {
 
   const toggleStatus = async () => {
     if (!listing) return
-    const { data } = await api.patch(`/admin/listings/${listing.id}/status`, { is_active: !listing.faol })
+    const { data } = await api.patch(`/admin/listings/${listing.id}/status`, { is_active: !listing.is_active })
     setListing(data.listing)
   }
 
@@ -65,15 +65,15 @@ export function AdminListingDetail() {
           <div className="detail-avatar"><Building2 size={34} /></div>
           <div>
             <p className="eyebrow">E'lon tafsilotlari</p>
-            <h1>{listing?.manzil || `${listing?.tuman || ''}, ${listing?.viloyat || ''}`}</h1>
+            <h1>{listing?.address || `${listing?.district || ''}, ${listing?.region || ''}`}</h1>
             <div className="meta-row">
-              <span>{Number(listing?.narx_usd || 0).toLocaleString('uz-UZ')} USD</span>
+              <span>{Number(listing?.price_usd || 0).toLocaleString('uz-UZ')} USD</span>
               <span><CalendarDays size={15} /> {formatDate(listing?.created_at)}</span>
               <span><MessageSquare size={15} /> {reviews.length} izoh</span>
             </div>
           </div>
-          <button className={`status-action ${listing?.faol ? 'deactivate' : 'activate'}`} onClick={toggleStatus}>
-            {listing?.faol ? 'Nofaol qilish' : 'Faol qilish'}
+          <button className={`status-action ${listing?.is_active ? 'deactivate' : 'activate'}`} onClick={toggleStatus}>
+            {listing?.is_active ? 'Nofaol qilish' : 'Faol qilish'}
           </button>
         </section>
 
@@ -99,10 +99,10 @@ export function AdminListingDetail() {
               <h2>Reklama ma'lumotlari</h2>
             </div>
             <dl className="info-list">
-              <div><dt>Holati</dt><dd>{listing?.faol ? 'Faol' : 'Nofaol'}</dd></div>
-              <div><dt>Turi</dt><dd>{listing?.premium ? 'Premium' : 'Oddiy'}</dd></div>
-              <div><dt>Xona</dt><dd>{listing?.xonalar_soni || '-'}</dd></div>
-              <div><dt>Ko'rishlar</dt><dd>{listing?.korishlar || 0}</dd></div>
+              <div><dt>Holati</dt><dd>{listing?.is_active ? 'Faol' : 'Nofaol'}</dd></div>
+              <div><dt>Turi</dt><dd>{listing?.is_premium ? 'Premium' : 'Oddiy'}</dd></div>
+              <div><dt>Xona</dt><dd>{listing?.rooms_count || '-'}</dd></div>
+              <div><dt>Ko'rishlar</dt><dd>{listing?.views_count || 0}</dd></div>
             </dl>
           </div>
         </section>

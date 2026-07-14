@@ -37,13 +37,24 @@ import { api } from '../../services/api'
 import './MaklerDashboard.scss'
 
 const getListingTitle = (listing = {}) => {
-  const location = [listing.manzil, listing.tuman, listing.viloyat].filter(Boolean).join(', ')
-  return listing.nomi || location || 'Manzil kiritilmagan'
+  const location = [
+    listing.address,
+    listing.district,
+    listing.region,
+  ].filter(Boolean).join(', ')
+  return listing.title || location || 'Manzil kiritilmagan'
 }
+
+const getListingImages = (listing = {}) => listing.images || []
+const getListingRooms = (listing = {}) => listing.rooms_count ?? 0
+const getListingSpaces = (listing = {}) => listing.available_spaces ?? 0
+const getListingPrice = (listing = {}) => listing.price_usd ?? 0
+const isListingActive = (listing = {}) => Boolean(listing.is_active)
+const isListingPremium = (listing = {}) => Boolean(listing.is_premium)
 
 const getSubscriptionStatus = (subscription) => {
   if (!subscription) return true
-  return Boolean(subscription.faol ?? subscription.is_active ?? true)
+  return Boolean(subscription.is_active ?? true)
 }
 
 export function MaklerDashboard() {
@@ -74,7 +85,7 @@ export function MaklerDashboard() {
         ])
         setBroker(profileData)
         setListings(Array.isArray(listingData) ? listingData : [])
-        setSubscription(subscriptionResponse.data?.[0] || { faol: true, limit: 5, plan: 'Bepul' })
+        setSubscription(subscriptionResponse.data?.[0] || { is_active: true, limit: 5, plan: 'Bepul' })
         setRequests(Array.isArray(requestData) ? requestData : [])
       } catch (error) {
         console.error("Makler ma'lumotlarini yuklashda xatolik:", error)
@@ -92,10 +103,10 @@ export function MaklerDashboard() {
   }, [accessToken, navigate])
 
   const stats = useMemo(() => {
-    const activeAds = listings.filter((listing) => listing.faol).length
-    const inactiveAds = listings.filter((listing) => !listing.faol).length
-    const premiumAds = listings.filter((listing) => listing.premium).length
-    const totalValue = listings.reduce((sum, listing) => sum + Number(listing.narx_usd || 0), 0)
+    const activeAds = listings.filter((listing) => isListingActive(listing)).length
+    const inactiveAds = listings.filter((listing) => !isListingActive(listing)).length
+    const premiumAds = listings.filter((listing) => isListingPremium(listing)).length
+    const totalValue = listings.reduce((sum, listing) => sum + Number(getListingPrice(listing) || 0), 0)
 
     return { activeAds, inactiveAds, premiumAds, totalValue }
   }, [listings])
@@ -143,7 +154,7 @@ export function MaklerDashboard() {
       setListings((prev) =>
         prev.map((item) =>
           item.id === listing.id
-            ? { ...item, faol: true, premium: premium || item.premium }
+            ? { ...item, is_active: true, is_premium: premium || isListingPremium(item) }
             : item
         )
       )
@@ -182,14 +193,14 @@ export function MaklerDashboard() {
       <div className="broker-dashboard__shell">
         <section className="broker-profile-hero">
           <div className="broker-avatar" aria-hidden="true">
-            {broker?.rasm_url ? <img src={broker.rasm_url} alt="" /> : <UserRound size={38} />}
+            {broker?.profile_photo_url || broker?.rasm_url ? <img src={broker.profile_photo_url || broker.rasm_url} alt="" /> : <UserRound size={38} />}
           </div>
           <div className="broker-identity">
             <p className="broker-eyebrow">{roleLabel} account</p>
-            <h1>{broker?.ism || roleLabel}</h1>
+            <h1>{broker?.full_name || broker?.ism || roleLabel}</h1>
             <div className="broker-badges">
               <span><BadgeCheck size={15} /> {broker?.verified ? 'Tasdiqlangan' : 'Tasdiqlanmagan'}</span>
-              <span><Phone size={15} /> {broker?.telefon || '-'}</span>
+              <span><Phone size={15} /> {broker?.phone || broker?.telefon || '-'}</span>
               <span><WalletCards size={15} /> {subscription?.plan || 'Bepul'} plan</span>
             </div>
           </div>
@@ -256,33 +267,36 @@ export function MaklerDashboard() {
             ) : (
               <div className="broker-listing-stack">
                 {listings.map((listing) => {
-                  const isOccupied = Number(listing.bosh_joy) === 0
+                  const listingImages = getListingImages(listing)
+                  const isOccupied = Number(getListingSpaces(listing)) === 0
+                  const listingActive = isListingActive(listing)
+                  const listingPremium = isListingPremium(listing)
                   return (
                   <article className="broker-listing-card" key={listing.id}>
                     <div className="broker-listing-card__main">
                       <div className="broker-listing-image">
-                        {listing.rasmlar?.[0] ? <img src={listing.rasmlar[0]} alt="" /> : <Building2 size={24} />}
+                        {listingImages[0] ? <img src={listingImages[0]} alt="" /> : <Building2 size={24} />}
                       </div>
                       <div className="broker-listing-info">
                         <div className="broker-listing-title-row">
                           <h3>{getListingTitle(listing)}</h3>
                         </div>
                         <div className="broker-listing-meta">
-                          <span>{listing.xonalar_soni || 0} xona</span>
-                          <span>{listing.bosh_joy || 0} joy</span>
-                          <strong>${listing.narx_usd || 0}/oy</strong>
+                          <span>{getListingRooms(listing)} xona</span>
+                          <span>{getListingSpaces(listing)} joy</span>
+                          <strong>${getListingPrice(listing)}/oy</strong>
                         </div>
                         <div className="broker-status-row">
-                          <span className={`broker-status broker-status--${isOccupied ? 'occupied' : listing.faol ? 'active' : 'inactive'}`}>
-                            {isOccupied ? 'Band' : listing.faol ? 'Active' : 'Deactive'}
+                          <span className={`broker-status broker-status--${isOccupied ? 'occupied' : listingActive ? 'active' : 'inactive'}`}>
+                            {isOccupied ? 'Band' : listingActive ? 'Active' : 'Deactive'}
                           </span>
-                          {listing.premium && <span className="broker-status broker-status--premium">Premium</span>}
+                          {listingPremium && <span className="broker-status broker-status--premium">Premium</span>}
                         </div>
                       </div>
                     </div>
 
                     <div className="broker-listing-actions">
-                      {!listing.faol && !isOccupied && (
+                      {!listingActive && !isOccupied && (
                         <button
                           className="broker-primary-btn broker-primary-btn--compact"
                           disabled={activatingId === listing.id}
@@ -292,7 +306,7 @@ export function MaklerDashboard() {
                           {activatingId === listing.id ? 'Chiqarilmoqda...' : 'Reklamaga chiqarish'}
                         </button>
                       )}
-                      {listing.faol && !listing.premium && !isOccupied && (
+                      {listingActive && !listingPremium && !isOccupied && (
                         <button
                           className="broker-icon-btn"
                           disabled={activatingId === listing.id}

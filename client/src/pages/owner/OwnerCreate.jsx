@@ -43,15 +43,15 @@ const defaultMarkerIcon = L.icon({
 
 L.Marker.prototype.options.icon = defaultMarkerIcon
 
-const amenities = [
+const amenitiesList = [
   { key: 'wifi', label: 'Wi-Fi', icon: Wifi },
-  { key: 'gaz', label: 'Gaz', icon: Fan },
-  { key: 'suv', label: 'Suv', icon: Bath },
+  { key: 'gas', label: 'Gaz', icon: Fan },
+  { key: 'water', label: 'Suv', icon: Bath },
   { key: 'tv', label: 'TV', icon: Tv },
-  { key: 'konditsioner', label: 'Konditsioner', icon: Fan },
-  { key: 'kir_mashina', label: 'Kir mashinasi', icon: WashingMachine },
-  { key: 'holodilnik', label: 'Sovutkich', icon: Refrigerator },
-  { key: 'oshxona_jihozi', label: 'Oshxona jihozlari', icon: LampDesk },
+  { key: 'ac', label: 'Konditsioner', icon: Fan },
+  { key: 'washer', label: 'Kir mashinasi', icon: WashingMachine },
+  { key: 'fridge', label: 'Sovutkich', icon: Refrigerator },
+  { key: 'kitchenware', label: 'Oshxona jihozlari', icon: LampDesk },
 ]
 
 const propertyTypes = [
@@ -60,7 +60,7 @@ const propertyTypes = [
 ]
 
 const genderOptions = [
-  { value: 'mixed', label: 'Farqi yo‘q' },
+  { value: 'mixed', label: 'Farqi yo'q' },
   { value: 'male', label: 'Erkaklar' },
   { value: 'female', label: 'Ayollar' },
 ]
@@ -97,40 +97,40 @@ export function OwnerCreate() {
   const [uploadingImages, setUploadingImages] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
-    nomi: '',
-    tavsifi: '',
-    viloyat: '',
-    tuman: '',
-    manzil: '',
-    ijara_turi: 'full',
-    xonalar_soni: 1,
-    qavat: 1,
-    jami_qavat: 1,
-    max_kishi: 1,
-    bosh_joy: 1,
-    narx_usd: 100,
+    title: '',
+    description: '',
+    region: '',
+    district: '',
+    address: '',
+    rental_type: 'full',
+    rooms_count: 1,
+    floor: 1,
+    total_floors: 1,
+    max_guests: 1,
+    available_spaces: 1,
+    price_usd: 100,
     latitude: 41.311081,
     longitude: 69.240562,
-    rasmlar: [],
-    jins: 'mixed',
-    qulayliklar: {
+    images: [],
+    target_gender: 'mixed',
+    amenities: {
       wifi: false,
-      gaz: false,
-      suv: false,
+      gas: false,
+      water: false,
       tv: false,
-      konditsioner: false,
-      kir_mashina: false,
-      holodilnik: false,
-      oshxona_jihozi: false,
+      ac: false,
+      washer: false,
+      fridge: false,
+      kitchenware: false,
     },
   })
 
   const selectedAmenities = useMemo(
-    () => amenities.filter((item) => form.qulayliklar[item.key]),
-    [form.qulayliklar]
+    () => amenitiesList.filter((item) => form.amenities[item.key]),
+    [form.amenities]
   )
 
-  const districts = useMemo(() => REGIONS_DATA[form.viloyat] || [], [form.viloyat])
+  const districts = useMemo(() => REGIONS_DATA[form.region] || [], [form.region])
   const mapCenter = useMemo(
     () => [form.latitude, form.longitude],
     [form.latitude, form.longitude]
@@ -138,7 +138,7 @@ export function OwnerCreate() {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    const numericFields = ['xonalar_soni', 'qavat', 'jami_qavat', 'max_kishi', 'bosh_joy', 'narx_usd']
+    const numericFields = ['rooms_count', 'floor', 'total_floors', 'max_guests', 'available_spaces', 'price_usd']
     setForm((prev) => ({
       ...prev,
       [name]: numericFields.includes(name) ? Number(value) : value,
@@ -148,7 +148,7 @@ export function OwnerCreate() {
   const handleAmenity = (name) => {
     setForm((prev) => ({
       ...prev,
-      qulayliklar: { ...prev.qulayliklar, [name]: !prev.qulayliklar[name] },
+      amenities: { ...prev.amenities, [name]: !prev.amenities[name] },
     }))
   }
 
@@ -159,9 +159,9 @@ export function OwnerCreate() {
   const handleRentalTypeChange = (type) => {
     setForm((prev) => ({
       ...prev,
-      ijara_turi: type,
-      max_kishi: type === 'full' ? 1 : Math.max(prev.max_kishi, 2),
-      bosh_joy: type === 'full' ? 1 : Math.max(prev.bosh_joy, 1),
+      rental_type: type,
+      max_guests: type === 'full' ? 1 : Math.max(prev.max_guests, 2),
+      available_spaces: type === 'full' ? 1 : Math.max(prev.available_spaces, 1),
     }))
   }
 
@@ -169,8 +169,8 @@ export function OwnerCreate() {
     if (!region) {
       setForm((prev) => ({
         ...prev,
-        viloyat: '',
-        tuman: '',
+        region: '',
+        district: '',
       }))
       return
     }
@@ -178,8 +178,8 @@ export function OwnerCreate() {
     const [latitude, longitude] = regionCenters[region] || regionCenters.Andijon
     setForm((prev) => ({
       ...prev,
-      viloyat: region,
-      tuman: '',
+      region,
+      district: '',
       latitude,
       longitude,
     }))
@@ -197,7 +197,7 @@ export function OwnerCreate() {
     const files = Array.from(event.target.files || [])
     if (!files.length) return
 
-    const remainingSlots = Math.max(0, 5 - form.rasmlar.length)
+    const remainingSlots = Math.max(0, 5 - form.images.length)
     const uploadFiles = files.slice(0, remainingSlots)
     if (!uploadFiles.length) {
       setError('Maksimum 5 ta rasm yuklash mumkin')
@@ -211,7 +211,7 @@ export function OwnerCreate() {
       const uploaded = await Promise.all(uploadFiles.map((file) => uploadService.uploadImage(file)))
       setForm((prev) => ({
         ...prev,
-        rasmlar: [...prev.rasmlar, ...uploaded.map((item) => item.url)].slice(0, 5),
+        images: [...prev.images, ...uploaded.map((item) => item.url)].slice(0, 5),
       }))
     } catch (err) {
       setError(err.response?.data?.detail || 'Rasm yuklashda xatolik yuz berdi')
@@ -224,7 +224,7 @@ export function OwnerCreate() {
   const removeImage = (url) => {
     setForm((prev) => ({
       ...prev,
-      rasmlar: prev.rasmlar.filter((imageUrl) => imageUrl !== url),
+      images: prev.images.filter((imageUrl) => imageUrl !== url),
     }))
   }
 
@@ -233,12 +233,26 @@ export function OwnerCreate() {
     setError('')
     setLoading(true)
     try {
-      const { ijara_turi, ...payload } = form
-      await createListing({
-        ...payload,
-        max_kishi: ijara_turi === 'full' ? 1 : payload.max_kishi,
-        bosh_joy: ijara_turi === 'full' ? 1 : payload.bosh_joy,
-      })
+      const payload = {
+        region: form.region,
+        district: form.district,
+        address: form.address || null,
+        rental_type: form.rental_type,
+        rooms_count: form.rooms_count,
+        floor: form.floor,
+        total_floors: form.total_floors,
+        max_guests: form.rental_type === 'full' ? 1 : form.max_guests,
+        available_spaces: form.rental_type === 'full' ? 1 : form.available_spaces,
+        price_usd: form.price_usd,
+        latitude: form.latitude,
+        longitude: form.longitude,
+        images: form.images,
+        target_gender: form.target_gender,
+        amenities: form.amenities,
+        description: form.description || null,
+        is_premium: false,
+      }
+      await createListing(payload)
       navigate('/owner')
     } catch (err) {
       setError(err.response?.data?.detail || 'Kvartira yaratishda xatolik yuz berdi')
@@ -279,12 +293,12 @@ export function OwnerCreate() {
               </div>
 
               <div className="owner-field">
-                <label htmlFor="nomi">E'lon nomi</label>
+                <label htmlFor="title">E'lon nomi</label>
                 <input
-                  id="nomi"
+                  id="title"
                   type="text"
-                  name="nomi"
-                  value={form.nomi}
+                  name="title"
+                  value={form.title}
                   onChange={handleChange}
                   placeholder="Masalan: Markazda 2 xonali shinam kvartira"
                   required
@@ -297,11 +311,11 @@ export function OwnerCreate() {
                     <h3>Uy rasmlari</h3>
                     <p>Kamida 2 ta, maksimum 5 ta rasm yuklang.</p>
                   </div>
-                  <strong>{form.rasmlar.length}/5</strong>
+                  <strong>{form.images.length}/5</strong>
                 </div>
 
                 <div className="owner-image-grid">
-                  {form.rasmlar.map((url) => (
+                  {form.images.map((url) => (
                     <div className="owner-image-tile" key={url}>
                       <img src={url} alt="" />
                       <button type="button" onClick={() => removeImage(url)} aria-label="Rasmni o'chirish">
@@ -310,10 +324,10 @@ export function OwnerCreate() {
                     </div>
                   ))}
 
-                  {form.rasmlar.length < 5 && (
+                  {form.images.length < 5 && (
                     <label className="owner-image-add">
                       <ImagePlus size={24} />
-                      <span>{uploadingImages ? 'Yuklanmoqda...' : 'Rasm qo‘shish'}</span>
+                      <span>{uploadingImages ? 'Yuklanmoqda...' : 'Rasm qo'shish'}</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -327,11 +341,11 @@ export function OwnerCreate() {
               </div>
 
               <div className="owner-field">
-                <label htmlFor="tavsifi">Tavsif</label>
+                <label htmlFor="description">Tavsif</label>
                 <textarea
-                  id="tavsifi"
-                  name="tavsifi"
-                  value={form.tavsifi}
+                  id="description"
+                  name="description"
+                  value={form.description}
                   onChange={handleChange}
                   placeholder="Kvartira holati, yaqin joylar va shartlarni yozing"
                   rows={5}
@@ -343,7 +357,7 @@ export function OwnerCreate() {
                   <button
                     type="button"
                     key={type.value}
-                    className={`owner-choice-card ${form.ijara_turi === type.value ? 'is-selected' : ''}`}
+                    className={`owner-choice-card ${form.rental_type === type.value ? 'is-selected' : ''}`}
                     onClick={() => handleRentalTypeChange(type.value)}
                   >
                     <Home size={19} />
@@ -355,23 +369,23 @@ export function OwnerCreate() {
 
               <div className="owner-form-grid owner-form-grid--two">
                 <div className="owner-field">
-                  <label htmlFor="xonalar_soni">Xonalar soni</label>
+                  <label htmlFor="rooms_count">Xonalar soni</label>
                   <div className="owner-field__with-icon">
                     <BedDouble size={18} />
                     <input
-                      id="xonalar_soni"
+                      id="rooms_count"
                       type="number"
-                      name="xonalar_soni"
+                      name="rooms_count"
                       min="1"
-                      value={form.xonalar_soni}
+                      value={form.rooms_count}
                       onChange={handleChange}
                     />
                   </div>
                 </div>
 
                 <div className="owner-field owner-field--select">
-                  <label htmlFor="jins">Kimlar uchun</label>
-                  <select id="jins" name="jins" value={form.jins} onChange={handleChange}>
+                  <label htmlFor="target_gender">Kimlar uchun</label>
+                  <select id="target_gender" name="target_gender" value={form.target_gender} onChange={handleChange}>
                     {genderOptions.map((option) => (
                       <option value={option.value} key={option.value}>{option.label}</option>
                     ))}
@@ -382,28 +396,28 @@ export function OwnerCreate() {
 
               <div className="owner-form-grid owner-form-grid--two">
                 <div className="owner-field">
-                  <label htmlFor="qavat">Qavat</label>
+                  <label htmlFor="floor">Qavat</label>
                   <div className="owner-field__with-icon">
                     <Layers size={18} />
                     <input
-                      id="qavat"
+                      id="floor"
                       type="number"
-                      name="qavat"
+                      name="floor"
                       min="0"
-                      value={form.qavat}
+                      value={form.floor}
                       onChange={handleChange}
                     />
                   </div>
                 </div>
 
                 <div className="owner-field">
-                  <label htmlFor="jami_qavat">Jami qavat</label>
+                  <label htmlFor="total_floors">Jami qavat</label>
                   <input
-                    id="jami_qavat"
+                    id="total_floors"
                     type="number"
-                    name="jami_qavat"
+                    name="total_floors"
                     min="1"
-                    value={form.jami_qavat}
+                    value={form.total_floors}
                     onChange={handleChange}
                   />
                 </div>
@@ -421,11 +435,11 @@ export function OwnerCreate() {
 
               <div className="owner-form-grid owner-form-grid--two">
                 <div className="owner-field owner-field--select">
-                  <label htmlFor="viloyat">Viloyat</label>
+                  <label htmlFor="region">Viloyat</label>
                   <select
-                    id="viloyat"
-                    name="viloyat"
-                    value={form.viloyat}
+                    id="region"
+                    name="region"
+                    value={form.region}
                     onChange={(event) => handleRegionChange(event.target.value)}
                     required
                   >
@@ -438,16 +452,16 @@ export function OwnerCreate() {
                 </div>
 
                 <div className="owner-field owner-field--select">
-                  <label htmlFor="tuman">Tuman</label>
+                  <label htmlFor="district">Tuman</label>
                   <select
-                    id="tuman"
-                    name="tuman"
-                    value={form.tuman}
-                    onChange={(event) => setField('tuman', event.target.value)}
-                    disabled={!form.viloyat}
+                    id="district"
+                    name="district"
+                    value={form.district}
+                    onChange={(event) => setField('district', event.target.value)}
+                    disabled={!form.region}
                     required
                   >
-                    <option value="">{form.viloyat ? 'Tumanni tanlang' : 'Avval viloyat tanlang'}</option>
+                    <option value="">{form.region ? 'Tumanni tanlang' : 'Avval viloyat tanlang'}</option>
                     {districts.map((district) => (
                       <option value={district} key={district}>{district}</option>
                     ))}
@@ -457,32 +471,32 @@ export function OwnerCreate() {
               </div>
 
               <div className="owner-field">
-                <label htmlFor="manzil">To'liq manzil</label>
+                <label htmlFor="address">To'liq manzil</label>
                 <div className="owner-field__with-icon">
                   <MapPin size={18} />
                   <input
-                    id="manzil"
+                    id="address"
                     type="text"
-                    name="manzil"
-                    value={form.manzil}
+                    name="address"
+                    value={form.address}
                     onChange={handleChange}
                     placeholder="Ko'cha, uy raqami, orientir"
                   />
                 </div>
               </div>
 
-              <div className={`owner-map-picker ${!form.tuman ? 'is-disabled' : ''}`}>
+              <div className={`owner-map-picker ${!form.district ? 'is-disabled' : ''}`}>
                 <div className="owner-map-picker__header">
                   <div>
                     <h3>Xaritadan aniq joyni belgilang</h3>
-                    <p>{form.tuman ? `${form.tuman}, ${form.viloyat}` : 'Xarita uchun avval viloyat va tuman tanlang'}</p>
+                    <p>{form.district ? `${form.district}, ${form.region}` : 'Xarita uchun avval viloyat va tuman tanlang'}</p>
                   </div>
                   <span>{form.latitude.toFixed(5)}, {form.longitude.toFixed(5)}</span>
                 </div>
 
-                {form.tuman ? (
+                {form.district ? (
                   <MapContainer
-                    key={`${form.viloyat}-${form.tuman}`}
+                    key={`${form.region}-${form.district}`}
                     center={mapCenter}
                     zoom={13}
                     scrollWheelZoom={false}
@@ -515,15 +529,15 @@ export function OwnerCreate() {
 
               <div className="owner-form-grid owner-form-grid--three">
                 <div className="owner-field">
-                  <label htmlFor="narx_usd">{form.ijara_turi === 'full' ? 'Oylik narx' : 'Kishi boshiga narx'}</label>
+                  <label htmlFor="price_usd">{form.rental_type === 'full' ? 'Oylik narx' : 'Kishi boshiga narx'}</label>
                   <div className="owner-field__with-icon">
                     <CircleDollarSign size={18} />
                     <input
-                      id="narx_usd"
+                      id="price_usd"
                       type="number"
-                      name="narx_usd"
+                      name="price_usd"
                       min="0"
-                      value={form.narx_usd}
+                      value={form.price_usd}
                       onChange={handleChange}
                       placeholder="0"
                     />
@@ -531,27 +545,27 @@ export function OwnerCreate() {
                 </div>
 
                 <div className="owner-field">
-                  <label htmlFor="max_kishi">Maksimal odam</label>
+                  <label htmlFor="max_guests">Maksimal odam</label>
                   <input
-                    id="max_kishi"
+                    id="max_guests"
                     type="number"
-                    name="max_kishi"
+                    name="max_guests"
                     min="1"
-                    value={form.max_kishi}
-                    disabled={form.ijara_turi === 'full'}
+                    value={form.max_guests}
+                    disabled={form.rental_type === 'full'}
                     onChange={handleChange}
                   />
                 </div>
 
                 <div className="owner-field">
-                  <label htmlFor="bosh_joy">Bo'sh joy</label>
+                  <label htmlFor="available_spaces">Bo'sh joy</label>
                   <input
-                    id="bosh_joy"
+                    id="available_spaces"
                     type="number"
-                    name="bosh_joy"
+                    name="available_spaces"
                     min="1"
-                    value={form.bosh_joy}
-                    disabled={form.ijara_turi === 'full'}
+                    value={form.available_spaces}
+                    disabled={form.rental_type === 'full'}
                     onChange={handleChange}
                   />
                 </div>
@@ -573,16 +587,16 @@ export function OwnerCreate() {
               </div>
 
               <div className="owner-amenities-grid">
-                {amenities.map(({ key, label, icon: Icon }) => (
+                {amenitiesList.map(({ key, label, icon: Icon }) => (
                   <button
                     type="button"
                     key={key}
-                    className={`owner-amenity-chip ${form.qulayliklar[key] ? 'is-selected' : ''}`}
+                    className={`owner-amenity-chip ${form.amenities[key] ? 'is-selected' : ''}`}
                     onClick={() => handleAmenity(key)}
                   >
                     <Icon size={18} />
                     <span>{label}</span>
-                    {form.qulayliklar[key] && <Check size={16} />}
+                    {form.amenities[key] && <Check size={16} />}
                   </button>
                 ))}
               </div>
@@ -602,25 +616,25 @@ export function OwnerCreate() {
           <aside className="owner-create__summary">
             <div className="owner-summary-card">
               <div className="owner-summary-card__image">
-                {form.rasmlar[0] ? <img src={form.rasmlar[0]} alt="" /> : <Home size={34} />}
+                {form.images[0] ? <img src={form.images[0]} alt="" /> : <Home size={34} />}
               </div>
               <div className="owner-summary-card__body">
                 <p className="owner-create__eyebrow">Ko'rinish</p>
-                <h2>{form.nomi || 'Kvartira nomi'}</h2>
-                <span>{[form.tuman, form.viloyat].filter(Boolean).join(', ') || 'Manzil tanlanmagan'}</span>
+                <h2>{form.title || 'Kvartira nomi'}</h2>
+                <span>{[form.district, form.region].filter(Boolean).join(', ') || 'Manzil tanlanmagan'}</span>
               </div>
               <div className="owner-summary-card__stats">
                 <div>
                   <span>Xona</span>
-                  <strong>{form.xonalar_soni}</strong>
+                  <strong>{form.rooms_count}</strong>
                 </div>
                 <div>
                   <span>Ijara</span>
-                  <strong>{form.ijara_turi === 'full' ? 'To‘liq' : 'Joy'}</strong>
+                  <strong>{form.rental_type === 'full' ? 'To'liq' : 'Joy'}</strong>
                 </div>
                 <div>
                   <span>Narx</span>
-                  <strong>${form.narx_usd}</strong>
+                  <strong>${form.price_usd}</strong>
                 </div>
               </div>
               <div className="owner-summary-card__amenities">

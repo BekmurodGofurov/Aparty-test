@@ -41,7 +41,7 @@ export function PropertySearch() {
   const applyFilters = (event) => {
     event?.preventDefault?.()
     const params = Object.entries(filters).reduce((acc, [key, value]) => {
-      if (key === 'qulayliklar') {
+      if (key === 'amenities') {
         Object.entries(value).forEach(([amenityKey, amenityValue]) => {
           if (amenityValue) acc[amenityKey] = 'true'
         })
@@ -58,16 +58,16 @@ export function PropertySearch() {
 
   const activeFilterCount = useMemo(() => {
     let count = 0
-    if (filters.viloyat) count++
-    if (filters.tuman) count++
-    if (filters.narx_min || filters.narx_max) count++
-    if (filters.jins) count++
+    if (filters.region) count++
+    if (filters.district) count++
+    if (filters.price_min || filters.price_max) count++
+    if (filters.target_gender) count++
     if (filters.apartmentType) count++
-    if (filters.xonalar_soni) count++
-    if (filters.bosh_joy) count++
-    if (filters.kiring_yashaing) count++
-    if (filters.egasi_turi) count++
-    Object.values(filters.qulayliklar || {}).forEach((v) => { if (v) count++ })
+    if (filters.rooms_count) count++
+    if (filters.available_spaces) count++
+    if (filters.move_in_ready) count++
+    if (filters.owner_role) count++
+    Object.values(filters.amenities || {}).forEach((v) => { if (v) count++ })
     return count
   }, [filters])
 

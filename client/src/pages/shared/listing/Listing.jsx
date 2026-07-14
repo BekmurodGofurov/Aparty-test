@@ -30,7 +30,6 @@ import {
   X,
 } from 'lucide-react'
 import { createRentalRequest, getListingById } from '../../../services/listingService'
-import { adaptListing } from '../../../utils/adaptListing'
 import { favoritesService } from '../../../services/favoritesService'
 import { useAuthStore } from '../../../store/authStore'
 import { ListingMap } from '../../../components/listing/ListingMap'
@@ -64,7 +63,7 @@ export function Listing() {
     setListing(null)
     setActiveImage(0)
     void getListingById(id)
-      .then((data) => { if (cancelled) return; setListing(adaptListing(data)) })
+      .then((data) => { if (cancelled) return; setListing(data) })
       .catch((err) => { if (cancelled) return; const status = err?.response?.status; setError(status === 404 || status === 422 ? 'not_found' : 'load_failed') })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
@@ -88,19 +87,19 @@ export function Listing() {
   }, [previewOpen])
 
   const images = useMemo(() => {
-    const gallery = listing?.rasmlar?.length ? listing.rasmlar : [FALLBACK_IMG]
+    const gallery = listing?.images?.length ? listing.images : [FALLBACK_IMG]
     return gallery
   }, [listing])
 
   const amenityRows = useMemo(() => ([
     ['wifi', 'WiFi', <Wifi size={19} />],
-    ['gaz', t('search.gas'), <Flame size={19} />],
-    ['suv', t('search.water'), <Droplets size={19} />],
-    ['holodilnik', t('search.fridge'), <Refrigerator size={19} />],
-    ['oshxona_jihozi', t('search.kitchen'), <ChefHat size={19} />],
-    ['konditsioner', t('search.ac'), <Snowflake size={19} />],
+    ['gas', t('search.gas'), <Flame size={19} />],
+    ['water', t('search.water'), <Droplets size={19} />],
+    ['fridge', t('search.fridge'), <Refrigerator size={19} />],
+    ['kitchenware', t('search.kitchen'), <ChefHat size={19} />],
+    ['ac', t('search.ac'), <Snowflake size={19} />],
     ['tv', t('search.tv'), <Tv size={19} />],
-    ['kir_mashina', t('search.washer'), <WashingMachine size={19} />],
+    ['washer', t('search.washer'), <WashingMachine size={19} />],
   ]), [t])
 
   if (loading) return <ListingDetailSkeleton />
@@ -126,16 +125,16 @@ export function Listing() {
     )
   }
 
-  const isSharedRoom = listing.xonalar_soni === 1
+  const isSharedRoom = listing.rooms_count === 1
   const activeSrc = images[activeImage] || FALLBACK_IMG
-  const rating = typeof listing.reyting === 'number' ? listing.reyting.toFixed(1) : t('listing.new')
-  const title = listing.manzil || `${listing.xonalar_soni} ${t('listing.rooms_count')} uy`
-  const fullAddress = `${listing.tuman}, ${listing.viloyat}`
+  const rating = typeof listing.rating === 'number' ? listing.rating.toFixed(1) : t('listing.new')
+  const title = listing.address || `${listing.rooms_count} ${t('listing.rooms_count')} uy`
+  const fullAddress = `${listing.district}, ${listing.region}`
   const similarListings = images.slice(0, 3).map((src, index) => ({
     src,
     title: index === 0 ? t('listing.premium_residence') : index === 1 ? t('listing.modern_apartment') : t('listing.student_friendly_home'),
-    meta: `${listing.tuman}, ${listing.viloyat}`,
-    price: Math.max(Number(listing.narx_usd || 0) - index * 35, 0),
+    meta: `${listing.district}, ${listing.region}`,
+    price: Math.max(Number(listing.price_usd || 0) - index * 35, 0),
   }))
 
   const nextImage = () => setActiveImage((v) => (v + 1) % images.length)
@@ -173,10 +172,10 @@ export function Listing() {
     } finally { setRequestLoading(false) }
   }
 
-  const ownerPhoneLink = listing.egasi_telefon ? `tel:${String(listing.egasi_telefon).replace(/\s/g, '')}` : null
-  const ownerTelegramId = Number(listing.egasi_telegram_id)
+  const ownerPhoneLink = listing.owner_phone ? `tel:${String(listing.owner_phone).replace(/\s/g, '')}` : null
+  const ownerTelegramId = Number(listing.owner_telegram_id)
   const hasLikelyTelegramId = Number.isFinite(ownerTelegramId) && ownerTelegramId >= 10000 && ownerTelegramId < 10000000000
-  const ownerTelegramLink = listing.egasi_telegram_url || (hasLikelyTelegramId ? `tg://user?id=${ownerTelegramId}` : null)
+  const ownerTelegramLink = listing.owner_telegram_url || (hasLikelyTelegramId ? `tg://user?id=${ownerTelegramId}` : null)
 
   return (
     <main className="listing-page">
@@ -216,7 +215,7 @@ export function Listing() {
                     <motion.img
                       key={activeSrc}
                       src={activeSrc}
-                      alt={listing.manzil || 'Listing'}
+                      alt={listing.address || 'Listing'}
                       initial={{ opacity: 0, scale: 1.03 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.98 }}
@@ -234,7 +233,7 @@ export function Listing() {
 
                 <div className="gallery-topbar">
                   <div className="hero-chips">
-                    {listing.premium && (
+                    {listing.is_premium && (
                       <span className="hero-chip premium"><Sparkles size={13} /> {t('listing.premium')}</span>
                     )}
                     <span className="hero-chip"><Star size={13} fill="currentColor" /> {rating}</span>
@@ -266,8 +265,8 @@ export function Listing() {
                   <span className="location-kicker"><MapPin size={14} /> {fullAddress}</span>
                   <h1>{title}</h1>
                   <p>
-                    {listing.dom_raqami ? `${t('listing.dom')} ${listing.dom_raqami}` : t('listing.street')}
-                    {listing.xona_raqami ? `, ${t('listing.room')} ${listing.xona_raqami}` : ''}
+                    {listing.building_number ? `${t('listing.dom')} ${listing.building_number}` : t('listing.street')}
+                    {listing.room_number ? `, ${t('listing.room')} ${listing.room_number}` : ''}
                   </p>
                 </div>
               </div>
@@ -297,22 +296,22 @@ export function Listing() {
             {/* Overview: xona, qavat, maydon, ko'rishlar */}
             <motion.section className="overview-panel" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring}>
               <div className="overview-metrics">
-                <span><Home size={20} /> <strong>{listing.xonalar_soni}</strong><small>{t('listing.rooms_count')}</small></span>
-                <span><Users size={20} /> <strong>{listing.bosh_joy ?? '-'}</strong><small>{t('listing.free_spots')}</small></span>
-                <span><Building2 size={20} /> <strong>{listing.qavat ?? '-'}/{listing.jami_qavat ?? '-'}</strong><small>{t('listing.floor')}</small></span>
-                <span><Eye size={20} /> <strong>{listing.korishlar ?? 0}</strong><small>{t('listing.views')}</small></span>
+                <span><Home size={20} /> <strong>{listing.rooms_count}</strong><small>{t('listing.rooms_count')}</small></span>
+                <span><Users size={20} /> <strong>{listing.available_spaces ?? '-'}</strong><small>{t('listing.free_spots')}</small></span>
+                <span><Building2 size={20} /> <strong>{listing.floor ?? '-'}/{listing.total_floors ?? '-'}</strong><small>{t('listing.floor')}</small></span>
+                <span><Eye size={20} /> <strong>{listing.views_count ?? 0}</strong><small>{t('listing.views')}</small></span>
               </div>
               <div className="address-card">
                 <MapPin size={20} />
                 <div>
                   <strong>{fullAddress}</strong>
-                  <p>{t('listing.street')}: {listing.manzil ?? '-'} {listing.maydon_m2 ? `, ${listing.maydon_m2} m2` : ''}</p>
+                  <p>{t('listing.street')}: {listing.address ?? '-'} {listing.area_m2 ? `, ${listing.area_m2} m2` : ''}</p>
                 </div>
               </div>
               {isSharedRoom && (
                 <div className="shared-note">
                   <Users size={18} />
-                  <span>{t('listing.free_spots')}: {listing.bosh_joy} / {listing.max_kishi} {t('listing.people')}</span>
+                  <span>{t('listing.free_spots')}: {listing.available_spaces} / {listing.max_guests} {t('listing.people')}</span>
                 </div>
               )}
             </motion.section>
@@ -323,7 +322,7 @@ export function Listing() {
                 <span>{t('listing.overview')}</span>
                 <h2>{t('listing.description')}</h2>
               </div>
-              <p>{listing.tavsif ?? t('listing.no_description')}</p>
+              <p>{listing.description ?? t('listing.no_description')}</p>
             </motion.section>
 
             {/* Amenities */}
@@ -334,7 +333,7 @@ export function Listing() {
               </div>
               <div className="amenities-grid">
                 {amenityRows.map(([key, label, icon]) => {
-                  const active = Boolean(listing.qulayliklar?.[key])
+                  const active = Boolean(listing.amenities?.[key])
                   return (
                     <div key={key} className={`amenity-tile ${active ? 'active' : 'muted'}`}>
                       <span>{icon}</span>
@@ -352,7 +351,7 @@ export function Listing() {
                 <span>{t('listing.location')}</span>
                 <h2>{t('listing.location')}</h2>
               </div>
-              <ListingMap lat={listing.latitude} lng={listing.longitude} address={listing.manzil} />
+              <ListingMap lat={listing.latitude} lng={listing.longitude} address={listing.address} />
             </motion.section>
 
             {/* Reviews */}
@@ -370,28 +369,28 @@ export function Listing() {
             transition={spring}
           >
             <div className="booking-price">
-              <span>${listing.narx_usd}</span>
+              <span>${listing.price_usd}</span>
               <small>/ {t('listing.per_month')}</small>
             </div>
 
             <div className="booking-host">
-              <span className="host-avatar">{listing.egasi_ism?.charAt(0)?.toUpperCase() || 'A'}</span>
+              <span className="host-avatar">{listing.owner_full_name?.charAt(0)?.toUpperCase() || 'A'}</span>
               <div>
-                <strong>{listing.egasi_ism || t('listing.owner_label')}</strong>
-                <small>{listing.egasi_telefon || (listing.manba === 'makler' ? t('listing.makler_verified') : t('listing.owner_label'))}</small>
+                <strong>{listing.owner_full_name || t('listing.owner_label')}</strong>
+                <small>{listing.owner_phone || (listing.source === 'makler' ? t('listing.makler_verified') : t('listing.owner_label'))}</small>
               </div>
               <BadgeCheck size={19} />
             </div>
 
             <div className="booking-mini-stats">
               <span><Star size={15} fill="currentColor" /> {rating}</span>
-              <span><Eye size={15} /> {listing.korishlar ?? 0}</span>
+              <span><Eye size={15} /> {listing.views_count ?? 0}</span>
               <span><ShieldCheck size={15} /> {t('listing.verified')}</span>
             </div>
 
             <div className="booking-details">
-              <span><CalendarDays size={17} /> {t('listing.first_month')}: ${listing.narx_usd}</span>
-              <span><ShieldCheck size={17} /> {listing.manba === 'makler' ? t('listing.makler_notice') : t('listing.owner_notice')}</span>
+              <span><CalendarDays size={17} /> {t('listing.first_month')}: ${listing.price_usd}</span>
+              <span><ShieldCheck size={17} /> {listing.source === 'makler' ? t('listing.makler_notice') : t('listing.owner_notice')}</span>
             </div>
 
             {(!role || role === 'student') && (

@@ -92,20 +92,24 @@ SAMPLE_IMAGES = [
 
 BASE_AMENITIES: dict[str, bool] = {
     "wifi": True,
-    "washing_machine": False,
-    "heating": True,
-    "air_conditioning": False,
-    "parking": False,
-    "gym": False,
+    "washer": False,
+    "gas": True,
+    "water": True,
+    "ac": False,
+    "fridge": True,
+    "kitchenware": True,
+    "tv": False,
 }
 
 FULL_AMENITIES: dict[str, bool] = {
     "wifi": True,
-    "washing_machine": True,
-    "heating": True,
-    "air_conditioning": True,
-    "parking": True,
-    "gym": True,
+    "washer": True,
+    "gas": True,
+    "water": True,
+    "ac": True,
+    "fridge": True,
+    "kitchenware": True,
+    "tv": True,
 }
 
 # ─────────────────────────────────────────────────────────────────────
@@ -192,20 +196,20 @@ async def seed_listings(db: AsyncSession, users: dict[str, User]) -> dict[str, L
         )
 
     specs = [
-        L("L01", "owner_dilnoza",  "Asaka",          "Navruz ko'chasi 12, Asaka",              "12", "3",  3, 5,  0.012,  0.024,  2, 45, 120, ListingTargetGender.male,   ListingSource.owner,   2, 1, {**BASE_AMENITIES, "washing_machine": True},                       0, "Asaka tumanida qulay 2 xonali xonadon. Wi-Fi, kir yuvish mashina mavjud. Faqat erkak talabalar.",                               True,  20, True,  1247),
+        L("L01", "owner_dilnoza",  "Asaka",          "Navruz ko'chasi 12, Asaka",              "12", "3",  3, 5,  0.012,  0.024,  2, 45, 120, ListingTargetGender.male,   ListingSource.owner,   2, 1, {**BASE_AMENITIES, "washer": True},                       0, "Asaka tumanida qulay 2 xonali xonadon. Wi-Fi, kir yuvish mashina mavjud. Faqat erkak talabalar.",                               True,  20, True,  1247),
         L("L02", "owner_dilnoza",  "Oltinkol",        "Mustaqillik ko'chasi 7, Oltinkol",        "7",  "1",  1, 3, -0.018,  0.031,  1, 28,  75, ListingTargetGender.female, ListingSource.owner,   1, 1, {**BASE_AMENITIES},                                                  2, "Oltinkol tumanida 1 xonali xonadon. Faqat qiz talabalar. Isitish tizimi ajoyib.",                                                 False, None, True,    38),
         L("L03", "owner_sarvar",   "Marhamat",        "Bog'bon ko'chasi 5, Marhamat",            "5",  "2",  2, 4,  0.032, -0.015,  3, 70, 150, ListingTargetGender.mixed,  ListingSource.owner,   3, 3, {**BASE_AMENITIES},                                                  3, "Marhamat tumanida 3 xonali keng xonadon. Hozirda ta'mirda. Egasi tasdiqlanmagan.",                                               False, None, False,     5),
-        L("L04", "owner_sarvar",   "Andijon shahri",  "Istiqlol ko'chasi 22, Andijon shahri",   "22", "4",  4, 9,  0.005,  0.003,  1, 22,  90, ListingTargetGender.male,   ListingSource.owner,   1, 1, {**BASE_AMENITIES, "air_conditioning": True},                        4, "Andijon markazida 1 xonali. Premium status muddati tugashiga 2 kun qoldi!",                                                      True,   2, True,   201),
-        L("L05", "makler_mansur",  "Qo'rg'ontepa",   "Sharq ko'chasi 8, Qo'rg'ontepa",         "8",  "5",  2, 5, -0.041,  0.058,  2, 52, 100, ListingTargetGender.mixed,  ListingSource.makler,  2, 2, {**BASE_AMENITIES, "washing_machine": True, "air_conditioning": True, "parking": True}, 0, "Qo'rg'ontepa tumanida 2 xonali. Wi-Fi, konditsioner, parking. Makler orqali.",                                False, None, True,   456),
+        L("L04", "owner_sarvar",   "Andijon shahri",  "Istiqlol ko'chasi 22, Andijon shahri",   "22", "4",  4, 9,  0.005,  0.003,  1, 22,  90, ListingTargetGender.male,   ListingSource.owner,   1, 1, {**BASE_AMENITIES, "ac": True},                        4, "Andijon markazida 1 xonali. Premium status muddati tugashiga 2 kun qoldi!",                                                      True,   2, True,   201),
+        L("L05", "makler_mansur",  "Qo'rg'ontepa",   "Sharq ko'chasi 8, Qo'rg'ontepa",         "8",  "5",  2, 5, -0.041,  0.058,  2, 52, 100, ListingTargetGender.mixed,  ListingSource.makler,  2, 2, {**BASE_AMENITIES, "washer": True, "ac": True}, 0, "Qo'rg'ontepa tumanida 2 xonali. Wi-Fi, konditsioner, parking. Makler orqali.",                                False, None, True,   456),
         L("L06", "makler_mansur",  "Asaka",           "Yangi hayot ko'chasi 3, Asaka",           "3",  "7",  1, 2,  0.019,  0.027,  1, 30,  80, ListingTargetGender.female, ListingSource.makler,  1, 1, {**BASE_AMENITIES},                                                  1, "Asaka tumanida qiz talabalar uchun xona. Makler orqali.",                                                                         False, None, True,    92),
-        L("L07", "makler_mansur",  "Shahrixon",       "Do'stlik ko'chasi 14, Shahrixon",        "14", "2",  3, 5, -0.055, -0.022,  2, 48, 110, ListingTargetGender.male,   ListingSource.makler,  2, 2, {**BASE_AMENITIES, "washing_machine": True},                        3, "Shahrixon tumanida 2 xonali. Erkak talabalar uchun.",                                                                             False, None, True,    17),
-        L("L08", "makler_mansur",  "Baliqchi",        "Tinchlik ko'chasi 19, Baliqchi",         "19", "1",  1, 3,  0.061, -0.044,  3, 65, 130, ListingTargetGender.mixed,  ListingSource.makler,  3, 3, {**BASE_AMENITIES, "parking": True},                                4, "Baliqchi tumanida yangi e'lon. Hali hech kim ko'rmagan.",                                                                         False, None, True,     0),
+        L("L07", "makler_mansur",  "Shahrixon",       "Do'stlik ko'chasi 14, Shahrixon",        "14", "2",  3, 5, -0.055, -0.022,  2, 48, 110, ListingTargetGender.male,   ListingSource.makler,  2, 2, {**BASE_AMENITIES, "washer": True},                        3, "Shahrixon tumanida 2 xonali. Erkak talabalar uchun.",                                                                             False, None, True,    17),
+        L("L08", "makler_mansur",  "Baliqchi",        "Tinchlik ko'chasi 19, Baliqchi",         "19", "1",  1, 3,  0.061, -0.044,  3, 65, 130, ListingTargetGender.mixed,  ListingSource.makler,  3, 3, {**BASE_AMENITIES},                                4, "Baliqchi tumanida yangi e'lon. Hali hech kim ko'rmagan.",                                                                         False, None, True,     0),
         L("L09", "makler_mansur",  "Xo'jaobod",      "Baxt ko'chasi 6, Xo'jaobod",              "6",  "3",  2, 4, -0.071,  0.039,  1, 20,  60, ListingTargetGender.male,   ListingSource.makler,  1, 1, {**BASE_AMENITIES},                                                  0, "Xo'jaobod tumanida eng arzon variant. Maklerning 5-chi (oxirgi) e'loni.",                                                        False, None, True,     3),
         L("L10", "makler_gavhar",  "Andijon shahri",  "Navoiy ko'chasi 33, Andijon shahri",     "33", "8",  2, 4,  0.003,  0.007,  2, 40, 115, ListingTargetGender.female, ListingSource.makler,  2, 1, {**FULL_AMENITIES},                                                  1, "Andijon markazida premium 2 xonali. Barcha qulayliklar: Wi-Fi, AC, parking, sport zal. Qiz talabalar.",                          True,  25, True,   834),
         L("L11", "makler_gavhar",  "Izboskan",        "Guliston ko'chasi 11, Izboskan",         "11", "2",  5, 9, -0.028, -0.033,  3, 72, 140, ListingTargetGender.mixed,  ListingSource.makler,  3, 2, {**FULL_AMENITIES},                                                  0, "Izboskan tumanida keng 3 xonali premium xonadon. Oila yoki guruh uchun.",                                                        True,  25, True,   312),
-        L("L12", "makler_gavhar",  "Oltinkol",        "Mehnat ko'chasi 4, Oltinkol",             "4",  "6",  1, 2, -0.022,  0.044,  1, 25,  70, ListingTargetGender.male,   ListingSource.makler,  1, 1, {**BASE_AMENITIES, "washing_machine": True},                        2, "Oltinkol tumanida arzon 1 xonali. Erkak talabalar uchun.",                                                                        False, None, True,    55),
+        L("L12", "makler_gavhar",  "Oltinkol",        "Mehnat ko'chasi 4, Oltinkol",             "4",  "6",  1, 2, -0.022,  0.044,  1, 25,  70, ListingTargetGender.male,   ListingSource.makler,  1, 1, {**BASE_AMENITIES, "washer": True},                        2, "Oltinkol tumanida arzon 1 xonali. Erkak talabalar uchun.",                                                                        False, None, True,    55),
         L("L13", "owner_dilnoza",  "Asaka",           "Bog'cha ko'chasi 1, Asaka",               "1",  "9",  1, 2,  0.008,  0.021,  1, 18,  50, ListingTargetGender.mixed,  ListingSource.owner,   1, 1, {**BASE_AMENITIES},                                                  3, "Asaka tumanida eng arzon variant ($50). Talabalar uchun iqtisodiy xona.",                                                         False, None, True,     9),
-        L("L14", "makler_gavhar",  "Jalaquduq",       "Yoshlik ko'chasi 2, Jalaquduq",           "2",  "1",  2, 3,  0.044, -0.062,  2, 38,  95, ListingTargetGender.female, ListingSource.makler,  2, 2, {**BASE_AMENITIES, "air_conditioning": True},                        1, "Jalaquduq tumanida yangi e'lon. 0 ko'rilgan. Qiz talabalar uchun 2 xonali.",                                                      False, None, True,     0),
+        L("L14", "makler_gavhar",  "Jalaquduq",       "Yoshlik ko'chasi 2, Jalaquduq",           "2",  "1",  2, 3,  0.044, -0.062,  2, 38,  95, ListingTargetGender.female, ListingSource.makler,  2, 2, {**BASE_AMENITIES, "ac": True},                        1, "Jalaquduq tumanida yangi e'lon. 0 ko'rilgan. Qiz talabalar uchun 2 xonali.",                                                      False, None, True,     0),
     ]
 
     listings: dict[str, Listing] = {}

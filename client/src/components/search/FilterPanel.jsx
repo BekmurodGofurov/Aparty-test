@@ -149,23 +149,23 @@ export function FilterPanel({
 
   const amenities = [
     { key: 'wifi', label: t('search.wifi'), icon: <Wifi size={17} /> },
-    { key: 'gaz', label: t('search.gas'), icon: <Flame size={17} /> },
-    { key: 'suv', label: t('search.water'), icon: <Droplets size={17} /> },
+    { key: 'gas', label: t('search.gas'), icon: <Flame size={17} /> },
+    { key: 'water', label: t('search.water'), icon: <Droplets size={17} /> },
     { key: 'tv', label: t('search.tv'), icon: <Tv size={17} /> },
-    { key: 'konditsioner', label: t('search.ac'), icon: <Snowflake size={17} /> },
-    { key: 'kir_mashina', label: t('search.washer'), icon: <WashingMachine size={17} /> },
-    { key: 'holodilnik', label: t('search.fridge'), icon: <Refrigerator size={17} /> },
-    { key: 'oshxona_jihozi', label: t('search.kitchen'), icon: <ChefHat size={17} /> },
+    { key: 'ac', label: t('search.ac'), icon: <Snowflake size={17} /> },
+    { key: 'washer', label: t('search.washer'), icon: <WashingMachine size={17} /> },
+    { key: 'fridge', label: t('search.fridge'), icon: <Refrigerator size={17} /> },
+    { key: 'kitchenware', label: t('search.kitchen'), icon: <ChefHat size={17} /> },
   ]
 
   const searchHint = useMemo(() => {
-    if (filters.tuman) return filters.tuman
-    if (filters.viloyat) return filters.viloyat
+    if (filters.district) return filters.district
+    if (filters.region) return filters.region
     return t('search.region_placeholder')
-  }, [filters.tuman, filters.viloyat, t])
+  }, [filters.district, filters.region, t])
 
-  const priceMax = Number(filters.narx_max || 1000)
-  const priceMin = Number(filters.narx_min || 0)
+  const priceMax = Number(filters.price_max || 1000)
+  const priceMin = Number(filters.price_min || 0)
   const pricePercent = Math.min(100, Math.max(0, (priceMax / 1000) * 100))
 
   const handleSmartSearch = (value) => {
@@ -175,15 +175,15 @@ export function FilterPanel({
 
     const matchedRegion = Object.keys(REGIONS_DATA).find((region) => region.toLowerCase().includes(normalized))
     if (matchedRegion) {
-      setFilter('viloyat', matchedRegion)
+      setFilter('region', matchedRegion)
       return
     }
 
     Object.entries(REGIONS_DATA).some(([region, districts]) => {
       const district = districts.find((item) => item.toLowerCase().includes(normalized))
       if (!district) return false
-      setFilter('viloyat', region)
-      setFilter('tuman', district)
+      setFilter('region', region)
+      setFilter('district', district)
       return true
     })
   }
@@ -238,15 +238,15 @@ export function FilterPanel({
         <AccordionSection
           icon={<MapPin size={18} />}
           title={t('search.location', { defaultValue: t('search.region') })}
-          meta={filters.tuman || filters.viloyat || t('search.district_placeholder')}
+          meta={filters.district || filters.region || t('search.district_placeholder')}
           defaultOpen
         >
           <RegionSelect
             regions={REGIONS_DATA}
-            selectedRegion={filters.viloyat}
-            selectedDistrict={filters.tuman}
-            onRegionChange={(region) => setFilter('viloyat', region)}
-            onDistrictChange={(district) => setFilter('tuman', district)}
+            selectedRegion={filters.region}
+            selectedDistrict={filters.district}
+            onRegionChange={(region) => setFilter('region', region)}
+            onDistrictChange={(district) => setFilter('district', district)}
             regionPlaceholder={t('search.region_placeholder')}
             districtPlaceholder={t('search.district_placeholder')}
           />
@@ -270,7 +270,7 @@ export function FilterPanel({
                 max="1000"
                 step="10"
                 value={priceMax}
-                onChange={(event) => setFilter('narx_max', event.target.value)}
+                onChange={(event) => setFilter('price_max', event.target.value)}
                 aria-label="Maximum price"
               />
             </div>
@@ -280,9 +280,9 @@ export function FilterPanel({
                 <input
                   type="number"
                   min="0"
-                  value={filters.narx_min}
+                  value={filters.price_min}
                   placeholder="0"
-                  onChange={(event) => setFilter('narx_min', event.target.value)}
+                  onChange={(event) => setFilter('price_min', event.target.value)}
                 />
               </label>
               <label>
@@ -290,9 +290,9 @@ export function FilterPanel({
                 <input
                   type="number"
                   min="0"
-                  value={filters.narx_max}
+                  value={filters.price_max}
                   placeholder="1000"
-                  onChange={(event) => setFilter('narx_max', event.target.value)}
+                  onChange={(event) => setFilter('price_max', event.target.value)}
                 />
               </label>
             </div>
@@ -303,8 +303,8 @@ export function FilterPanel({
           <div className="lux-pill-grid">
             {[
               { id: '', label: t('search.apartment_type_all'), icon: <Building2 size={16} /> },
-              { id: 'bomboq', label: t('search.apartment_type_entire'), icon: <Home size={16} /> },
-              { id: 'yotoqxona', label: t('search.apartment_type_per_bed'), icon: <BedDouble size={16} /> },
+              { id: 'apartment', label: t('search.apartment_type_entire'), icon: <Home size={16} /> },
+              { id: 'dormitory', label: t('search.apartment_type_per_bed'), icon: <BedDouble size={16} /> },
             ].map((type) => (
               <PillButton
                 key={type.id || 'all'}
@@ -320,9 +320,9 @@ export function FilterPanel({
             {['1', '2', '3', '4'].map((value) => (
               <PillButton
                 key={value}
-                active={String(filters.xonalar_soni) === value}
+                active={String(filters.rooms_count) === value}
                 label={value === '4' ? '4+' : value}
-                onClick={() => setFilter('xonalar_soni', String(filters.xonalar_soni) === value ? '' : value)}
+                onClick={() => setFilter('rooms_count', String(filters.rooms_count) === value ? '' : value)}
               />
             ))}
           </div>
@@ -332,15 +332,15 @@ export function FilterPanel({
           <div className="lux-pill-grid compact">
             {[
               { id: '', label: t('search.gender_all') },
-              { id: 'erkak', label: t('search.gender_male') },
-              { id: 'ayol', label: t('search.gender_female') },
-              { id: 'aralash', label: t('search.gender_mixed') },
+              { id: 'male', label: t('search.gender_male') },
+              { id: 'female', label: t('search.gender_female') },
+              { id: 'mixed', label: t('search.gender_mixed') },
             ].map((item) => (
               <PillButton
                 key={item.id || 'all-gender'}
-                active={filters.jins === item.id}
+                active={filters.target_gender === item.id}
                 label={item.label}
-                onClick={() => setFilter('jins', item.id)}
+                onClick={() => setFilter('target_gender', item.id)}
               />
             ))}
           </div>
@@ -349,9 +349,9 @@ export function FilterPanel({
             <input
               type="number"
               min="0"
-              value={filters.bosh_joy}
+              value={filters.available_spaces}
               placeholder="0"
-              onChange={(event) => setFilter('bosh_joy', event.target.value)}
+              onChange={(event) => setFilter('available_spaces', event.target.value)}
             />
           </label>
         </AccordionSection>
@@ -361,21 +361,21 @@ export function FilterPanel({
             {amenities.map(({ key, label, icon }) => (
               <AmenityButton
                 key={key}
-                active={Boolean(filters.qulayliklar?.[key])}
+                active={Boolean(filters.amenities?.[key])}
                 icon={icon}
                 label={label}
-                onClick={() => setAmenity(key, !filters.qulayliklar?.[key])}
+                onClick={() => setAmenity(key, !filters.amenities?.[key])}
               />
             ))}
           </div>
         </AccordionSection>
 
         <ToggleCard
-          active={Boolean(filters.kiring_yashaing)}
+          active={Boolean(filters.move_in_ready)}
           icon={<Sparkles size={18} />}
           title={t('search.move_in')}
           desc={t('search.move_in_desc')}
-          onClick={() => setFilter('kiring_yashaing', !filters.kiring_yashaing)}
+          onClick={() => setFilter('move_in_ready', !filters.move_in_ready)}
         />
 
         <div className="lux-panel-buttons">

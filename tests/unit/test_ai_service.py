@@ -75,7 +75,7 @@ def _make_tool_call_response(fn_name: str, fn_args: dict, call_id: str = "call_1
 
 class TestNormalizeAmenities:
     def test_known_alias_ac(self):
-        assert normalize_amenities(["ac"]) == ["konditsioner"]
+        assert normalize_amenities(["ac"]) == ["ac"]
 
     def test_known_alias_wifi(self):
         assert normalize_amenities(["wi-fi"]) == ["wifi"]
@@ -179,12 +179,12 @@ class TestParseDirectSearchRequest:
     def test_gender_erkak(self):
         args = parse_direct_search_request("erkaklar uchun uy")
         assert args is not None
-        assert args.get("jins") == "erkak"
+        assert args.get("jins") == "male"
 
     def test_gender_ayol(self):
         args = parse_direct_search_request("qizlar uchun kvartira")
         assert args is not None
-        assert args.get("jins") == "ayol"
+        assert args.get("jins") == "female"
 
     def test_roommate_flag(self):
         args = parse_direct_search_request("roommate kerak bo'sh joy")
@@ -199,7 +199,7 @@ class TestParseDirectSearchRequest:
     def test_ac_amenity_normalized(self):
         args = parse_direct_search_request("ac bor uy kerak")
         assert args is not None
-        assert "konditsioner" in (args.get("qulayliklar") or [])
+        assert "ac" in (args.get("qulayliklar") or [])
 
 
 # ---------------------------------------------------------------------------

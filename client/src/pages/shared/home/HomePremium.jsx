@@ -65,14 +65,14 @@ const LOCATIONS = [
 
 // Realistic Demo Listings
 const DEMO_LISTINGS = [
-  { id: '101', viloyat: 'Andijon', tuman: 'Andijon shahar', manzil: 'Navoiy shoh ko\'chasi, 12-dom', narx_usd: 250, xonalar_soni: 2, premium: true, egasi_verified: true, rasmlar: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop'], maydon: 65, qavat: '3/4', wifi: true, type: 'family' },
-  { id: '102', viloyat: 'Andijon', tuman: 'Andijon shahar', manzil: 'Bobur maydoni yonida', narx_usd: 180, xonalar_soni: 1, premium: false, egasi_verified: true, rasmlar: ['https://images.unsplash.com/photo-1502672260266-1c1de2d93688?q=80&w=1980&auto=format&fit=crop'], maydon: 40, qavat: '2/5', wifi: true, type: 'student' },
-  { id: '103', viloyat: 'Andijon', tuman: 'Asaka', manzil: 'Markaziy shifoxona ro\'parasida', narx_usd: 300, xonalar_soni: 3, premium: true, egasi_verified: true, rasmlar: ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2075&auto=format&fit=crop'], maydon: 90, qavat: '1/4', wifi: false, type: 'luxury' },
-  { id: '104', viloyat: 'Andijon', tuman: 'Shahrixon', manzil: 'Bozor yonida, tinch mahalla', narx_usd: 150, xonalar_soni: 2, premium: false, egasi_verified: false, rasmlar: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop'], maydon: 55, qavat: '1/1', wifi: true, type: 'student' },
-  { id: '105', viloyat: 'Andijon', tuman: 'Andijon shahar', manzil: 'Makro supermarketi ustida', narx_usd: 400, xonalar_soni: 4, premium: true, egasi_verified: true, rasmlar: ['https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?q=80&w=2070&auto=format&fit=crop'], maydon: 120, qavat: '5/7', wifi: true, type: 'luxury' },
-  { id: '106', viloyat: 'Andijon', tuman: 'Andijon shahar', manzil: 'Universitet yotoqxonasi yonida', narx_usd: 120, xonalar_soni: 1, premium: false, egasi_verified: true, rasmlar: ['https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=2070&auto=format&fit=crop'], maydon: 35, qavat: '4/4', wifi: true, type: 'student' },
-  { id: '107', viloyat: 'Andijon', tuman: 'Xo\'jaobod', manzil: 'Katta yo\'l yoqasida', narx_usd: 200, xonalar_soni: 2, premium: false, egasi_verified: false, rasmlar: ['https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070&auto=format&fit=crop'], maydon: 60, qavat: '2/2', wifi: false, type: 'family' },
-  { id: '108', viloyat: 'Andijon', tuman: 'Andijon shahar', manzil: 'Eski shahar, milliy uslubda', narx_usd: 280, xonalar_soni: 3, premium: true, egasi_verified: true, rasmlar: ['https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2070&auto=format&fit=crop'], maydon: 85, qavat: '1/2', wifi: true, type: 'luxury' },
+  { id: '101', region: 'Andijon', district: 'Andijon shahar', address: 'Navoiy shoh ko\'chasi, 12-dom', price_usd: 250, rooms_count: 2, is_premium: true, owner_verified: true, images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop'], area_m2: 65, floor: '3/4', wifi: true, type: 'family' },
+  { id: '102', region: 'Andijon', district: 'Andijon shahar', address: 'Bobur maydoni yonida', price_usd: 180, rooms_count: 1, is_premium: false, owner_verified: true, images: ['https://images.unsplash.com/photo-1502672260266-1c1de2d93688?q=80&w=1980&auto=format&fit=crop'], area_m2: 40, floor: '2/5', wifi: true, type: 'student' },
+  { id: '103', region: 'Andijon', district: 'Asaka', address: 'Markaziy shifoxona ro\'parasida', price_usd: 300, rooms_count: 3, is_premium: true, owner_verified: true, images: ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2075&auto=format&fit=crop'], area_m2: 90, floor: '1/4', wifi: false, type: 'luxury' },
+  { id: '104', region: 'Andijon', district: 'Shahrixon', address: 'Bozor yonida, tinch mahalla', price_usd: 150, rooms_count: 2, is_premium: false, owner_verified: false, images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop'], area_m2: 55, floor: '1/1', wifi: true, type: 'student' },
+  { id: '105', region: 'Andijon', district: 'Andijon shahar', address: 'Makro supermarketi ustida', price_usd: 400, rooms_count: 4, is_premium: true, owner_verified: true, images: ['https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?q=80&w=2070&auto=format&fit=crop'], area_m2: 120, floor: '5/7', wifi: true, type: 'luxury' },
+  { id: '106', region: 'Andijon', district: 'Andijon shahar', address: 'Universitet yotoqxonasi yonida', price_usd: 120, rooms_count: 1, is_premium: false, owner_verified: true, images: ['https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=2070&auto=format&fit=crop'], area_m2: 35, floor: '4/4', wifi: true, type: 'student' },
+  { id: '107', region: 'Andijon', district: 'Xo\'jaobod', address: 'Katta yo\'l yoqasida', price_usd: 200, rooms_count: 2, is_premium: false, owner_verified: false, images: ['https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070&auto=format&fit=crop'], area_m2: 60, floor: '2/2', wifi: false, type: 'family' },
+  { id: '108', region: 'Andijon', district: 'Andijon shahar', address: 'Eski shahar, milliy uslubda', price_usd: 280, rooms_count: 3, is_premium: true, owner_verified: true, images: ['https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2070&auto=format&fit=crop'], area_m2: 85, floor: '1/2', wifi: true, type: 'luxury' },
 ]
 
 // ── DECORATIVE BACKGROUND COMPONENT (REDESIGNED) ─────────────────────────────
@@ -105,7 +105,7 @@ export function HomePremium() {
 
   const displayListings = useMemo(() => {
     let src = listings;
-    if (activeFilter === 'featured') src = listings.filter(l => l.premium)
+    if (activeFilter === 'featured') src = listings.filter(l => l.is_premium)
     if (activeFilter === 'student') src = listings.filter(l => l.type === 'student')
     if (activeFilter === 'luxury') src = listings.filter(l => l.type === 'luxury')
     return src.slice(0, 8)
@@ -224,13 +224,13 @@ export function HomePremium() {
                       <div key={listing.id}>
                         <PremiumListingCard
                           id={listing.id}
-                          image={listing.rasmlar?.[0] || '/placeholder-apartment.jpg'}
-                          title={listing.manzil || `${listing.tuman || ''}, ${listing.viloyat || ''}`}
-                          location={`${listing.tuman || ''}, ${listing.viloyat || ''}`}
-                          price={listing.narx_usd}
-                          rooms={listing.xonalar_soni}
-                          isPremium={listing.premium}
-                          isVerified={listing.egasi_verified}
+                          image={listing.images?.[0] || '/placeholder-apartment.jpg'}
+                          title={listing.address || `${listing.district || ''}, ${listing.region || ''}`}
+                          location={`${listing.district || ''}, ${listing.region || ''}`}
+                          price={listing.price_usd}
+                          rooms={listing.rooms_count}
+                          isPremium={listing.is_premium}
+                          isVerified={listing.owner_verified}
                           onClick={() => navigate(`/listing/${listing.id}`)}
                         />
                       </div>

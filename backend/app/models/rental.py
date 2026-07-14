@@ -50,9 +50,9 @@ class RentalRequest(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     listing_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("listings.id"), nullable=False)
-    requester_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    recipient_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    status: Mapped[RentalRequestStatus] = mapped_column(Enum(RentalRequestStatus, name="rental_request_status"), default=RentalRequestStatus.pending, nullable=False)
+    requester_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    recipient_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    status: Mapped[RentalRequestStatus] = mapped_column(Enum(RentalRequestStatus, name="rental_request_status"), default=RentalRequestStatus.pending, nullable=False, index=True)
     message: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     rental_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("rentals.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

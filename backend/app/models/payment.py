@@ -23,10 +23,10 @@ class Payment(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     rental_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("rentals.id", ondelete="CASCADE"), nullable=False)
-    payer_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    payer_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     amount: Mapped[int] = mapped_column(Integer, nullable=False)
     billing_month: Mapped[date] = mapped_column(Date, nullable=False)
-    status: Mapped[PaymentStatus] = mapped_column(Enum(PaymentStatus, name="payment_status"), default=PaymentStatus.pending, nullable=False)
+    status: Mapped[PaymentStatus] = mapped_column(Enum(PaymentStatus, name="payment_status"), default=PaymentStatus.pending, nullable=False, index=True)
     payment_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=True)
 
     # Relationships

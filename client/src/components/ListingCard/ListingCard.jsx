@@ -5,11 +5,14 @@ import { motion } from 'framer-motion'
 import {
   Armchair,
   BadgeCheck,
+  ChefHat,
+  Droplets,
   Flame,
   Heart,
   Home,
   MapPin,
   Phone,
+  Refrigerator,
   Send,
   Snowflake,
   Sparkles,
@@ -28,42 +31,50 @@ const FALLBACK_IMG = 'https://images.unsplash.com/photo-1564013799919-ab600027ff
 
 const spring = { type: 'spring', stiffness: 340, damping: 28, mass: 0.75 }
 
-export function ListingCard({ listing }) {
+export default function ListingCard({ listing, onUnfavorite = null }) {
   const { t } = useTranslation()
+  const { user, isAuthenticated } = useAuthStore()
   const accessToken = useAuthStore((s) => s.accessToken)
-  const [saved, setSaved] = useState(false)
+  const [saved, setSaved] = useState(Boolean(listing.is_favorite))
   const [saving, setSaving] = useState(false)
   const [spotlight, setSpotlight] = useState({ x: 50, y: 20 })
 
-  const ownerLabel = listing.egasi_turi === 'makler'
+  const isOwnerVerified = listing.owner_verified ?? false
+  const isPremium = listing.is_premium || false
+
+  const ownerLabel = listing.owner_role === 'makler'
     ? t('card.makler')
-    : listing.egasi_turi === 'owner'
+    : listing.owner_role === 'owner'
       ? t('card.owner')
       : t('card.student')
 
-  const genderLabel = listing.jins === 'erkak'
+  const roomsText = listing.rooms_count > 0 ? `${listing.rooms_count} ${t('card.rooms')}` : t('card.studio')
+  const genderLabel = listing.target_gender === 'male'
     ? t('card.male')
-    : listing.jins === 'ayol'
+    : listing.target_gender === 'female'
       ? t('card.female')
       : t('card.mixed')
 
   const amenityIcons = {
     wifi: <Wifi size={15} />,
-    gaz: <Flame size={15} />,
-    konditsioner: <Snowflake size={15} />,
-    kir_mashina: <WashingMachine size={15} />,
+    gas: <Flame size={15} />,
+    water: <Droplets size={15} />,
+    ac: <Snowflake size={15} />,
+    washer: <WashingMachine size={15} />,
+    fridge: <Refrigerator size={15} />,
+    kitchenware: <ChefHat size={15} />,
     tv: <Tv size={15} />,
   }
 
-  const visibleAmenities = Object.entries(listing.qulayliklar || {})
+  const visibleAmenities = Object.entries(listing.amenities || {})
     .filter(([, value]) => value)
     .slice(0, 4)
 
-  const rating = typeof listing.reyting === 'number' ? listing.reyting.toFixed(1) : t('listing.new')
-  const phoneLink = listing.egasi_telefon ? `tel:${String(listing.egasi_telefon).replace(/\s/g, '')}` : null
-  const telegramId = Number(listing.egasi_telegram_id)
+  const rating = typeof listing.rating === 'number' ? listing.rating.toFixed(1) : t('listing.new')
+  const phoneLink = listing.owner_phone ? `tel:${String(listing.owner_phone).replace(/\s/g, '')}` : null
+  const telegramId = Number(listing.owner_telegram_id)
   const hasLikelyTelegramId = Number.isFinite(telegramId) && telegramId >= 10000 && telegramId < 10000000000
-  const telegramLink = listing.egasi_telegram_url || (hasLikelyTelegramId ? `tg://user?id=${telegramId}` : null)
+  const telegramLink = listing.owner_telegram_url || (hasLikelyTelegramId ? `tg://user?id=${telegramId}` : null)
 
   const handleMouseMove = (event) => {
     const bounds = event.currentTarget.getBoundingClientRect()
@@ -94,19 +105,19 @@ export function ListingCard({ listing }) {
 
   return (
     <motion.article
-      className={`listing-card-liquid ${listing.premium ? 'is-premium' : ''}`}
+      className={`listing-card-liquid ${listing.is_premium ? 'is-premium' : ''}`}
       onMouseMove={handleMouseMove}
       style={{ '--spot-x': `${spotlight.x}%`, '--spot-y': `${spotlight.y}%` }}
       whileHover={{ y: -6 }}
       transition={spring}
     >
-      <Link to={`/listing/${listing.id}`} className="card-hit-area" aria-label={`${listing.tuman}, ${listing.viloyat}`}>
+      <Link to={`/listing/${listing.id}`} className="card-hit-area" aria-label={`${listing.district}, ${listing.region}`}>
         <div className="card-ambient" aria-hidden="true" />
 
         <div className="card-media">
           <motion.img
-            src={listing.rasmlar?.[0] || FALLBACK_IMG}
-            alt={listing.manzil || "E'lon rasmi"}
+            src={listing.images?.[0] || FALLBACK_IMG}
+            alt={listing.address || "E'lon rasmi"}
             loading="lazy"
             onError={(event) => { event.currentTarget.src = FALLBACK_IMG }}
             whileHover={{ scale: 1.075 }}
@@ -116,7 +127,7 @@ export function ListingCard({ listing }) {
           <div className="media-reflection" />
 
           <div className="media-top">
-            {listing.premium && (
+            {listing.is_premium && (
               <motion.span
                 className="premium-chip"
                 initial={{ opacity: 0, y: -8 }}
@@ -139,7 +150,7 @@ export function ListingCard({ listing }) {
           </div>
 
           <div className="price-glass">
-            <span className="price-value">${listing.narx_usd}</span>
+            <span className="price-value">${listing.price_usd}</span>
             <span className="price-unit">{t('card.per_month')}</span>
           </div>
         </div>
@@ -147,7 +158,7 @@ export function ListingCard({ listing }) {
         <div className="card-body">
           <div className="location-row">
             <span className="location-icon"><MapPin size={15} /></span>
-            <span>{listing.tuman}, {listing.viloyat}</span>
+            <span>{listing.district}, {listing.region}</span>
             <span className="rating-pill">
               <Star size={13} fill="currentColor" />
               {rating}
@@ -155,12 +166,12 @@ export function ListingCard({ listing }) {
           </div>
 
           <div className="title-row">
-            <h3>{listing.manzil || `${listing.xonalar_soni} ${t('card.rooms')} kvartira`}</h3>
+            <h3>{listing.address || `${listing.rooms_count} ${t('card.rooms')} kvartira`}</h3>
           </div>
 
           <div className="metrics-row">
-            <span><Home size={15} /> {listing.xonalar_soni} {t('card.rooms')}</span>
-            <span><Users size={15} /> {listing.bosh_joy} {t('card.free')}</span>
+            <span><Home size={15} /> {listing.rooms_count} {t('card.rooms')}</span>
+            <span><Users size={15} /> {listing.available_spaces} {t('card.free')}</span>
             <span><Zap size={15} /> {genderLabel}</span>
           </div>
 
@@ -175,13 +186,13 @@ export function ListingCard({ listing }) {
 
           <div className="card-footer">
             <div className="owner-cluster">
-              <span className="owner-avatar">{listing.egasi_ism?.charAt(0)?.toUpperCase() || 'A'}</span>
+              <span className="owner-avatar">{listing.owner_full_name?.charAt(0)?.toUpperCase() || 'A'}</span>
               <span>
-                <strong>{listing.egasi_ism || ownerLabel}</strong>
+                <strong>{listing.owner_full_name || ownerLabel}</strong>
                 <small>{ownerLabel}</small>
               </span>
             </div>
-            {listing.egasi_verified && (
+            {listing.owner_verified && (
               <span className="verified-mark">
                 <BadgeCheck size={15} />
               </span>

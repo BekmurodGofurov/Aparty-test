@@ -188,9 +188,9 @@ async def search_listings(
     water: Optional[bool] = None,
     tv: Optional[bool] = None,
     ac: Optional[bool] = None,
-    washing_machine: Optional[bool] = None,
-    refrigerator: Optional[bool] = None,
-    kitchen_appliances: Optional[bool] = None,
+    washer: Optional[bool] = None,
+    fridge: Optional[bool] = None,
+    kitchenware: Optional[bool] = None,
     move_in_ready: bool = False,
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=12, ge=1, le=100),
@@ -233,12 +233,12 @@ async def search_listings(
         filters.append(Listing.amenities["tv"].as_boolean() == tv)
     if ac is not None:
         filters.append(Listing.amenities["ac"].as_boolean() == ac)
-    if washing_machine is not None:
-        filters.append(Listing.amenities["washing_machine"].as_boolean() == washing_machine)
-    if refrigerator is not None:
-        filters.append(Listing.amenities["refrigerator"].as_boolean() == refrigerator)
-    if kitchen_appliances is not None:
-        filters.append(Listing.amenities["kitchen_appliances"].as_boolean() == kitchen_appliances)
+    if washer is not None:
+        filters.append(Listing.amenities["washer"].as_boolean() == washer)
+    if fridge is not None:
+        filters.append(Listing.amenities["fridge"].as_boolean() == fridge)
+    if kitchenware is not None:
+        filters.append(Listing.amenities["kitchenware"].as_boolean() == kitchenware)
 
     if move_in_ready:
         filters.extend(
@@ -246,9 +246,9 @@ async def search_listings(
                 Listing.amenities["wifi"].as_boolean().is_(True),
                 Listing.amenities["gas"].as_boolean().is_(True),
                 Listing.amenities["water"].as_boolean().is_(True),
-                Listing.amenities["refrigerator"].as_boolean().is_(True),
-                Listing.amenities["kitchen_appliances"].as_boolean().is_(True),
-                Listing.amenities["washing_machine"].as_boolean().is_(True),
+                Listing.amenities["fridge"].as_boolean().is_(True),
+                Listing.amenities["kitchenware"].as_boolean().is_(True),
+                Listing.amenities["washer"].as_boolean().is_(True),
             ]
         )
 

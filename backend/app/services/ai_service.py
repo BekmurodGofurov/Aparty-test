@@ -31,12 +31,29 @@ from app.services.location_service import KnownPlace, distance_km, find_known_pl
 GROQ_MODEL = "llama3-70b-8192"
 
 AMENITY_ALIASES: Dict[str, str] = {
-    "ac": "konditsioner",
-    "conditioner": "konditsioner",
-    "konditsioner": "konditsioner",
-    "kondisioner": "konditsioner",
+    "ac": "ac",
+    "conditioner": "ac",
+    "konditsioner": "ac",
+    "kondisioner": "ac",
+    "air_conditioning": "ac",
     "wifi": "wifi",
     "wi-fi": "wifi",
+    "gas": "gas",
+    "gaz": "gas",
+    "water": "water",
+    "suv": "water",
+    "tv": "tv",
+    "washer": "washer",
+    "kir_mashina": "washer",
+    "kir mashina": "washer",
+    "washing_machine": "washer",
+    "fridge": "fridge",
+    "holodilnik": "fridge",
+    "refrigerator": "fridge",
+    "sovutkich": "fridge",
+    "kitchenware": "kitchenware",
+    "oshxona_jihozi": "kitchenware",
+    "kitchen_appliances": "kitchenware",
 }
 
 # Tool schema — identical semantics to the old Gemini function declaration.
@@ -249,9 +266,9 @@ def parse_direct_search_request(message: str) -> Optional[Dict[str, Any]]:
         args["xonalar"] = int(room_match.group(1))
 
     if any(word in text for word in ("erkak", "yigit", "bola")):
-        args["jins"] = "erkak"
+        args["jins"] = "male"
     elif any(word in text for word in ("ayol", "qiz")):
-        args["jins"] = "ayol"
+        args["jins"] = "female"
 
     if any(
         word in text
@@ -273,8 +290,19 @@ def parse_direct_search_request(message: str) -> Optional[Dict[str, Any]]:
     for requested, normalized in (
         ("wifi", "wifi"),
         ("wi-fi", "wifi"),
-        ("konditsioner", "konditsioner"),
-        ("ac", "konditsioner"),
+        ("konditsioner", "ac"),
+        ("ac", "ac"),
+        ("kir mashina", "washer"),
+        ("kir_mashina", "washer"),
+        ("washer", "washer"),
+        ("holodilnik", "fridge"),
+        ("fridge", "fridge"),
+        ("oshxona jihozi", "kitchenware"),
+        ("kitchenware", "kitchenware"),
+        ("gaz", "gas"),
+        ("gas", "gas"),
+        ("suv", "water"),
+        ("water", "water"),
     ):
         if requested in text and normalized not in amenities:
             amenities.append(normalized)
@@ -380,7 +408,7 @@ async def search_listings_db(
             "amenities": [
                 key
                 for key, enabled in (l.amenities or {}).items()
-                if enabled and key in {"wifi", "konditsioner", "gaz", "suv", "tv"}
+                if enabled and key in {"wifi", "ac", "gas", "water", "tv", "washer", "fridge", "kitchenware"}
             ],
             "image": l.images[0] if l.images else None,
             "description": (

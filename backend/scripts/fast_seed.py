@@ -41,7 +41,7 @@ REGION_COORDS = {
     "Jizzax": (40.1250, 67.8808),
 }
 
-AMENITIES_LIST = ["wifi", "gas", "water", "tv", "ac", "washing_machine", "refrigerator", "kitchen_appliances"]
+AMENITIES_LIST = ["wifi", "gas", "water", "tv", "ac", "washer", "fridge", "kitchenware"]
 
 SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 

@@ -59,9 +59,20 @@ const getNextPaymentDate = (startDate) => {
 }
 
 const getListingTitle = (listing = {}) => {
-  const location = [listing.manzil, listing.tuman, listing.viloyat].filter(Boolean).join(', ')
+  const location = [
+    listing.address,
+    listing.district,
+    listing.region,
+  ].filter(Boolean).join(', ')
   return location || 'Manzil kiritilmagan'
 }
+
+const getListingImages = (listing = {}) => listing.images || []
+const getListingRooms = (listing = {}) => listing.rooms_count ?? 0
+const getListingSpaces = (listing = {}) => listing.available_spaces ?? 0
+const getListingPrice = (listing = {}) => listing.price_usd ?? 0
+const isListingActive = (listing = {}) => Boolean(listing.is_active)
+const getRentalStudent = (rental = {}) => rental.student || rental.tenant || {}
 
 export function OwnerDashboard() {
   const navigate = useNavigate()
@@ -116,8 +127,8 @@ export function OwnerDashboard() {
   }, [rentals])
 
   const stats = useMemo(() => {
-    const activeAds = listings.filter((listing) => listing.faol).length
-    const inactiveAds = listings.filter((listing) => !listing.faol).length
+    const activeAds = listings.filter((listing) => isListingActive(listing)).length
+    const inactiveAds = listings.filter((listing) => !isListingActive(listing)).length
     const occupied = rentals.filter((rental) => rental.is_active).length
     const monthlyRevenue = rentals
       .filter((rental) => rental.is_active)
@@ -139,7 +150,7 @@ export function OwnerDashboard() {
       setListings((prev) =>
         prev.map((listing) =>
           listing.id === promoListing.id
-            ? { ...listing, faol: true, premium: type === 'premium' }
+            ? { ...listing, is_active: true, is_premium: type === 'premium' }
             : listing
         )
       )
@@ -214,14 +225,14 @@ export function OwnerDashboard() {
       <div className="owner-dashboard__shell">
         <section className="owner-profile-hero">
           <div className="owner-avatar" aria-hidden="true">
-            {owner?.rasm_url ? <img src={owner.rasm_url} alt="" /> : <UserRound size={38} />}
+            {owner?.profile_photo_url ? <img src={owner.profile_photo_url} alt="" /> : <UserRound size={38} />}
           </div>
           <div className="owner-identity">
             <p className="owner-eyebrow">Uy egasi hisobi</p>
-            <h1>{owner?.ism || 'Uy egasi'}</h1>
+            <h1>{owner?.full_name || owner?.ism || 'Uy egasi'}</h1>
             <div className="owner-badges">
               <span><BadgeCheck size={15} /> {owner?.verified ? 'Tasdiqlangan' : 'Tasdiqlanmagan'}</span>
-              <span><Phone size={15} /> {owner?.telefon || '-'}</span>
+              <span><Phone size={15} /> {owner?.phone || owner?.telefon || '-'}</span>
             </div>
           </div>
           <div className="owner-hero-actions">
@@ -283,23 +294,25 @@ export function OwnerDashboard() {
               <div className="owner-listing-stack">
                 {listings.map((listing) => {
                   const activeRental = rentalsByListingId[listing.id]
-                  const isOccupied = Boolean(activeRental) || Number(listing.bosh_joy) === 0
-                  const isVisible = Boolean(listing.faol)
+                  const activeStudent = getRentalStudent(activeRental)
+                  const listingImages = getListingImages(listing)
+                  const isOccupied = Boolean(activeRental) || Number(getListingSpaces(listing)) === 0
+                  const isVisible = isListingActive(listing)
 
                   return (
                     <article className="owner-listing-card" key={listing.id}>
                       <div className="owner-listing-card__main">
                         <div className="owner-listing-image">
-                          {listing.rasmlar?.[0] ? <img src={listing.rasmlar[0]} alt="" /> : <Home size={24} />}
+                          {listingImages[0] ? <img src={listingImages[0]} alt="" /> : <Home size={24} />}
                         </div>
                         <div className="owner-listing-info">
                           <div className="owner-listing-title-row">
                             <h3>{getListingTitle(listing)}</h3>
                           </div>
                           <div className="owner-listing-meta">
-                            <span>{listing.xonalar_soni || 0} xona</span>
-                            <span>{listing.bosh_joy || 0} joy</span>
-                            <strong>${listing.narx_usd || 0}/oy</strong>
+                            <span>{getListingRooms(listing)} xona</span>
+                            <span>{getListingSpaces(listing)} joy</span>
+                            <strong>${getListingPrice(listing)}/oy</strong>
                           </div>
                           <div className="owner-status-row">
                             <span className={`owner-status owner-status--${isOccupied ? 'occupied' : isVisible ? 'active' : 'inactive'}`}>
@@ -309,7 +322,7 @@ export function OwnerDashboard() {
                           {activeRental && (
                             <div className="owner-renter-inline">
                               <UserRound size={15} />
-                              {activeRental.tenant.full_name} olgan, keyingi to'lov: {getNextPaymentDate(activeRental.start_date)}
+                              {activeStudent.full_name || 'Student'} olgan, keyingi to'lov: {getNextPaymentDate(activeRental.start_date)}
                             </div>
                           )}
                         </div>
@@ -449,10 +462,10 @@ export function OwnerDashboard() {
                   <article className="owner-rental-card" key={rental.id}>
                     <div className="owner-rental-card__top">
                       <div>
-                        <h3>{rental.tenant.full_name}</h3>
-                        <p>{rental.tenant.phone}</p>
+                        <h3>{getRentalStudent(rental).full_name || 'Student'}</h3>
+                        <p>{getRentalStudent(rental).phone || '-'}</p>
                       </div>
-                      {rental.tenant.verified && <CheckCircle2 size={18} />}
+                      {(getRentalStudent(rental).is_verified || getRentalStudent(rental).verified) && <CheckCircle2 size={18} />}
                     </div>
                     <div className="owner-rental-meta">
                       <span><Home size={14} /> {rental.listing.address || `${rental.listing.district}, ${rental.listing.region}`}</span>

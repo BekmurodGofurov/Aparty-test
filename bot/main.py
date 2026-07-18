@@ -8,6 +8,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from config.settings import settings
 from handlers import start
 from handlers import registration
+from handlers import login
 
 
 # Configure logging
@@ -50,6 +51,7 @@ async def main():
     # Register routers
     dp.include_router(start.router)
     dp.include_router(registration.router)
+    dp.include_router(login.router)
     
     logger.info("Bot started polling...")
     try:

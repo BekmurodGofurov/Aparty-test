@@ -85,7 +85,7 @@ export function RegisterPage() {
           <div className="premium-alert-box">
              <div className="alert-glow"></div>
              <p>
-               <Sparkles size={16} /> {t('auth.tg_box_2_title', "Telefon raqam + generatsiya qilingan parol orqali saytga kirasiz.")}
+               <Sparkles size={16} /> {t('auth.tg_box_2_title', "Telegram botdan 6 xonali kod olib, saytga kirish uchun undan foydalanasiz.")}
              </p>
           </div>
         </div>

@@ -90,7 +90,7 @@ async def all_users(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/users/{user_id}/detail")
-async def user_detail(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> dict:
+async def user_detail(user_id: int, db: AsyncSession = Depends(get_db)) -> dict:
     user = await select_users.get_by_id(db, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
@@ -106,7 +106,7 @@ async def user_detail(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) ->
 
 
 @router.patch("/users/{user_id}/status")
-async def set_user_status(user_id: uuid.UUID, payload: dict, db: AsyncSession = Depends(get_db)) -> dict:
+async def set_user_status(user_id: int, payload: dict, db: AsyncSession = Depends(get_db)) -> dict:
     user = await select_users.get_by_id(db, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")

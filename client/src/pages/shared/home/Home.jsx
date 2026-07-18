@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { searchListings } from '../../../services/listingService'
 import { HomeSearchBar } from '../../../components/search/HomeSearchBar'
+import ListingCard from '../../../components/ListingCard/ListingCard.jsx'
 import './Home.scss'
 
 const TRUST_BADGES = [

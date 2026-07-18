@@ -1,4 +1,10 @@
-"""Registration flow handler — guides new users through sign-up"""
+"""Registration flow handler — guides new users through sign-up.
+
+FSM flow: Language → Full Name → Role → Phone (via contact button)
+On completion: single POST /api/v1/auth/register sent to the backend.
+
+The bot never stores passwords.  Login uses the /login command → code flow.
+"""
 from contextlib import suppress
 from html import escape
 import re
@@ -15,7 +21,6 @@ from aiogram.fsm.context import FSMContext
 
 from states import RegistrationStates
 from utils.messages import get_message
-from utils.password_generator import generate_password
 from utils.backend_api import backend_client
 
 
@@ -33,7 +38,7 @@ def is_valid_full_name(value: str) -> bool:
     if len(parts) < 2:
         return False
 
-    name_part_pattern = re.compile(r"^[A-Za-zА-Яа-яЁёЎўҚқҒғҲҳʼ'`‘’-]{2,}$")
+    name_part_pattern = re.compile(r"^[A-Za-zА-Яа-яЁёЎўҚқҒғҲҳʼ'`''-]{2,}$")
     return all(name_part_pattern.fullmatch(part) for part in parts)
 
 
@@ -54,7 +59,7 @@ def is_valid_phone(value: str) -> bool:
 
 @router.callback_query(RegistrationStates.waiting_for_language)
 async def language_selected(callback: CallbackQuery, state: FSMContext):
-    """Handle language selection"""
+    """Handle language selection."""
     lang_map = {
         "lang_uz": "uz",
         "lang_ru": "ru",
@@ -80,7 +85,7 @@ async def language_selected(callback: CallbackQuery, state: FSMContext):
 
 @router.message(RegistrationStates.waiting_for_full_name)
 async def full_name_received(message: Message, state: FSMContext):
-    """Handle full name input"""
+    """Handle full name input."""
     name = normalize_full_name(message.text or "")
     data = await state.get_data()
     language = data.get("language", "uz")
@@ -122,7 +127,7 @@ async def full_name_received(message: Message, state: FSMContext):
 
 @router.callback_query(RegistrationStates.waiting_for_role)
 async def role_selected(callback: CallbackQuery, state: FSMContext):
-    """Handle role selection"""
+    """Handle role selection."""
     role_map = {
         "role_owner": "owner",
         "role_realtor": "makler",
@@ -164,11 +169,16 @@ async def role_selected(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-# ─── Phone number ──────────────────────────────────────────────────────────────
+# ─── Phone number (final step) ─────────────────────────────────────────────────
 
 @router.message(RegistrationStates.waiting_for_phone)
 async def phone_received(message: Message, state: FSMContext):
-    """Handle phone number received via contact sharing"""
+    """Handle phone number received via contact sharing — final registration step.
+
+    Security: verifies the user is sharing their OWN Telegram contact.
+    On success: sends a single POST /api/v1/auth/register to the backend
+    with { id, full_name, role, phone } — no password.
+    """
     data = await state.get_data()
     language = data.get("language", "uz")
     full_name = data.get("full_name", "")
@@ -184,7 +194,8 @@ async def phone_received(message: Message, state: FSMContext):
         await message.answer(err.get(language, err["en"]))
         return
 
-    if message.contact.user_id and message.contact.user_id != message.from_user.id:
+    # Security check: user must share their OWN contact
+    if not message.contact.user_id or message.contact.user_id != message.from_user.id:
         err = {
             "uz": "❌ Iltimos, faqat o'zingizning Telegram kontaktingizni yuboring.",
             "ru": "❌ Пожалуйста, отправьте только свой Telegram контакт.",
@@ -203,48 +214,42 @@ async def phone_received(message: Message, state: FSMContext):
         await message.answer(err.get(language, err["en"]))
         return
 
-    # Telegram ID of the registering user
     telegram_id = message.from_user.id
 
-    # Generate a secure password
-    password = generate_password()
-
-    # Register via backend API
+    # Single API call with { id, full_name, role, phone } — no password
     result = await backend_client.register_user(
+        telegram_id=telegram_id,
         full_name=full_name,
         phone=phone,
         role=role,
-        password=password,
-        user_id=telegram_id,
     )
 
     if result["success"]:
         messages_map = {
             "uz": (
                 "✅ <b>Ro'yxatdan o'tdingiz!</b>\n\n"
-                "📱 <b>Telefon:</b> <code>{phone}</code>\n"
-                "🔑 <b>Parol:</b> <code>{password}</code>\n\n"
-                "💻 Bu ma'lumotlar bilan <b>Aparty.uz</b> saytiga kiring.\n"
-                "⚠️ Parolni eslab qoling!"
+                "📱 <b>Telefon:</b> <code>{phone}</code>\n\n"
+                "💻 Saytga kirish uchun <b>Aparty.uz</b> ni oching va /login "
+                "buyrug'i orqali kirish kodini oling.\n"
+                "🔐 Kod 2 daqiqa amal qiladi."
             ),
             "ru": (
                 "✅ <b>Вы успешно зарегистрированы!</b>\n\n"
-                "📱 <b>Телефон:</b> <code>{phone}</code>\n"
-                "🔑 <b>Пароль:</b> <code>{password}</code>\n\n"
-                "💻 Используйте эти данные для входа на <b>Aparty.uz</b>.\n"
-                "⚠️ Запомните пароль!"
+                "📱 <b>Телефон:</b> <code>{phone}</code>\n\n"
+                "💻 Для входа на <b>Aparty.uz</b> используйте команду /login "
+                "чтобы получить одноразовый код.\n"
+                "🔐 Код действует 2 минуты."
             ),
             "en": (
                 "✅ <b>Registration successful!</b>\n\n"
-                "📱 <b>Phone:</b> <code>{phone}</code>\n"
-                "🔑 <b>Password:</b> <code>{password}</code>\n\n"
-                "💻 Use these credentials to log in to <b>Aparty.uz</b>.\n"
-                "⚠️ Remember your password!"
+                "📱 <b>Phone:</b> <code>{phone}</code>\n\n"
+                "💻 To log in to <b>Aparty.uz</b>, use the /login command "
+                "to get a one-time code.\n"
+                "🔐 The code is valid for 2 minutes."
             ),
         }
         text = messages_map.get(language, messages_map["en"]).format(
             phone=escape(phone),
-            password=escape(password),
         )
         await message.answer(text, reply_markup=ReplyKeyboardRemove(), parse_mode="HTML")
     else:

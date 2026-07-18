@@ -3,29 +3,31 @@
 import pytest
 from httpx import AsyncClient
 
-from app.utils.security import DEV_OTP_CODE
+from app.utils.login_code_store import generate_login_code
 
 
 @pytest.mark.asyncio
 async def test_user_journey_register_verify_create_and_search(client: AsyncClient):
+    user_id = 777888999
     phone = "+998909998877"
     register_payload = {
+        "id": user_id,
         "full_name": "Journey User",
         "phone": phone,
-        "password": "password123",
         "role": "makler",
     }
 
     register_response = await client.post("/api/v1/auth/register", json=register_payload)
     assert register_response.status_code == 201
-    user_id = register_response.json()["id"]
+    assert register_response.json()["id"] == user_id
 
-    otp_response = await client.post(
-        "/api/v1/auth/otp/verify",
-        json={"phone": phone, "otp": DEV_OTP_CODE},
+    code = generate_login_code(str(user_id))
+    login_response = await client.post(
+        "/api/v1/auth/login",
+        json={"code": code},
     )
-    assert otp_response.status_code == 200
-    token_data = otp_response.json()
+    assert login_response.status_code == 200
+    token_data = login_response.json()
     assert token_data["access_token"]
     headers = {"Authorization": f"Bearer {token_data['access_token']}"}
 

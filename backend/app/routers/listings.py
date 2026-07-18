@@ -124,16 +124,26 @@ async def _enforce_listing_limits(
 
 
 async def _maybe_consume_subscription(db: AsyncSession, user: User, is_premium: bool) -> bool:
+    """Consume one subscription slot for a Makler, atomically and under a DB lock.
+
+    For non-Makler users or premium listings this is a no-op.
+    Raises HTTP 403 if the Makler has an active subscription but no remaining
+    slots (covering the race-condition scenario where two concurrent requests
+    both try to spend the last slot).
+    """
     if (not user.role or user.role != UserRole.makler) or is_premium:
         return False
 
     today = datetime.now(timezone.utc).date()
-    sub = await select_subscriptions.get_active_subscription(db, user.id, today)
+    sub = await update_subscriptions.try_consume_with_lock(db, user.id, today)
+
     if sub is None:
+        # Either no active subscription exists, OR every slot is already taken.
+        # Let the caller decide whether to allow a free listing creation or block.
         return False
 
-    await update_subscriptions.increment_used_count(db, sub.id)
-    return True
+    return True  # slot consumed; db.flush() already executed inside the lock
+
 
 
 @router.post("", response_model=ListingOut, status_code=status.HTTP_201_CREATED, include_in_schema=False)

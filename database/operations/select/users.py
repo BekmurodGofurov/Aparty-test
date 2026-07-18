@@ -1,4 +1,3 @@
-import uuid
 from typing import Optional
 
 from sqlalchemy import func, select
@@ -7,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User, UserRole
 
 
-async def get_by_id(db: AsyncSession, user_id: uuid.UUID) -> Optional[User]:
+async def get_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
+    """Look up a user by their Telegram ID (which is the primary key)."""
     result = await db.execute(select(User).where(User.id == user_id))
     return result.scalar_one_or_none()
 

@@ -1,7 +1,7 @@
 import asyncio
 import random
-import uuid
 from datetime import datetime, timedelta, timezone
+
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.database import engine
 from app.models.listing import Listing, ListingSource, ListingTargetGender
 from app.models.user import User, UserRole
-from app.utils.security import hash_password
 
 REGIONS = {
     "Toshkent shahri": ["Yunusobod", "Chilonzor", "Mirzo Ulug'bek", "Yashnobod", "Mirobod", "Shayxontohur", "Uchtepa", "Olmazor", "Yakkasaroy", "Sergeli"],
@@ -52,7 +51,6 @@ async def _get_or_create_user(
     phone: str,
     full_name: str,
     role: UserRole,
-    password: str = "password123",
 ) -> User:
     result = await session.execute(select(User).where(User.phone == phone))
     existing = result.scalar_one_or_none()
@@ -60,10 +58,10 @@ async def _get_or_create_user(
         return existing
 
     user = User(
+        id=int(phone.replace("+", "")),
         full_name=full_name,
         phone=phone,
         role=role,
-        hashed_password=hash_password(password),
         is_verified=True,
     )
     session.add(user)
@@ -83,7 +81,7 @@ async def seed() -> None:
                 role=UserRole.admin,
             )
 
-        broker_ids: list[uuid.UUID] = []
+        broker_ids: list[int] = []
         for i in range(100):
             user = await _get_or_create_user(
                 session,
@@ -93,7 +91,7 @@ async def seed() -> None:
             )
             broker_ids.append(user.id)
 
-        owner_ids: list[uuid.UUID] = []
+        owner_ids: list[int] = []
         for i in range(30):
             user = await _get_or_create_user(
                 session,

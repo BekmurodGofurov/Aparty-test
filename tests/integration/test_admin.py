@@ -1,7 +1,5 @@
 """Integration tests for admin API endpoints."""
 
-import uuid
-
 import pytest
 from httpx import AsyncClient
 
@@ -34,7 +32,7 @@ async def test_all_users(client: AsyncClient, admin_user: User):
 @pytest.mark.asyncio
 async def test_user_detail_not_found(client: AsyncClient, admin_user: User):
     response = await client.get(
-        f"/api/v1/admin/users/{uuid.uuid4()}/detail",
+        "/api/v1/admin/users/999999999/detail",
         headers=auth_headers(admin_user),
     )
     assert response.status_code == 404

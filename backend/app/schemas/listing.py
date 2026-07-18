@@ -64,7 +64,7 @@ class ListingUpdate(BaseModel):
 
 class ListingOut(ListingBase):
     id: uuid.UUID
-    owner_id: uuid.UUID
+    owner_id: int
     owner_full_name: Optional[str] = None
     owner_phone: Optional[str] = None
     owner_role: Optional[str] = None

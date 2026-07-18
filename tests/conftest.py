@@ -28,7 +28,7 @@ from app.models import (  # noqa: F401
 )
 from app.models.listing import Listing, ListingSource, ListingTargetGender
 from app.models.user import User, UserRole
-from app.utils.security import create_token, hash_password
+from app.utils.security import create_token
 
 # Allow PostgreSQL-specific column types to compile on SQLite for tests.
 @compiles(UUID, "sqlite")
@@ -98,10 +98,10 @@ async def client(db_session: AsyncSession, db_engine) -> AsyncGenerator[AsyncCli
 @pytest_asyncio.fixture
 async def admin_user(db_session: AsyncSession) -> User:
     user = User(
+        id=100000001,
         full_name="Test Admin",
         phone="+998900000001",
         role=UserRole.admin,
-        hashed_password=hash_password("password123"),
         is_verified=True,
     )
     db_session.add(user)
@@ -113,10 +113,10 @@ async def admin_user(db_session: AsyncSession) -> User:
 @pytest_asyncio.fixture
 async def owner_user(db_session: AsyncSession) -> User:
     user = User(
+        id=100000002,
         full_name="Test Owner",
         phone="+998901234567",
         role=UserRole.owner,
-        hashed_password=hash_password("password123"),
         is_verified=True,
     )
     db_session.add(user)
@@ -128,10 +128,10 @@ async def owner_user(db_session: AsyncSession) -> User:
 @pytest_asyncio.fixture
 async def student_user(db_session: AsyncSession) -> User:
     user = User(
+        id=100000003,
         full_name="Test Student",
         phone="+998907654321",
         role=UserRole.student,
-        hashed_password=hash_password("password123"),
         is_verified=True,
     )
     db_session.add(user)
@@ -143,10 +143,10 @@ async def student_user(db_session: AsyncSession) -> User:
 @pytest_asyncio.fixture
 async def makler_user(db_session: AsyncSession) -> User:
     user = User(
+        id=100000004,
         full_name="Test Makler",
         phone="+998901112233",
         role=UserRole.makler,
-        hashed_password=hash_password("password123"),
         is_verified=True,
     )
     db_session.add(user)

@@ -15,12 +15,8 @@ class TestUpdateFields:
     async def test_update_fields_callable(self, db_session):
         assert callable(ops.update_fields)
 
-class TestUpdatePassword:
-    @pytest.mark.asyncio
-    async def test_update_password_callable(self, db_session):
-        assert callable(ops.update_password)
-
 class TestVerifyUser:
     @pytest.mark.asyncio
     async def test_verify_user_callable(self, db_session):
         assert callable(ops.verify_user)
+

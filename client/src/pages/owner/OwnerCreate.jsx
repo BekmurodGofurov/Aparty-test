@@ -60,7 +60,7 @@ const propertyTypes = [
 ]
 
 const genderOptions = [
-  { value: 'mixed', label: 'Farqi yo'q' },
+  { value: 'mixed', label: "Farqi yo'q" },
   { value: 'male', label: 'Erkaklar' },
   { value: 'female', label: 'Ayollar' },
 ]
@@ -327,7 +327,7 @@ export function OwnerCreate() {
                   {form.images.length < 5 && (
                     <label className="owner-image-add">
                       <ImagePlus size={24} />
-                      <span>{uploadingImages ? 'Yuklanmoqda...' : 'Rasm qo'shish'}</span>
+                      <span>{uploadingImages ? 'Yuklanmoqda...' : "Rasm qo'shish"}</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -630,7 +630,7 @@ export function OwnerCreate() {
                 </div>
                 <div>
                   <span>Ijara</span>
-                  <strong>{form.rental_type === 'full' ? 'To'liq' : 'Joy'}</strong>
+                  <strong>{form.rental_type === 'full' ? "To'liq" : 'Joy'}</strong>
                 </div>
                 <div>
                   <span>Narx</span>

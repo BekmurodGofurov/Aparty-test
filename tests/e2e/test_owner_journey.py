@@ -5,30 +5,32 @@ from datetime import date
 import pytest
 from httpx import AsyncClient
 
-from app.utils.security import DEV_OTP_CODE
+from app.utils.login_code_store import generate_login_code
 from tests.conftest import auth_headers
 
 
 @pytest.mark.asyncio
 async def test_owner_journey_premium_listing_accept_payment(client: AsyncClient, student_user):
+    owner_id = 999888777
     phone = "+998908776655"
     register_response = await client.post(
         "/api/v1/auth/register",
         json={
+            "id": owner_id,
             "full_name": "Owner Journey",
             "phone": phone,
-            "password": "password123",
             "role": "owner",
         },
     )
     assert register_response.status_code == 201
-    owner_id = register_response.json()["id"]
+    assert register_response.json()["id"] == owner_id
 
-    otp_response = await client.post(
-        "/api/v1/auth/otp/verify",
-        json={"phone": phone, "otp": DEV_OTP_CODE},
+    code = generate_login_code(str(owner_id))
+    login_response = await client.post(
+        "/api/v1/auth/login",
+        json={"code": code},
     )
-    owner_headers = {"Authorization": f"Bearer {otp_response.json()['access_token']}"}
+    owner_headers = {"Authorization": f"Bearer {login_response.json()['access_token']}"}
 
     listing_payload = {
         "region": "Samarqand",
@@ -79,7 +81,7 @@ async def test_owner_journey_premium_listing_accept_payment(client: AsyncClient,
         "/api/v1/payments/",
         json={
             "rental_id": rental_id,
-            "payer_id": str(student_user.id),
+            "payer_id": student_user.id,
             "amount": 350,
             "billing_month": str(date.today().replace(day=1)),
         },

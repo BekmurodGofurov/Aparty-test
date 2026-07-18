@@ -1,4 +1,6 @@
 """Start command handler — checks if user is registered via backend API"""
+from html import escape
+
 from aiogram import Router
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
@@ -31,9 +33,10 @@ async def start_handler(message: Message, state: FSMContext):
     if user_data.get("exists"):
         full_name = user_data.get("full_name", "")
         await message.answer(
-            f"👋 Xush kelibsiz, {full_name}!\n\n"
+            f"👋 Xush kelibsiz, <b>{escape(full_name)}</b>!\n\n"
             f"✅ Siz allaqachon ro'yxatdan o'tgansiz.\n"
-            f"💻 Aparty.uz saytiga telefon va parolingiz bilan kiring.",
+            f"💻 Aparty.uz saytiga kirish uchun /login buyrug'ini yuboring.",
+            parse_mode="HTML",
         )
         return
 

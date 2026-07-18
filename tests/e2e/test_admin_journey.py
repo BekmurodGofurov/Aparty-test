@@ -7,6 +7,9 @@ from app.models.user import User
 from tests.conftest import auth_headers
 
 
+from app.utils.login_code_store import generate_login_code
+
+
 @pytest.mark.asyncio
 async def test_admin_journey_moderate_and_ban(
     client: AsyncClient,
@@ -16,9 +19,10 @@ async def test_admin_journey_moderate_and_ban(
 ):
     admin_headers = auth_headers(admin_user)
 
+    code = generate_login_code(str(admin_user.id))
     login_response = await client.post(
-        "/api/v1/auth/admin-login",
-        json={"phone": admin_user.phone, "password": "password123"},
+        "/api/v1/auth/login",
+        json={"code": code},
     )
     assert login_response.status_code == 200
 
@@ -47,4 +51,4 @@ async def test_admin_journey_moderate_and_ban(
         headers=admin_headers,
     )
     assert detail.status_code == 200
-    assert detail.json()["user"]["id"] == str(student_user.id)
+    assert detail.json()["user"]["id"] == student_user.id

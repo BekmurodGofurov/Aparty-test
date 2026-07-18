@@ -3,7 +3,7 @@
 import pytest
 from httpx import AsyncClient
 
-from app.utils.security import DEV_OTP_CODE
+from app.utils.login_code_store import generate_login_code
 from tests.conftest import auth_headers
 
 
@@ -12,24 +12,26 @@ async def test_guest_journey_register_verify_search_book(
     client: AsyncClient,
     active_listing,
 ):
+    user_id = 888777666
     phone = "+998909998877"
     register_response = await client.post(
         "/api/v1/auth/register",
         json={
+            "id": user_id,
             "full_name": "Guest Journey",
             "phone": phone,
-            "password": "password123",
             "role": "student",
         },
     )
     assert register_response.status_code == 201
 
-    otp_response = await client.post(
-        "/api/v1/auth/otp/verify",
-        json={"phone": phone, "otp": DEV_OTP_CODE},
+    code = generate_login_code(str(user_id))
+    login_response = await client.post(
+        "/api/v1/auth/login",
+        json={"code": code},
     )
-    assert otp_response.status_code == 200
-    token = otp_response.json()["access_token"]
+    assert login_response.status_code == 200
+    token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
     search_response = await client.get(

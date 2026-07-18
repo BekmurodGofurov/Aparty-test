@@ -8,7 +8,7 @@
 ║    python -m scripts.seed_demo_data --wipe  # wipe then re-seed     ║
 ║                                                                      ║
 ║  WHAT IT CREATES:                                                    ║
-║    • 9 users   (1 admin, 2 owners, 2 maklers, 4 students)           ║
+║    • 8 users   (2 owners, 2 maklers, 4 students — root admin via env)║
 ║    • 14 listings (premium, regular, deactivated, zero-views…)       ║
 ║    • 3 subscriptions  (at-cap, expiring, expired)                   ║
 ║    • 7 listing-payment records                                       ║
@@ -70,14 +70,11 @@ from app.models import (
     User,
     UserRole,
 )
-from app.utils.security import hash_password
-
 # ─────────────────────────────────────────────────────────────────────
 # Constants
 # ─────────────────────────────────────────────────────────────────────
 TODAY = date.today()
 NOW = datetime.now(timezone.utc)
-PASSWORD = "Demo1234!"
 
 ANDIJAN_LAT = 40.7821
 ANDIJAN_LNG = 72.3442
@@ -90,34 +87,32 @@ SAMPLE_IMAGES = [
     "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1200&q=80",
 ]
 
+# Standard English amenity keys: gas, water, ac, washer, fridge, kitchenware, wifi, tv
 BASE_AMENITIES: dict[str, bool] = {
-    "wifi": True,
-    "washer": False,
     "gas": True,
     "water": True,
     "ac": False,
+    "washer": False,
     "fridge": True,
     "kitchenware": True,
+    "wifi": True,
     "tv": False,
 }
 
 FULL_AMENITIES: dict[str, bool] = {
-    "wifi": True,
-    "washer": True,
     "gas": True,
     "water": True,
     "ac": True,
+    "washer": True,
     "fridge": True,
     "kitchenware": True,
+    "wifi": True,
     "tv": True,
 }
 
 # ─────────────────────────────────────────────────────────────────────
 # Helpers
 # ─────────────────────────────────────────────────────────────────────
-
-def _hp(pw: str) -> str:
-    return hash_password(pw)
 
 def _coord(lat_off: float, lng_off: float) -> tuple[float, float]:
     return round(ANDIJAN_LAT + lat_off, 6), round(ANDIJAN_LNG + lng_off, 6)
@@ -136,30 +131,49 @@ async def _get_or_none(db: AsyncSession, model: Any, **filters) -> Any | None:
 # ─────────────────────────────────────────────────────────────────────
 
 async def seed_users(db: AsyncSession) -> dict[str, User]:
-    print("\n── [1/9] Seeding Users ──────────────────────────────────────")
+    print("\n── [1/8] Seeding Users (Telegram BigInteger IDs) ────────────")
     specs = [
-        dict(alias="admin_bekzod",      full_name="Bekzod Yusupov",       phone="+998901000001", email="admin@aparty.uz",   role=UserRole.admin,   university=None,                                     is_verified=True),
-        dict(alias="owner_dilnoza",     full_name="Dilnoza Raximova",      phone="+998901000010", email="dilnoza@mail.uz",   role=UserRole.owner,   university=None,                                     is_verified=True),
-        dict(alias="owner_sarvar",      full_name="Sarvar Nazarov",        phone="+998901000011", email=None,                role=UserRole.owner,   university=None,                                     is_verified=False),
-        dict(alias="makler_mansur",     full_name="Mansur Holiqov",        phone="+998901000020", email="mansur@broker.uz",  role=UserRole.makler,  university=None,                                     is_verified=True),
-        dict(alias="makler_gavhar",     full_name="Gavhar Toshmatova",     phone="+998901000021", email=None,                role=UserRole.makler,  university=None,                                     is_verified=True),
-        dict(alias="student_aziz",      full_name="Aziz Mirzayev",         phone="+998901000030", email=None,                role=UserRole.student, university="Andijon Davlat Universiteti (ADU)",      is_verified=True),
-        dict(alias="student_malika",    full_name="Malika Sotvoldiyeva",   phone="+998901000031", email=None,                role=UserRole.student, university="Andijon Mashinasozlik Instituti (AMI)",  is_verified=True),
-        dict(alias="student_jasur",     full_name="Jasur Ergashev",        phone="+998901000032", email=None,                role=UserRole.student, university="Andijon Tibbiyot Instituti (ATI)",       is_verified=False),
-        dict(alias="student_nodira",    full_name="Nodira Xasanova",       phone="+998901000033", email=None,                role=UserRole.student, university="Fergana Politexnika Instituti (FarPI)",  is_verified=True),
+        dict(alias="makler_mansur",  id=200000001, full_name="Mansur Holiqov",     phone="+998901000020", role=UserRole.makler,  university=None,                                    is_verified=True),
+        dict(alias="makler_gavhar",  id=200000002, full_name="Gavhar Toshmatova",  phone="+998901000021", role=UserRole.makler,  university=None,                                    is_verified=True),
+        dict(alias="owner_dilnoza",  id=300000001, full_name="Dilnoza Raximova",   phone="+998901000010", role=UserRole.owner,   university=None,                                    is_verified=True),
+        dict(alias="owner_sarvar",   id=300000002, full_name="Sarvar Nazarov",     phone="+998901000011", role=UserRole.owner,   university=None,                                    is_verified=False),
+        dict(alias="student_aziz",   id=400000001, full_name="Aziz Mirzayev",      phone="+998901000030", role=UserRole.student, university="Andijon Davlat Universiteti (ADU)",     is_verified=True),
+        dict(alias="student_malika", id=400000002, full_name="Malika Sotvoldiyeva", phone="+998901000031", role=UserRole.student, university="Andijon Mashinasozlik Instituti (AMI)", is_verified=True),
+        dict(alias="student_jasur",  id=400000003, full_name="Jasur Ergashev",     phone="+998901000032", role=UserRole.student, university="Andijon Tibbiyot Instituti (ATI)",      is_verified=False),
+        dict(alias="student_nodira", id=400000004, full_name="Nodira Xasanova",    phone="+998901000033", role=UserRole.student, university="Fergana Politexnika Instituti (FarPI)", is_verified=True),
     ]
     users: dict[str, User] = {}
     for spec in specs:
         alias = spec.pop("alias")
-        existing = await _get_or_none(db, User, phone=spec["phone"])
-        if existing:
-            print(f"  ↩  {alias} already exists.")
-            users[alias] = existing
+        existing_by_phone = await _get_or_none(db, User, phone=spec["phone"])
+        existing_by_id = await _get_or_none(db, User, id=spec["id"])
+
+        if existing_by_phone and existing_by_id and existing_by_phone.id == existing_by_id.id:
+            print(f"  ↩  {alias} already exists (BigInteger ID: {existing_by_phone.id}).")
+            users[alias] = existing_by_phone
             continue
-        user = User(hashed_password=_hp(PASSWORD), **spec)
+
+        # If there is an older demo user with the same phone but old schema/ID, remove it to ensure exact BigInteger Telegram ID
+        if existing_by_phone and existing_by_phone.id != spec["id"]:
+            print(f"  🔄 Re-aligning schema ID for {alias}: replacing ID {existing_by_phone.id} with BigInteger {spec['id']}")
+            await db.execute(delete(User).where(User.id == existing_by_phone.id))
+            await db.flush()
+            existing_by_phone = None
+
+        if existing_by_id:
+            existing_by_id.full_name = spec["full_name"]
+            existing_by_id.phone = spec["phone"]
+            existing_by_id.role = spec["role"]
+            existing_by_id.university = spec["university"]
+            existing_by_id.is_verified = spec["is_verified"]
+            print(f"  ✓  {alias} ({spec['phone']}) updated with BigInteger ID: {spec['id']}.")
+            users[alias] = existing_by_id
+            continue
+
+        user = User(**spec)
         db.add(user)
         await db.flush()
-        print(f"  ✓  {alias} ({spec['phone']}) created.")
+        print(f"  ✓  {alias} ({spec['phone']}) created with BigInteger ID: {spec['id']}.")
         users[alias] = user
     await db.commit()
     for u in users.values():
@@ -559,13 +573,24 @@ async def seed_notifications(
 # WIPE
 # ─────────────────────────────────────────────────────────────────────
 
-DEMO_PHONES = ["+998901000001","+998901000010","+998901000011",
-               "+998901000020","+998901000021",
-               "+998901000030","+998901000031","+998901000032","+998901000033"]
+DEMO_PHONES = [
+    "+998901000001", "+998901000010", "+998901000011",
+    "+998901000020", "+998901000021",
+    "+998901000030", "+998901000031", "+998901000032", "+998901000033",
+]
+
+DEMO_USER_IDS = [
+    100000001, 200000001, 200000002, 300000001, 300000002, 400000001, 400000002, 400000003, 400000004,
+    100000010, 100000011, 100000012, 100000013, 100000014, 100000015, 100000016, 100000017, 100000018,
+]
 
 async def wipe_demo_data(db: AsyncSession) -> None:
     print("\n⚠️  WIPE MODE — deleting existing demo data...")
-    result = await db.execute(select(User.id).where(User.phone.in_(DEMO_PHONES)))
+    result = await db.execute(
+        select(User.id).where(
+            (User.phone.in_(DEMO_PHONES)) | (User.id.in_(DEMO_USER_IDS))
+        )
+    )
     user_ids = [r[0] for r in result.fetchall()]
     if not user_ids:
         print("  — No demo users found.")
@@ -608,46 +633,66 @@ async def wipe_demo_data(db: AsyncSession) -> None:
 
 async def main(wipe: bool = False) -> None:
     print("═" * 62)
-    print("  Aparty — Demo Data Seed Script")
+    print("  Aparty — Demo Data Seed Script (Telegram BigInteger Schema)")
     print("═" * 62)
 
     async with AsyncSessionLocal() as db:
-        if wipe:
-            await wipe_demo_data(db)
+        try:
+            if wipe:
+                await wipe_demo_data(db)
 
-        users    = await seed_users(db)
-        listings = await seed_listings(db, users)
-        await seed_subscriptions(db, users)
-        await seed_listing_payments(db, users, listings)
-        rentals  = await seed_rentals(db, users, listings)
-        await seed_payments(db, users, rentals)
-        requests = await seed_rental_requests(db, users, listings, rentals)
-        await seed_room_messages(db, users, listings, rentals)
-        await seed_reviews(db, users, listings)
-        await seed_favorites(db, users, listings)
-        await seed_maintenance_reports(db, users, listings, rentals)
-        await seed_notifications(db, users, listings, requests)
+            # Relational Integrity sequence:
+            # 1. Users first (with BigInteger Telegram IDs)
+            users = await seed_users(db)
+            # 2. Subscriptions second
+            await seed_subscriptions(db, users)
+            # 3. Listings third (explicitly linking to BigInteger owner IDs)
+            listings = await seed_listings(db, users)
+            # 4. Listing Payments
+            await seed_listing_payments(db, users, listings)
+            # 5. Rentals
+            rentals = await seed_rentals(db, users, listings)
+            # 6. Payments
+            await seed_payments(db, users, rentals)
+            # 7. Rental Requests + Messages
+            requests = await seed_rental_requests(db, users, listings, rentals)
+            # 8. Room Messages
+            await seed_room_messages(db, users, listings, rentals)
+            # 9. Reviews
+            await seed_reviews(db, users, listings)
+            # 10. Favorites
+            await seed_favorites(db, users, listings)
+            # 11. Maintenance Reports
+            await seed_maintenance_reports(db, users, listings, rentals)
+            # 12. Notifications
+            await seed_notifications(db, users, listings, requests)
+
+            await db.commit()
+        except Exception as e:
+            await db.rollback()
+            print(f"\n❌ ERROR during seeding: {e}")
+            print("🔄 Session rolled back to preserve transactional relational integrity.")
+            raise
 
     print("\n" + "═" * 62)
     print("  ✅  Demo data seeded successfully!")
     print("═" * 62)
-    print(f"\n  Password for all accounts: {PASSWORD}\n")
+    print("\n  Authentication: 100% Passwordless (Telegram Auth / OTP)\n")
     rows = [
-        ("admin",   "admin_bekzod",   "+998901000001"),
-        ("owner",   "owner_dilnoza",  "+998901000010"),
-        ("owner",   "owner_sarvar",   "+998901000011"),
-        ("makler",  "makler_mansur",  "+998901000020"),
-        ("makler",  "makler_gavhar",  "+998901000021"),
-        ("student", "student_aziz",   "+998901000030"),
-        ("student", "student_malika", "+998901000031"),
-        ("student", "student_jasur",  "+998901000032"),
-        ("student", "student_nodira", "+998901000033"),
+        ("makler",  "makler_mansur",  200000001, "+998901000020"),
+        ("makler",  "makler_gavhar",  200000002, "+998901000021"),
+        ("owner",   "owner_dilnoza",  300000001, "+998901000010"),
+        ("owner",   "owner_sarvar",   300000002, "+998901000011"),
+        ("student", "student_aziz",   400000001, "+998901000030"),
+        ("student", "student_malika", 400000002, "+998901000031"),
+        ("student", "student_jasur",  400000003, "+998901000032"),
+        ("student", "student_nodira", 400000004, "+998901000033"),
     ]
-    print(f"  {'Role':<10} {'Alias':<20} {'Phone'}")
-    print(f"  {'-'*10} {'-'*20} {'-'*18}")
-    for role, alias, phone in rows:
-        print(f"  {role:<10} {alias:<20} {phone}")
-    print()
+    print(f"  {'Role':<10} {'Alias':<18} {'Telegram ID':<15} {'Phone'}")
+    print(f"  {'-'*10} {'-'*18} {'-'*15} {'-'*18}")
+    for role, alias, tid, phone in rows:
+        print(f"  {role:<10} {alias:<18} {tid:<15} {phone}")
+    print(f"\n  Confirmed: Successfully merged/inserted {len(users)} Users and {len(listings)} Listings with BigInteger Telegram IDs and 0 relation errors.\n")
 
 
 if __name__ == "__main__":

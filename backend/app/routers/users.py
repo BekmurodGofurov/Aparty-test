@@ -1,4 +1,3 @@
-import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,7 +5,6 @@ from app.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.schemas.user import UserOut, UserUpdate
-from app.utils.security import hash_password
 from database.operations.delete import users as delete_users
 from database.operations.select import users as select_users
 from database.operations.update import users as update_users
@@ -21,8 +19,8 @@ async def get_current_user_profile(current_user: User = Depends(get_current_user
 
 
 @router.get("/{user_id}", response_model=UserOut)
-async def get_user(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> User:
-    """Get user by UUID"""
+async def get_user(user_id: int, db: AsyncSession = Depends(get_db)) -> User:
+    """Get user by ID (Telegram ID)"""
     user = await select_users.get_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
@@ -37,9 +35,6 @@ async def update_current_user(
 ) -> User:
     """Update current user profile"""
     update_data = payload.model_dump(exclude_unset=True)
-
-    if "password" in update_data:
-        update_data["hashed_password"] = hash_password(update_data.pop("password"))
 
     update_data.pop("role", None)
     update_data.pop("is_verified", None)

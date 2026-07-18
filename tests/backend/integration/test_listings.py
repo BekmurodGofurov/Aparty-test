@@ -26,7 +26,7 @@ async def test_create_listing_success(
     assert data["region"] == sample_listing_payload["region"]
     assert data["district"] == sample_listing_payload["district"]
     assert data["price_usd"] == sample_listing_payload["price_usd"]
-    assert data["owner_id"] == str(makler_user.id)
+    assert data["owner_id"] == makler_user.id
     assert data["source"] == "makler"
 
 

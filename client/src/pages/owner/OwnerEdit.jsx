@@ -60,7 +60,7 @@ const propertyTypes = [
 ]
 
 const genderOptions = [
-  { value: 'mixed', label: 'Farqi yo'q' },
+  { value: 'mixed', label: "Farqi yo'q" },
   { value: 'male', label: 'Erkaklar' },
   { value: 'female', label: 'Ayollar' },
 ]
@@ -136,7 +136,7 @@ export function OwnerEdit() {
         const data = await getListingById(id)
         setForm(normalizeListing(data))
       } catch {
-        setError('E'lonni yuklab bo'lmadi')
+        setError("E'lonni yuklab bo'lmadi")
       } finally {
         setLoading(false)
       }
@@ -259,7 +259,7 @@ export function OwnerEdit() {
       await updateListing(id, payload)
       navigate(basePath)
     } catch (err) {
-      setError(err.response?.data?.detail || 'E'lonni saqlashda xatolik yuz berdi')
+      setError(err.response?.data?.detail || "E'lonni saqlashda xatolik yuz berdi")
     } finally {
       setSaving(false)
     }
@@ -337,7 +337,7 @@ export function OwnerEdit() {
                   {form.images.length < 5 && (
                     <label className="owner-image-add">
                       <ImagePlus size={24} />
-                      <span>{uploadingImages ? 'Yuklanmoqda...' : 'Rasm qo'shish'}</span>
+                      <span>{uploadingImages ? 'Yuklanmoqda...' : "Rasm qo'shish"}</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -594,7 +594,7 @@ export function OwnerEdit() {
               </button>
               <button type="submit" className="owner-create__primary" disabled={saving}>
                 <Save size={18} />
-                {saving ? 'Saqlanmoqda...' : 'O'zgarishlarni saqlash'}
+                {saving ? 'Saqlanmoqda...' : "O'zgarishlarni saqlash"}
               </button>
             </div>
           </form>
@@ -616,7 +616,7 @@ export function OwnerEdit() {
                 </div>
                 <div>
                   <span>Joy</span>
-                  <strong>{form.rental_type === 'full' ? 'To'liq' : form.available_spaces}</strong>
+                  <strong>{form.rental_type === 'full' ? "To'liq" : form.available_spaces}</strong>
                 </div>
                 <div>
                   <span>Narx</span>

@@ -1,7 +1,5 @@
 """Integration tests for users API endpoints."""
 
-import uuid
-
 import pytest
 from httpx import AsyncClient
 
@@ -24,7 +22,7 @@ async def test_get_user_by_id(client: AsyncClient, student_user: User):
 
 @pytest.mark.asyncio
 async def test_get_user_not_found(client: AsyncClient):
-    response = await client.get(f"/api/v1/users/{uuid.uuid4()}")
+    response = await client.get("/api/v1/users/999999999")
     assert response.status_code == 404
 
 
@@ -42,13 +40,12 @@ async def test_update_current_user(client: AsyncClient, student_user: User):
 @pytest.mark.asyncio
 async def test_delete_current_user(client: AsyncClient, db_session):
     from app.models.user import User, UserRole
-    from app.utils.security import hash_password
 
     user = User(
+        id=888888888,
         full_name="Delete Me",
         phone="+998903333333",
         role=UserRole.student,
-        hashed_password=hash_password("password123"),
         is_verified=True,
     )
     db_session.add(user)

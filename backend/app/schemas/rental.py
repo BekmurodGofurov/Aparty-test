@@ -11,7 +11,7 @@ from app.models.rental import MaintenanceReportStatus, RentalRequestStatus
 
 class RentalCreate(BaseModel):
     listing_id: uuid.UUID
-    student_id: uuid.UUID
+    student_id: int
     start_date: date
     end_date: Optional[date] = None
     price_usd: int = Field(ge=1)
@@ -20,7 +20,7 @@ class RentalCreate(BaseModel):
 class RentalOut(BaseModel):
     id: uuid.UUID
     listing_id: Optional[uuid.UUID] = None
-    student_id: uuid.UUID
+    student_id: int
     start_date: date
     end_date: Optional[date] = None
     price_usd: int
@@ -31,7 +31,7 @@ class RentalOut(BaseModel):
 
 
 class OwnerRentalStudent(BaseModel):
-    id: uuid.UUID
+    id: int
     full_name: str
     phone: str
     is_verified: bool
@@ -73,7 +73,7 @@ class RentalMessageCreate(BaseModel):
 
 
 class RentalRequestUser(BaseModel):
-    id: uuid.UUID
+    id: int
     full_name: str
     phone: str
     is_verified: bool
@@ -110,7 +110,7 @@ class RentalRequestOut(BaseModel):
 class RentalRequestMessageOut(BaseModel):
     id: uuid.UUID
     request_id: uuid.UUID
-    sender_id: uuid.UUID
+    sender_id: int
     sender_name: str
     text: str
     created_at: datetime
@@ -133,7 +133,7 @@ class RoomListingOut(BaseModel):
 
 
 class RoomNeighborOut(BaseModel):
-    id: uuid.UUID
+    id: int
     full_name: str
     phone: str
     is_verified: bool
@@ -162,7 +162,7 @@ class RoomMessageOut(BaseModel):
     id: uuid.UUID
     rental_id: uuid.UUID
     listing_id: uuid.UUID
-    sender_id: uuid.UUID
+    sender_id: int
     sender_name: str
     text: str
     created_at: datetime
@@ -179,8 +179,8 @@ class MaintenanceReportOut(BaseModel):
     id: uuid.UUID
     rental_id: uuid.UUID
     listing_id: uuid.UUID
-    reporter_id: uuid.UUID
-    recipient_id: uuid.UUID
+    reporter_id: int
+    recipient_id: int
     text: str
     image_url: Optional[str] = None
     status: MaintenanceReportStatus

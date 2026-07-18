@@ -17,16 +17,15 @@ def verify_password(password: str, hashed_password: str) -> bool:
         return False
 
 
-def create_token(subject: str, expires_minutes: int) -> str:
+def create_token(subject: str, expires_minutes: int, extra_claims: dict[str, object] | None = None) -> str:
     now = datetime.now(timezone.utc)
-    payload = {"sub": subject, "iat": now, "exp": now + timedelta(minutes=expires_minutes)}
+    payload: dict[str, object] = {"sub": subject, "iat": now, "exp": now + timedelta(minutes=expires_minutes)}
+    if extra_claims:
+        payload.update(extra_claims)
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
-# TODO: Replace with production SMS/TOTP verification backed by Redis or a dedicated OTP store.
-DEV_OTP_CODE = "000000"
-
-
-def verify_otp_code(_phone: str, otp: str) -> bool:
-    """Validate an OTP code. Uses a hardcoded dev code until SMS integration is added."""
-    return otp == DEV_OTP_CODE
+def verify_otp_code(phone: str, otp: str) -> bool:
+    """Validate an OTP code against the in-memory store (2-minute TTL, single-use)."""
+    from app.utils.otp_store import verify_and_consume  # local import avoids circular deps
+    return verify_and_consume(phone, otp)

@@ -5,6 +5,7 @@ from .registration import (
     role_selected,
     phone_received,
 )
+from .login import login_handler
 
 __all__ = [
     "start_handler",
@@ -12,4 +13,5 @@ __all__ = [
     "full_name_received",
     "role_selected",
     "phone_received",
+    "login_handler",
 ]

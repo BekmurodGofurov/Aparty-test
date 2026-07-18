@@ -4,7 +4,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, func
+from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Integer, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -26,7 +26,7 @@ class ListingPayment(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     listing_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("listings.id", ondelete="CASCADE"), nullable=False)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     amount: Mapped[int] = mapped_column(Integer, nullable=False)
     type: Mapped[ListingPaymentType] = mapped_column(Enum(ListingPaymentType, name="listing_payment_type"), nullable=False)
     status: Mapped[ListingPaymentStatus] = mapped_column(Enum(ListingPaymentStatus, name="listing_payment_status"), default=ListingPaymentStatus.pending, nullable=False)

@@ -22,7 +22,11 @@ class Settings(BaseSettings):
     db_connect_timeout_seconds: int = 5
     auto_migrate_on_startup: bool = True
     cookie_secure: bool = False
+    admin_username: str = "admin"
+    admin_password: str = "supersecret_dev_password"
     groq_api_key: str = ""
+    imgbb_api_key: str = ""  # ImgBB API key — used for cloud image uploads
+    bot_token: str = ""  # Telegram Bot token — used by the backend to deliver OTP messages
     cors_origins: str = (
         "http://localhost:3000,"
         "http://localhost:5173,"

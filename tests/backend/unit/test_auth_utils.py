@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 from jose import jwt
 
 from app.config import settings
+from app.utils import otp_store
 from app.utils.security import (
-    DEV_OTP_CODE,
     create_token,
     hash_password,
     verify_otp_code,
@@ -34,11 +34,13 @@ class TestPasswordHashing:
 
 
 class TestOtpValidation:
-    def test_verify_otp_accepts_dev_code(self):
-        assert verify_otp_code("+998901234567", DEV_OTP_CODE) is True
+    def test_verify_otp_accepts_valid_stored_code(self):
+        phone = "+998901234577"
+        code = otp_store.generate_and_store(phone)
+        assert verify_otp_code(phone, code) is True
 
     def test_verify_otp_rejects_invalid_code(self):
-        assert verify_otp_code("+998901234567", "123456") is False
+        assert verify_otp_code("+998901234578", "123456") is False
 
 
 class TestJwtToken:

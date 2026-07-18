@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class UserMin(BaseModel):
-    id: uuid.UUID
+    id: int
     full_name: str
     profile_picture_url: Optional[str] = None
 
@@ -24,7 +24,7 @@ class ReviewCreate(BaseModel):
 class ReviewOut(BaseModel):
     id: uuid.UUID
     listing_id: uuid.UUID
-    author_id: uuid.UUID
+    author_id: int
     rating: Optional[int] = None
     review_text: Optional[str] = None
     created_at: datetime

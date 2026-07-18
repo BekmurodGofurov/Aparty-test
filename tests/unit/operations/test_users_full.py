@@ -1,11 +1,8 @@
 """Comprehensive unit tests for user database operations."""
 
-import uuid
-
 import pytest
 
 from app.models.user import User, UserRole
-from app.utils.security import hash_password
 from database.operations.delete import users as delete_users
 from database.operations.insert import users as insert_users
 from database.operations.select import users as select_users
@@ -15,10 +12,10 @@ from database.operations.update import users as update_users
 @pytest.fixture
 async def sample_user(db_session):
     user = User(
+        id=555555555,
         full_name="Ops Test User",
         phone="+998901111111",
         role=UserRole.student,
-        hashed_password=hash_password("pass123"),
         is_verified=False,
     )
     return await insert_users.create(db_session, user)
@@ -33,7 +30,7 @@ class TestSelectUsers:
 
     @pytest.mark.asyncio
     async def test_get_by_id_not_found(self, db_session):
-        assert await select_users.get_by_id(db_session, uuid.uuid4()) is None
+        assert await select_users.get_by_id(db_session, 999999999) is None
 
     @pytest.mark.asyncio
     async def test_get_by_phone_found(self, db_session, sample_user):
@@ -79,10 +76,10 @@ class TestInsertUsers:
     @pytest.mark.asyncio
     async def test_create_persists_user(self, db_session):
         user = User(
+            id=666666666,
             full_name="New User",
             phone="+998902222222",
             role=UserRole.makler,
-            hashed_password=hash_password("x"),
         )
         created = await insert_users.create(db_session, user)
         assert created.id is not None
@@ -98,15 +95,14 @@ class TestUpdateUsers:
 
     @pytest.mark.asyncio
     async def test_update_fields_not_found(self, db_session):
-        result = await update_users.update_fields(db_session, uuid.uuid4(), full_name="Ghost")
+        result = await update_users.update_fields(db_session, 999999999, full_name="Ghost")
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_update_password(self, db_session, sample_user):
-        new_hash = hash_password("newpass")
-        updated = await update_users.update_password(db_session, sample_user.id, new_hash)
+    async def test_update_fields(self, db_session, sample_user):
+        updated = await update_users.update_fields(db_session, sample_user.id, full_name="Updated Name")
         assert updated is not None
-        assert updated.hashed_password == new_hash
+        assert updated.full_name == "Updated Name"
 
     @pytest.mark.asyncio
     async def test_set_verified_false(self, db_session, sample_user):

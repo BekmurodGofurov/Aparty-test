@@ -17,7 +17,7 @@ class SubscriptionPurchase(BaseModel):
 
 class SubscriptionOut(BaseModel):
     id: uuid.UUID
-    user_id: uuid.UUID
+    user_id: int
     type: SubscriptionType
     start_date: date
     end_date: date

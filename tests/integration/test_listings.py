@@ -22,7 +22,7 @@ async def test_create_listing_success(
     assert response.status_code == 201
     data = response.json()
     assert data["region"] == sample_listing_payload["region"]
-    assert data["owner_id"] == str(makler_user.id)
+    assert data["owner_id"] == makler_user.id
 
 
 @pytest.mark.asyncio

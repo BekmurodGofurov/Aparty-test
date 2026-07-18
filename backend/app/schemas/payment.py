@@ -11,7 +11,7 @@ from app.models.payment import PaymentStatus
 
 class PaymentCreate(BaseModel):
     rental_id: uuid.UUID
-    payer_id: Optional[uuid.UUID] = None
+    payer_id: Optional[int] = None
     amount: int = Field(ge=1)
     billing_month: date
 
@@ -29,7 +29,7 @@ class PaymentUpdate(BaseModel):
 class PaymentOut(BaseModel):
     id: uuid.UUID
     rental_id: uuid.UUID
-    payer_id: Optional[uuid.UUID] = None
+    payer_id: Optional[int] = None
     amount: int
     billing_month: date
     status: PaymentStatus

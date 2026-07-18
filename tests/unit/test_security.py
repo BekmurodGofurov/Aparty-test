@@ -6,8 +6,8 @@ import pytest
 from jose import jwt
 
 from app.config import settings
+from app.utils import otp_store
 from app.utils.security import (
-    DEV_OTP_CODE,
     create_token,
     hash_password,
     verify_otp_code,
@@ -39,14 +39,28 @@ class TestPasswordHashing:
 
 
 class TestOtpValidation:
-    def test_verify_otp_accepts_dev_code(self):
-        assert verify_otp_code("+998901234567", DEV_OTP_CODE) is True
+    def test_verify_otp_accepts_valid_stored_code(self):
+        phone = "+998901234567"
+        code = otp_store.generate_and_store(phone)
+        assert verify_otp_code(phone, code) is True
+
+    def test_verify_otp_is_single_use(self):
+        phone = "+998901234568"
+        code = otp_store.generate_and_store(phone)
+        assert verify_otp_code(phone, code) is True
+        assert verify_otp_code(phone, code) is False  # consumed
 
     def test_verify_otp_rejects_invalid_code(self):
-        assert verify_otp_code("+998901234567", "123456") is False
+        phone = "+998901234569"
+        otp_store.generate_and_store(phone)
+        assert verify_otp_code(phone, "000000") is False
 
     def test_verify_otp_rejects_empty_code(self):
-        assert verify_otp_code("+998901234567", "") is False
+        assert verify_otp_code("+998901234570", "") is False
+
+    def test_verify_otp_rejects_hardcoded_bypass(self):
+        """000000 must never work — the hardcoded bypass is gone."""
+        assert verify_otp_code("+998901234571", "000000") is False
 
 
 class TestJwtToken:

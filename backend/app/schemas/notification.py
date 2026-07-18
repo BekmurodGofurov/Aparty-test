@@ -11,8 +11,8 @@ from app.models.notification import NotificationType
 
 class NotificationOut(BaseModel):
     id: uuid.UUID
-    user_id: uuid.UUID
-    actor_id: Optional[uuid.UUID] = None
+    user_id: int
+    actor_id: Optional[int] = None
     type: NotificationType
     title: str
     body: Optional[str] = None

@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.config import settings
@@ -12,24 +12,32 @@ from app.routers import admin, ai, auth, listings, notifications, payments, rent
 from app.tasks.expire_premium import premium_expiry_loop
 
 
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from redis import asyncio as aioredis
+
+redis = None
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     from app.db_migrations import run_migrations
 
     await asyncio.to_thread(run_migrations)
 
+    global redis
+    redis = aioredis.from_url(settings.redis_url, encoding="utf8", decode_responses=False)
+    FastAPICache.init(RedisBackend(redis), prefix="aparty-cache")
+
     task = asyncio.create_task(premium_expiry_loop())
     try:
         yield
     finally:
         task.cancel()
+        await redis.close()
 
 
 app = FastAPI(title="Aparty.uz API", version="0.2.0", redirect_slashes=False, lifespan=lifespan)
 
-import os
-os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,

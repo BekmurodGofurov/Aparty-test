@@ -138,11 +138,13 @@ async def _maybe_consume_subscription(db: AsyncSession, user: User, is_premium: 
     sub = await update_subscriptions.try_consume_with_lock(db, user.id, today)
 
     if sub is None:
-        # Either no active subscription exists, OR every slot is already taken.
-        # Let the caller decide whether to allow a free listing creation or block.
+        # Check if they have an active sub but no slots
+        has_sub = await select_subscriptions.get_active_by_user(db, user.id)
+        if has_sub:
+            raise HTTPException(status_code=403, detail="Subscription limit reached")
         return False
 
-    return True  # slot consumed; db.flush() already executed inside the lock
+    return True
 
 
 
@@ -182,7 +184,10 @@ async def create_listing(
     return await insert_listings.commit_listing(db, listing)
 
 
+from fastapi_cache.decorator import cache
+
 @router.get("/search", response_model=ListingSearchResponse)
+@cache(expire=300)
 async def search_listings(
     region: Optional[str] = None,
     district: Optional[str] = None,

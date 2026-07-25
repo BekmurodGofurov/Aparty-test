@@ -27,6 +27,8 @@ export function PropertySearch() {
     fetchResults,
   } = useListingStore()
 
+  const searchString = searchParams.toString()
+
   useEffect(() => {
     const entries = Object.fromEntries(searchParams.entries())
     const nextFilters = Object.entries(entries).reduce((acc, [key, value]) => {
@@ -36,7 +38,7 @@ export function PropertySearch() {
     replaceFilters(nextFilters)
     void fetchResults(1, nextFilters)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams])
+  }, [searchString])
 
   const applyFilters = (event) => {
     event?.preventDefault?.()

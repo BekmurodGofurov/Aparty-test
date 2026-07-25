@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { searchListings } from '../../../services/listingService'
 import { HomeSearchBar } from '../../../components/search/HomeSearchBar'
 import ListingCard from '../../../components/ListingCard/ListingCard.jsx'
+import { ListingCardSkeleton } from '../../../components/ui/ListingCardSkeleton.jsx'
 import './Home.scss'
 
 const TRUST_BADGES = [
@@ -28,10 +29,14 @@ export function Home() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [listings, setListings] = useState([])
+  const [loading, setLoading] = useState(true)
   const [quick, setQuick] = useState({ viloyat: '', tuman: '', narx_min: '', narx_max: '', xonalar_soni: '' })
 
   useEffect(() => {
-    void searchListings({}, 1, 9).then((data) => setListings(data.listings))
+    void searchListings({}, 1, 9).then((data) => {
+      setListings(data.listings)
+      setLoading(false)
+    })
   }, [])
 
   const premium = useMemo(() => listings.filter((item) => item.premium).slice(0, 4), [listings])
@@ -117,10 +122,13 @@ export function Home() {
           <Link to="/search" className="see-all">{t('home.view_all')} →</Link>
         </div>
         <div className="horizontal-cards">
-          {premium.length > 0
-            ? premium.map((item) => <ListingCard key={item.id} listing={item} />)
-            : <div className="empty-section-hint">E'lonlar yuklanmoqda...</div>
-          }
+          {loading ? (
+            [...Array(4)].map((_, i) => <ListingCardSkeleton key={i} />)
+          ) : premium.length > 0 ? (
+            premium.map((item) => <ListingCard key={item.id} listing={item} />)
+          ) : (
+            <div className="empty-section-hint">Hozircha premium e'lonlar yo'q</div>
+          )}
         </div>
       </section>
 

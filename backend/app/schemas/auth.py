@@ -13,7 +13,7 @@ class RegisterRequest(BaseModel):
     The `id` field is the Telegram user ID and will be stored as the primary key.
     No password is required — authentication uses the login-code flow instead.
     """
-    id: int = Field(..., description="Telegram user ID — becomes the primary key")
+    id: int = Field(..., gt=0, description="Telegram user ID — becomes the primary key")
     full_name: str = Field(min_length=2, max_length=100)
     phone: str = Field(min_length=7, max_length=20)
     role: UserRole = UserRole.student

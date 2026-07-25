@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.user import UserRole
 
@@ -31,7 +31,7 @@ class UserUpdate(BaseModel):
 
 
 class UserCreate(BaseModel):
-    id: int
+    id: int = Field(gt=0)
     full_name: str
     phone: str
     role: UserRole

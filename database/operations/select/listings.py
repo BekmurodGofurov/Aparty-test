@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from sqlalchemy import and_, case, desc, func, select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.listing import Listing, ListingTargetGender
@@ -15,7 +16,11 @@ from app.models.user import User, UserRole
 
 
 async def get_by_id(db: AsyncSession, listing_id: uuid.UUID) -> Optional[Listing]:
-    return await db.get(Listing, listing_id)
+    return await db.scalar(
+        select(Listing)
+        .options(selectinload(Listing.owner), selectinload(Listing.reviews))
+        .where(Listing.id == listing_id)
+    )
 
 
 async def get_with_owner(
@@ -24,6 +29,7 @@ async def get_with_owner(
 ) -> Optional[tuple[Listing, User]]:
     result = await db.execute(
         select(Listing, User)
+        .options(selectinload(Listing.reviews))
         .join(User, Listing.owner_id == User.id)
         .where(Listing.id == listing_id)
     )
@@ -32,7 +38,7 @@ async def get_with_owner(
 
 
 async def get_all(db: AsyncSession, *, order_by_created_desc: bool = True) -> list[Listing]:
-    query = select(Listing)
+    query = select(Listing).options(selectinload(Listing.owner), selectinload(Listing.reviews))
     if order_by_created_desc:
         query = query.order_by(Listing.created_at.desc())
     result = await db.execute(query)
@@ -48,6 +54,7 @@ async def get_by_owner_id(
 ) -> list[Listing]:
     result = await db.execute(
         select(Listing)
+        .options(selectinload(Listing.owner), selectinload(Listing.reviews))
         .where(Listing.owner_id == owner_id)
         .offset(skip)
         .limit(limit)
@@ -63,6 +70,7 @@ async def get_active_listings(
 ) -> list[Listing]:
     result = await db.execute(
         select(Listing)
+        .options(selectinload(Listing.owner), selectinload(Listing.reviews))
         .where(Listing.is_active.is_(True))
         .offset(skip)
         .limit(limit)
@@ -79,6 +87,7 @@ async def get_by_region(
 ) -> list[Listing]:
     result = await db.execute(
         select(Listing)
+        .options(selectinload(Listing.owner), selectinload(Listing.reviews))
         .where(and_(Listing.region == region, Listing.is_active.is_(True)))
         .offset(skip)
         .limit(limit)
@@ -95,6 +104,7 @@ async def get_by_gender(
 ) -> list[Listing]:
     result = await db.execute(
         select(Listing)
+        .options(selectinload(Listing.owner), selectinload(Listing.reviews))
         .where(and_(Listing.target_gender == gender, Listing.is_active.is_(True)))
         .offset(skip)
         .limit(limit)
@@ -111,6 +121,7 @@ async def get_premium_listings(
 ) -> list[Listing]:
     result = await db.execute(
         select(Listing)
+        .options(selectinload(Listing.owner), selectinload(Listing.reviews))
         .where(
             and_(
                 Listing.is_premium.is_(True),
@@ -171,7 +182,7 @@ async def search(
     skip: int = 0,
     limit: int = 100,
 ) -> list[Listing]:
-    query = select(Listing).where(Listing.is_active.is_(True))
+    query = select(Listing).options(selectinload(Listing.owner), selectinload(Listing.reviews)).where(Listing.is_active.is_(True))
     if region:
         query = query.where(Listing.region == region)
     if district:

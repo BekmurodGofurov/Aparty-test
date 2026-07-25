@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import JSON
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 
 from app.database import Base, get_db
 from app.main import app
@@ -30,23 +28,10 @@ from app.models.listing import Listing, ListingSource, ListingTargetGender
 from app.models.user import User, UserRole
 from app.utils.security import create_token
 
-# Allow PostgreSQL-specific column types to compile on SQLite for tests.
-@compiles(UUID, "sqlite")
-def _compile_uuid_sqlite(_type, _compiler, **_kw):
-    return "CHAR(32)"
-
-
-@compiles(ARRAY, "sqlite")
-def _compile_array_sqlite(_type, _compiler, **_kw):
-    return "TEXT"
-
-
-@compiles(JSONB, "sqlite")
-def _compile_jsonb_sqlite(_type, _compiler, **_kw):
-    return "JSON"
-
-
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Use a test PostgreSQL database for accurate FOR UPDATE pessimistic locking and BigInts
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL", "postgresql+asyncpg://bekmurod@localhost:5432/aparty_test"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -56,15 +41,13 @@ def disable_startup_migrations(monkeypatch):
 
 @pytest_asyncio.fixture
 async def db_engine():
-    # SQLite cannot store PostgreSQL ARRAY columns; use JSON for image lists in tests.
-    Listing.__table__.c.images.type = JSON()
-
-    engine = create_async_engine(
-        TEST_DATABASE_URL,
-        connect_args={"check_same_thread": False},
-    )
+    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+    
+    # Wipe and migrate using metadata (simulates alembic upgrade head for tests)
     async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
+        
     yield engine
     await engine.dispose()
 
@@ -77,8 +60,26 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
         await session.rollback()
 
 
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
+
 @pytest_asyncio.fixture
-async def client(db_session: AsyncSession, db_engine) -> AsyncGenerator[AsyncClient, None]:
+async def mock_redis():
+    """Mock the global Redis instance to test cache hits and misses."""
+    with patch("app.main.redis") as mock_redis_client:
+        mock_redis_client.get = AsyncMock(return_value=None)
+        mock_redis_client.set = AsyncMock()
+        mock_redis_client.delete = AsyncMock()
+        mock_redis_client.expire = AsyncMock()
+        
+        # Initialize FastAPICache to avoid 'You must call init first!' errors and pipeline errors
+        FastAPICache.init(InMemoryBackend(), prefix="test-cache")
+        
+        yield mock_redis_client
+
+
+@pytest_asyncio.fixture
+async def client(db_session: AsyncSession, db_engine, mock_redis) -> AsyncGenerator[AsyncClient, None]:
     async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
         yield db_session
 
@@ -98,7 +99,7 @@ async def client(db_session: AsyncSession, db_engine) -> AsyncGenerator[AsyncCli
 @pytest_asyncio.fixture
 async def admin_user(db_session: AsyncSession) -> User:
     user = User(
-        id=100000001,
+        id=98765432101,  # BigInteger
         full_name="Test Admin",
         phone="+998900000001",
         role=UserRole.admin,
@@ -113,7 +114,7 @@ async def admin_user(db_session: AsyncSession) -> User:
 @pytest_asyncio.fixture
 async def owner_user(db_session: AsyncSession) -> User:
     user = User(
-        id=100000002,
+        id=98765432102,  # BigInteger
         full_name="Test Owner",
         phone="+998901234567",
         role=UserRole.owner,
@@ -128,7 +129,7 @@ async def owner_user(db_session: AsyncSession) -> User:
 @pytest_asyncio.fixture
 async def student_user(db_session: AsyncSession) -> User:
     user = User(
-        id=100000003,
+        id=98765432103,  # BigInteger
         full_name="Test Student",
         phone="+998907654321",
         role=UserRole.student,
@@ -143,7 +144,7 @@ async def student_user(db_session: AsyncSession) -> User:
 @pytest_asyncio.fixture
 async def makler_user(db_session: AsyncSession) -> User:
     user = User(
-        id=100000004,
+        id=98765432104,  # BigInteger
         full_name="Test Makler",
         phone="+998901112233",
         role=UserRole.makler,

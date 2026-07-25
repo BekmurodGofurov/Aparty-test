@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.config import settings
-from app.routers import admin, ai, auth, listings, notifications, payments, rentals, reviews, subscriptions, upload, users, favorites
+from app.routers import admin, ai, apartments, auth, favorites, listings, locations, notifications, payments, rentals, reviews, subscriptions, upload, users
 from app.tasks.expire_premium import premium_expiry_loop
 
 
@@ -19,7 +19,7 @@ from redis import asyncio as aioredis
 redis = None
 
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(fastapi_app: FastAPI):
     from app.db_migrations import run_migrations
 
     await asyncio.to_thread(run_migrations)
@@ -27,6 +27,7 @@ async def lifespan(_: FastAPI):
     global redis
     redis = aioredis.from_url(settings.redis_url, encoding="utf8", decode_responses=False)
     FastAPICache.init(RedisBackend(redis), prefix="aparty-cache")
+    fastapi_app.state.redis = redis
 
     task = asyncio.create_task(premium_expiry_loop())
     try:
@@ -75,6 +76,8 @@ app.include_router(upload.router, prefix="/api/v1/upload", tags=["upload"])
 app.include_router(ai.router, prefix="/api/v1/ai", tags=["ai"])
 app.include_router(favorites.router, prefix="/api/v1/favorites", tags=["favorites"])
 app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["notifications"])
+app.include_router(apartments.router, prefix="/api/v1/apartments", tags=["apartments"])
+app.include_router(locations.router, prefix="/api/v1/locations", tags=["locations"])
 
 
 @app.get("/api/v1/health")

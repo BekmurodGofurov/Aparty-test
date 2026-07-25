@@ -1,27 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Theme Toggle Logic ---
-    const themeToggle = document.getElementById('theme-toggle');
-    const htmlElement = document.documentElement;
-
-    // Check saved theme or system preference
-    const savedTheme = localStorage.getItem('theme');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme) {
-        htmlElement.setAttribute('data-theme', savedTheme);
-    } else if (systemPrefersDark) {
-        htmlElement.setAttribute('data-theme', 'dark');
-    } else {
-        htmlElement.setAttribute('data-theme', 'light');
-    }
-
-    themeToggle.addEventListener('click', () => {
-        const currentTheme = htmlElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        htmlElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-    });
-
     // --- Mouse Canvas Trail Logic ---
     const canvas = document.getElementById('trail-canvas');
     const ctx = canvas.getContext('2d');
@@ -50,9 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clear canvas for next frame
             ctx.clearRect(0, 0, width, height);
             
-            // Get current theme's trail color (expecting RGB like '34, 197, 94')
+            // Get current theme's trail color (expecting RGB like '251, 191, 36')
             const rootStyles = getComputedStyle(document.documentElement);
-            const trailColor = rootStyles.getPropertyValue('--trail-color').trim() || '34, 197, 94';
+            const trailColor = rootStyles.getPropertyValue('--trail-color').trim() || '251, 191, 36';
 
             // Draw line through points
             for (let i = 0; i < points.length - 1; i++) {

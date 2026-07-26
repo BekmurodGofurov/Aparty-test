@@ -3,7 +3,7 @@ from httpx import AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from tests.conftest import auth_headers
-from app.models.user import UserRole
+from app.domains.users.models import UserRole
 import random
 import string
 

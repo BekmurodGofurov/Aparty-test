@@ -5,7 +5,7 @@ from typing import Optional
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.payment import Payment, PaymentStatus
+from app.domains.orders.models import Payment, PaymentStatus
 
 
 async def get_by_id(db: AsyncSession, payment_id: uuid.UUID) -> Optional[Payment]:

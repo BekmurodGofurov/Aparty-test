@@ -3,7 +3,7 @@ from typing import Any, Optional
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user import User
+from app.domains.users.models import User
 
 from database.operations.select import users as select_users
 

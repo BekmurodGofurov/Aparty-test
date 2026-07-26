@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.review import Review
+from app.domains.orders.models import Review
 
 
 async def delete(db: AsyncSession, review: Review) -> None:

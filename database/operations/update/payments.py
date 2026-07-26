@@ -5,7 +5,7 @@ from typing import Optional
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.payment import Payment, PaymentStatus
+from app.domains.orders.models import Payment, PaymentStatus
 
 from database.operations.select import payments as select_payments
 

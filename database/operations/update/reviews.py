@@ -3,7 +3,7 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.review import Review
+from app.domains.orders.models import Review
 
 from database.operations.select import reviews as select_reviews
 

@@ -1,47 +1,23 @@
-import asyncio
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.config import settings
-from app.routers import admin, ai, apartments, auth, favorites, listings, locations, notifications, payments, rentals, reviews, subscriptions, upload, users
-from app.tasks.expire_premium import premium_expiry_loop
-from app.services.view_sync import view_sync_daemon
+from app.core.config import settings
+from app.core.lifespan import lifespan
 
+from app.domains.users.router import router as users_router
+from app.domains.apartments.router import router as apartments_router
+from app.domains.orders.router import router as orders_router
+from app.domains.media.router import router as media_router
+from app.domains.admin.router import router as admin_router
 
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
-from redis import asyncio as aioredis
-
-redis = None
-
-@asynccontextmanager
-async def lifespan(fastapi_app: FastAPI):
-    from app.db_migrations import run_migrations
-
-    await asyncio.to_thread(run_migrations)
-
-    global redis
-    redis = aioredis.from_url(settings.redis_url, encoding="utf8", decode_responses=False)
-    FastAPICache.init(RedisBackend(redis), prefix="aparty-cache")
-    fastapi_app.state.redis = redis
-
-    task = asyncio.create_task(premium_expiry_loop())
-    sync_task = asyncio.create_task(view_sync_daemon(redis))
-    try:
-        yield
-    finally:
-        task.cancel()
-        sync_task.cancel()
-        await redis.close()
-
-
-app = FastAPI(title="Aparty.uz API", version="0.2.0", redirect_slashes=False, lifespan=lifespan)
-
+app = FastAPI(
+    title="Aparty.uz API", 
+    version="1.0.0", 
+    redirect_slashes=False, 
+    lifespan=lifespan
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -51,14 +27,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.exception_handler(TimeoutError)
 async def database_timeout_handler(_: Request, __: TimeoutError) -> JSONResponse:
     return JSONResponse(
         status_code=503,
         content={"detail": "Database connection timed out. Please retry in a moment."},
     )
-
 
 @app.exception_handler(SQLAlchemyError)
 async def database_error_handler(_: Request, __: SQLAlchemyError) -> JSONResponse:
@@ -67,21 +41,16 @@ async def database_error_handler(_: Request, __: SQLAlchemyError) -> JSONRespons
         content={"detail": "Database is temporarily unavailable. Please retry in a moment."},
     )
 
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
-app.include_router(listings.router, prefix="/api/v1/listings", tags=["listings"])
-app.include_router(rentals.router, prefix="/api/v1/rentals", tags=["rentals"])
-app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
-app.include_router(reviews.router, prefix="/api/v1/reviews", tags=["reviews"])
-app.include_router(subscriptions.router, prefix="/api/v1/subscriptions", tags=["subscriptions"])
-app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
-app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
-app.include_router(upload.router, prefix="/api/v1/upload", tags=["upload"])
-app.include_router(ai.router, prefix="/api/v1/ai", tags=["ai"])
-app.include_router(favorites.router, prefix="/api/v1/favorites", tags=["favorites"])
-app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["notifications"])
-app.include_router(apartments.router, prefix="/api/v1/apartments", tags=["apartments"])
-app.include_router(locations.router, prefix="/api/v1/locations", tags=["locations"])
+_DOMAIN_ROUTERS = [
+    (users_router,      "/api/v1",           ["users", "auth"]),
+    (apartments_router, "/api/v1/apartments", ["apartments"]),
+    (orders_router,     "/api/v1",           ["orders"]),
+    (media_router,      "/api/v1/media",     ["media"]),
+    (admin_router,      "/api/v1/admin",     ["admin"]),
+]
 
+for router, prefix, tags in _DOMAIN_ROUTERS:
+    app.include_router(router, prefix=prefix, tags=tags)
 
 @app.get("/api/v1/health")
 async def health_check() -> dict[str, str]:

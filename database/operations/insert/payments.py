@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.payment import Payment
+from app.domains.orders.models import Payment
 
 
 async def create(db: AsyncSession, payment: Payment) -> Payment:

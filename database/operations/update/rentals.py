@@ -3,7 +3,7 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.rental import Rental, RentalRequest, RentalRequestStatus
+from app.domains.orders.models import Rental, RentalRequest, RentalRequestStatus
 
 from database.operations.select import rentals as select_rentals
 

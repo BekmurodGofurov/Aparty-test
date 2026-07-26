@@ -6,9 +6,9 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.database import engine
-from app.models.listing import Listing, ListingSource, ListingTargetGender
-from app.models.user import User, UserRole
+from app.core.database import engine
+from app.domains.apartments.models import Listing, ListingSource, ListingTargetGender
+from app.domains.users.models import User, UserRole
 
 REGIONS = {
     "Toshkent shahri": ["Yunusobod", "Chilonzor", "Mirzo Ulug'bek", "Yashnobod", "Mirobod", "Shayxontohur", "Uchtepa", "Olmazor", "Yakkasaroy", "Sergeli"],

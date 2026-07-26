@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user import User, UserRole
+from app.domains.users.models import User, UserRole
 
 
 async def get_by_id(db: AsyncSession, user_id: int) -> Optional[User]:

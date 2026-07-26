@@ -31,7 +31,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.config import settings
+from app.core.config import settings
 
 # Build a dedicated engine for the seed script with a generous connect
 # timeout so Neon's serverless pool has time to wake up (app engine uses 5 s).

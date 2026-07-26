@@ -5,7 +5,7 @@ from typing import Optional
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.subscription import Subscription, SubscriptionType
+from app.domains.orders.models import Subscription, SubscriptionType
 
 
 async def get_by_id(db: AsyncSession, subscription_id: uuid.UUID) -> Optional[Subscription]:

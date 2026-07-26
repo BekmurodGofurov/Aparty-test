@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.favorite import Favorite
+from app.domains.apartments.models import Favorite
 
 
 async def create(db: AsyncSession, favorite: Favorite) -> Favorite:

@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.notification import Notification
+from app.domains.users.models import Notification
 
 from database.operations.select import notifications as select_notifications
 

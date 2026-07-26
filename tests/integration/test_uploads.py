@@ -2,7 +2,7 @@ import pytest
 from httpx import AsyncClient
 from unittest.mock import patch, AsyncMock
 from tests.conftest import auth_headers
-from app.models.user import User
+from app.domains.users.models import User
 
 pytestmark = pytest.mark.asyncio
 

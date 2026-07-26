@@ -11,22 +11,12 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.database import Base, get_db
+from app.core.database import Base, get_db
 from app.main import app
-from app.models import (  # noqa: F401
-    favorite,
-    listing,
-    listing_payment,
-    notification,
-    payment,
-    rental,
-    review,
-    subscription,
-    user,
-)
-from app.models.listing import Listing, ListingSource, ListingTargetGender
-from app.models.user import User, UserRole
-from app.utils.security import create_token
+
+from app.domains.apartments.models import Listing, ListingSource, ListingTargetGender
+from app.domains.users.models import User, UserRole
+from app.core.security import create_token
 
 # Use a test PostgreSQL database for accurate FOR UPDATE pessimistic locking and BigInts
 TEST_DATABASE_URL = os.getenv(
@@ -36,7 +26,7 @@ TEST_DATABASE_URL = os.getenv(
 
 @pytest.fixture(autouse=True)
 def disable_startup_migrations(monkeypatch):
-    monkeypatch.setattr("app.config.settings.auto_migrate_on_startup", False)
+    monkeypatch.setattr("app.core.config.settings.auto_migrate_on_startup", False)
 
 
 @pytest_asyncio.fixture
@@ -86,8 +76,8 @@ async def client(db_session: AsyncSession, db_engine, mock_redis) -> AsyncGenera
     app.dependency_overrides[get_db] = override_get_db
 
     with (
-        patch("app.database.engine", db_engine),
-        patch("app.main.premium_expiry_loop", new=AsyncMock()),
+        patch("app.core.database.engine", db_engine),
+        patch("app.domains.orders.services.premium_expiry_loop", new=AsyncMock()),
     ):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as ac:

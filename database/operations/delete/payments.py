@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.payment import Payment
+from app.domains.orders.models import Payment
 
 
 async def delete_by_id(db: AsyncSession, payment_id: uuid.UUID) -> bool:

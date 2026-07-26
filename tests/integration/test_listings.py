@@ -3,8 +3,8 @@ import pytest
 from httpx import AsyncClient
 from unittest.mock import patch, AsyncMock
 from tests.conftest import auth_headers
-from app.models.user import User
-from app.models.subscription import Subscription
+from app.domains.users.models import User
+from app.domains.orders.models import Subscription
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta, timezone
 
@@ -89,7 +89,7 @@ class TestListingsArchitecture:
 
         # Clear the dependency override so that the app creates a fresh DB session 
         # for each concurrent request (AsyncSession cannot be shared concurrently)
-        from app.database import get_db
+        from app.core.database import get_db
         from app.main import app
         
         original_override = app.dependency_overrides.pop(get_db, None)

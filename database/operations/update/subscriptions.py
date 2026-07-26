@@ -13,7 +13,7 @@ from typing import Optional
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.subscription import Subscription
+from app.domains.orders.models import Subscription
 
 from database.operations.select import subscriptions as select_subscriptions
 

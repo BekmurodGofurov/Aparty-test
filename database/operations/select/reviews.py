@@ -5,8 +5,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.review import Review
-from app.models.user import User
+from app.domains.orders.models import Review
+from app.domains.users.models import User
 
 
 async def get_by_id(db: AsyncSession, review_id: uuid.UUID) -> Optional[Review]:

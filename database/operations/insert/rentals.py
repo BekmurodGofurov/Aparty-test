@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.notification import Notification
-from app.models.rental import (
+from app.domains.users.models import Notification
+from app.domains.orders.models import (
     MaintenanceReport,
     Rental,
     RentalRequest,

@@ -5,7 +5,7 @@ from typing import Any, Optional
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.listing import Listing
+from app.domains.apartments.models import Listing
 
 from database.operations.select import listings as select_listings
 

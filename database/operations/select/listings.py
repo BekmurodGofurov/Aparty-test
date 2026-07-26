@@ -9,10 +9,10 @@ from sqlalchemy import and_, case, desc, func, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.listing import Listing, ListingTargetGender
-from app.models.rental import Rental
-from app.models.review import Review
-from app.models.user import User, UserRole
+from app.domains.apartments.models import Listing, ListingTargetGender
+from app.domains.orders.models import Rental
+from app.domains.orders.models import Review
+from app.domains.users.models import User, UserRole
 
 
 async def get_by_id(db: AsyncSession, listing_id: uuid.UUID) -> Optional[Listing]:

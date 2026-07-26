@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.subscription import Subscription
+from app.domains.orders.models import Subscription
 
 
 async def create(db: AsyncSession, subscription: Subscription) -> Subscription:

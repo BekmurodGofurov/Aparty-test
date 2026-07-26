@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.rental import Rental
+from app.domains.orders.models import Rental
 
 from database.operations.select import rentals as select_rentals
 

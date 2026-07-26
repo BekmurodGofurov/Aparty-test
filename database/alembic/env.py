@@ -3,11 +3,13 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from app.config import settings
-from app.database import Base
+from app.core.config import settings
+from app.core.database import Base
 
 # Import every model so metadata is complete for autogenerate.
-from app import models  # noqa: F401
+from app.domains.users import models as user_models  # noqa: F401
+from app.domains.apartments import models as apt_models  # noqa: F401
+from app.domains.orders import models as order_models  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.sync_database_url)

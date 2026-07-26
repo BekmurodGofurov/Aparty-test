@@ -4,8 +4,8 @@ from typing import Optional
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.listing import Listing
-from app.models.rental import (
+from app.domains.apartments.models import Listing
+from app.domains.orders.models import (
     MaintenanceReport,
     Rental,
     RentalRequest,
@@ -13,7 +13,7 @@ from app.models.rental import (
     RentalRequestStatus,
     RoomMessage,
 )
-from app.models.user import User
+from app.domains.users.models import User
 
 
 async def get_rental_by_id(db: AsyncSession, rental_id: uuid.UUID) -> Optional[Rental]:

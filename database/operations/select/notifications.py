@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.notification import Notification
+from app.domains.users.models import Notification
 
 
 async def get_by_id(db: AsyncSession, notification_id: uuid.UUID) -> Optional[Notification]:

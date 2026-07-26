@@ -4,10 +4,10 @@ from typing import Optional
 from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.favorite import Favorite
-from app.models.listing import Listing
-from app.models.review import Review
-from app.models.user import User
+from app.domains.apartments.models import Favorite
+from app.domains.apartments.models import Listing
+from app.domains.orders.models import Review
+from app.domains.users.models import User
 
 
 async def get_by_user_and_listing(

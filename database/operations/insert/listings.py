@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.listing import Listing
-from app.models.listing_payment import ListingPayment
+from app.domains.apartments.models import Listing
+from app.domains.orders.models import ListingPayment
 
 
 async def create_listing(db: AsyncSession, listing: Listing) -> Listing:

@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.review import Review
+from app.domains.orders.models import Review
 
 
 async def create(db: AsyncSession, review: Review) -> Review:

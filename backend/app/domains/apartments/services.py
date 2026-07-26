@@ -17,11 +17,16 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import update
+import logging
 
 from app.core.contracts.apartment import ApartmentSummaryDTO
 from app.domains.apartments.models import Listing
+from app.core.database import AsyncSessionLocal
 
 from database.operations.select import listings as select_listings
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -106,3 +111,27 @@ class ApartmentService:
         if premium_expires_at.tzinfo is None:
             premium_expires_at = premium_expires_at.replace(tzinfo=timezone.utc)
         return premium_expires_at > now
+
+async def handle_order_placed(payload: dict) -> None:
+    """
+    Reacts to the 'order.placed' event.
+    Updates the apartment's availability status.
+    """
+    apartment_id = payload.get("apartment_id")
+    if not apartment_id:
+        return
+        
+    async with AsyncSessionLocal() as db:
+        try:
+            stmt = (
+                update(Listing)
+                .where(Listing.id == apartment_id)
+                .values(is_available=False) # Example: marking unavailable on request
+            )
+            await db.execute(stmt)
+            await db.commit()
+            logger.info(f"Apartment {apartment_id} marked unavailable due to new order.")
+        except Exception as e:
+            await db.rollback()
+            logger.error(f"Failed to update apartment {apartment_id}: {e}")
+            raise

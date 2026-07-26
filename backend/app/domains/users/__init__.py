@@ -18,8 +18,6 @@ def register_event_handlers() -> None:
 
     Called once during application lifespan startup.
     """
-    # Example: when the orders domain confirms a booking, notify the user.
-    # from app.core.events import subscribe
-    # from app.domains.users.services import notify_user_on_booking_confirmed
-    # subscribe("booking.confirmed", notify_user_on_booking_confirmed)
-    pass
+    from app.core.events import subscribe
+    from app.domains.users.services import handle_order_placed
+    subscribe("order.placed", handle_order_placed)

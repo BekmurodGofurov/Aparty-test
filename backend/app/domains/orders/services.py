@@ -19,8 +19,13 @@ import logging
 from datetime import datetime, timezone
 
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, ConfigDict
+from typing import Any, Optional
 
 from app.core.database import AsyncSessionLocal
+from app.core.events import publish
+from app.domains.orders.models import RentalRequest, RentalRequestStatus
 
 logger = logging.getLogger(__name__)
 
@@ -55,3 +60,39 @@ async def premium_expiry_loop() -> None:
     while True:
         await expire_premium_listings()
         await asyncio.sleep(3600)
+
+class PlaceOrderCommand(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    
+    requester_id: int
+    apartment_id: int
+    recipient_id: int
+    message: Optional[str] = None
+
+class OrderService:
+    @staticmethod
+    async def place_order(db: AsyncSession, command: PlaceOrderCommand) -> RentalRequest:
+        new_request = RentalRequest(
+            requester_id=command.requester_id,
+            listing_id=command.apartment_id,
+            recipient_id=command.recipient_id,
+            message=command.message,
+            status=RentalRequestStatus.pending,
+        )
+        
+        db.add(new_request)
+        await db.commit()
+        await db.refresh(new_request)
+
+        event_payload: dict[str, Any] = {
+            "order_id": new_request.id,
+            "apartment_id": command.apartment_id,
+            "user_id": command.requester_id,
+            "owner_id": command.recipient_id,
+            "message": command.message,
+            "status": new_request.status.value
+        }
+        
+        await publish("order.placed", event_payload)
+        
+        return new_request

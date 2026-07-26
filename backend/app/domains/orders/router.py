@@ -206,24 +206,26 @@ async def create_rental_request(
     if await select_rentals.get_pending_duplicate(db, listing.id, current_user.id) is not None:
         raise HTTPException(400, "Bu kvartira uchun so'rovingiz allaqachon yuborilgan")
 
-    request = RentalRequest(
-        listing_id=listing.id, requester_id=current_user.id,
-        recipient_id=listing.owner_id, message=payload.message,
+    command = PlaceOrderCommand(
+        requester_id=current_user.id,
+        apartment_id=listing.id,
+        recipient_id=listing.owner_id,
+        message=payload.message
     )
-    await insert_rentals.create_rental_request(db, request)
+    
+    # 1. Place the order (which persists RentalRequest and publishes order.placed)
+    request = await OrderService.place_order(db, command)
+    
+    # Note: No need for db.commit() here since OrderService handles its own transaction boundary
+    
+    # Optionally, we can still persist the specific initial chat message immediately if required
+    # Since OrderService created the request, we can insert the message directly 
     if payload.message:
         await insert_rentals.create_request_message(
             db, RentalRequestMessage(request_id=request.id, sender_id=current_user.id, text=payload.message)
         )
-    await _add_notification(
-        db, user_id=listing.owner_id, actor_id=current_user.id,
-        type=NotificationType.rental_request,
-        title=f"{current_user.full_name} kvartirangizni band qilmoqchi",
-        body=payload.message or "Yangi band qilish so'rovi keldi",
-        request_id=request.id, listing_id=listing.id,
-    )
-    await db.commit()
-    await db.refresh(request)
+        await db.commit()
+
     return await _request_payload(db, request)
 
 

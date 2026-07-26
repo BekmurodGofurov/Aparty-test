@@ -23,8 +23,8 @@ from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.database import get_db
-from app.domains.users.models import User, UserRole
+from app.core.database import get_db, AsyncSessionLocal
+from app.domains.users.models import User, UserRole, Notification, NotificationType
 
 # Lazy import of database operations to avoid circular imports
 from database.operations.select import users as select_users
@@ -209,3 +209,36 @@ class UserService:
     @staticmethod
     async def delete(db: AsyncSession, user: User) -> None:
         await delete_users.delete(db, user)
+
+async def handle_order_placed(payload: dict) -> None:
+    """
+    Reacts to the 'order.placed' event.
+    Handles user-specific logic (e.g. creating a notification).
+    """
+    user_id = payload.get("user_id")
+    order_id = payload.get("order_id")
+    owner_id = payload.get("owner_id")
+    apartment_id = payload.get("apartment_id")
+    message = payload.get("message")
+    
+    if not owner_id or not user_id:
+        return
+        
+    async with AsyncSessionLocal() as db:
+        try:
+            notification = Notification(
+                user_id=owner_id,
+                actor_id=user_id,
+                type=NotificationType.rental_request,
+                title="Yangi band qilish so'rovi",
+                body=message or "Sizga yangi band qilish so'rovi keldi",
+                request_id=order_id,
+                listing_id=apartment_id,
+            )
+            db.add(notification)
+            await db.commit()
+            logger.info(f"Notification created for User {owner_id} regarding Order: {order_id}")
+        except Exception as e:
+            await db.rollback()
+            logger.error(f"Failed to create notification for User {owner_id}: {e}")
+            raise

@@ -52,8 +52,10 @@ async def lifespan(app: FastAPI):
     # Imported here to avoid circular imports at module load time.
     # These calls are side-effect registrations, not function calls.
     from app.domains.users import register_event_handlers as _reg_users  # noqa: F401
+    from app.domains.apartments import register_event_handlers as _reg_apartments  # noqa: F401
 
     _reg_users()
+    _reg_apartments()
 
     # ── 4. Background daemons ──────────────────────────────────────────────
     from app.domains.orders.services import premium_expiry_loop

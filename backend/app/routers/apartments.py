@@ -23,6 +23,7 @@ from app.cache import (
 from app.database import get_db
 from app.models.listing import Listing
 from app.schemas.apartments import PopularApartmentItem, PopularApartmentsResponse
+from app.services.view_sync import increment_apartment_view
 
 logger = logging.getLogger(__name__)
 
@@ -183,3 +184,18 @@ async def invalidate_popular_cache(
     cache = CacheManager(redis)
     await cache.delete(POPULAR_APARTMENTS_KEY)
     return {"status": "invalidated"}
+
+
+# ---------------------------------------------------------------------------
+# 5. Track View Endpoint
+# ---------------------------------------------------------------------------
+
+@router.post("/{apartment_id}/view", status_code=status.HTTP_202_ACCEPTED)
+async def track_apartment_view(
+    apartment_id: uuid.UUID,
+    request: Request,
+) -> dict:
+    """Increment apartment view count quickly."""
+    redis_client = request.app.state.redis
+    await increment_apartment_view(apartment_id, redis_client)
+    return {"message": "View recorded", "apartment_id": str(apartment_id)}

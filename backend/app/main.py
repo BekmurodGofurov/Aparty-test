@@ -10,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.config import settings
 from app.routers import admin, ai, apartments, auth, favorites, listings, locations, notifications, payments, rentals, reviews, subscriptions, upload, users
 from app.tasks.expire_premium import premium_expiry_loop
+from app.services.view_sync import view_sync_daemon
 
 
 from fastapi_cache import FastAPICache
@@ -30,10 +31,12 @@ async def lifespan(fastapi_app: FastAPI):
     fastapi_app.state.redis = redis
 
     task = asyncio.create_task(premium_expiry_loop())
+    sync_task = asyncio.create_task(view_sync_daemon(redis))
     try:
         yield
     finally:
         task.cancel()
+        sync_task.cancel()
         await redis.close()
 
 

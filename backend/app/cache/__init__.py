@@ -12,12 +12,14 @@ from app.cache.config import (
     CachePolicies,
     CachePolicy,
 )
+from app.cache.etag import etag
 from app.cache.keys import POPULAR_APARTMENTS_KEY, build_key
 from app.cache.manager import CacheManager, cached
 
 __all__ = [
     "CacheManager",
     "cached",
+    "etag",
     "build_key",
     "POPULAR_APARTMENTS_KEY",
     "CachePolicies",

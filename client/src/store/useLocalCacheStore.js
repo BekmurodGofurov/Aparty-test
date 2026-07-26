@@ -11,6 +11,9 @@ const MAX_RECENTLY_VIEWED = 10
 /** Max number of recent search queries to keep. */
 const MAX_RECENT_QUERIES = 5
 
+/** Max number of ETag cache entries to keep (LRU eviction by access time). */
+const MAX_ETAG_ENTRIES = 50
+
 /** localStorage key for this store. */
 const STORAGE_KEY = 'aparty-local-cache'
 
@@ -38,6 +41,13 @@ const defaultRecentFilters = {
  * @property {string} title     – Display title (address or generated)
  * @property {string} thumbnail – First image URL or empty string
  * @property {number} viewedAt  – Unix timestamp (ms) when viewed
+ */
+
+/**
+ * @typedef {Object} EtagCacheEntry
+ * @property {string} etag      – The ETag value from the server (e.g. W/"abc...")
+ * @property {any}    data      – The cached response body
+ * @property {number} accessedAt – Unix timestamp (ms) of last access (for LRU eviction)
  */
 
 // ─────────────────────────────────────────────────────────────
@@ -69,6 +79,24 @@ export const useLocalCacheStore = create(
 
       /** Last 10 visited apartments for instant "back" navigation */
       recentlyViewed: [],
+
+      /**
+       * ETag cache — keyed by URL path.
+       * Each entry stores the ETag string + the cached response data.
+       * This enables HTTP 304 Not Modified zero-bandwidth responses.
+       *
+       * Shape: { [url: string]: EtagCacheEntry }
+       *
+       * Example:
+       *   {
+       *     "/locations": {
+       *       etag: 'W/"a3f2b8..."',
+       *       data: { regions: [...], amenities: [...] },
+       *       accessedAt: 1721984000000
+       *     }
+       *   }
+       */
+      etagCache: {},
 
       // ── Actions: User Preferences ──────────────────────────
 
@@ -167,6 +195,53 @@ export const useLocalCacheStore = create(
       /** Clear the entire recently viewed list. */
       clearRecentlyViewed: () => set({ recentlyViewed: [] }),
 
+      // ── Actions: ETag Cache ────────────────────────────────
+
+      /**
+       * Store or update an ETag entry for a specific URL.
+       * Performs LRU eviction when the cache exceeds MAX_ETAG_ENTRIES.
+       *
+       * @param {string} url  – API endpoint path (e.g. "/locations")
+       * @param {string} etag – The ETag value from the server
+       * @param {any}    data – The response body to cache locally
+       */
+      setEtagEntry: (url, etag, data) =>
+        set((state) => {
+          const next = { ...state.etagCache }
+
+          // Store the new entry with a fresh access timestamp
+          next[url] = { etag, data, accessedAt: Date.now() }
+
+          // LRU eviction: if we exceed the max, remove the oldest entries
+          const keys = Object.keys(next)
+          if (keys.length > MAX_ETAG_ENTRIES) {
+            const sorted = keys.sort(
+              (a, b) => (next[a].accessedAt || 0) - (next[b].accessedAt || 0)
+            )
+            // Remove the oldest entries until we're within the limit
+            const toRemove = sorted.slice(0, keys.length - MAX_ETAG_ENTRIES)
+            toRemove.forEach((key) => delete next[key])
+          }
+
+          return { etagCache: next }
+        }),
+
+      /**
+       * Remove a specific ETag cache entry.
+       * Call this after mutations (POST/PUT/DELETE) that change the resource.
+       *
+       * @param {string} url – The endpoint URL to invalidate
+       */
+      removeEtagEntry: (url) =>
+        set((state) => {
+          const next = { ...state.etagCache }
+          delete next[url]
+          return { etagCache: next }
+        }),
+
+      /** Clear all ETag cache entries. */
+      clearEtagCache: () => set({ etagCache: {} }),
+
       // ── Actions: Global Reset ──────────────────────────────
 
       /** Factory-reset all persisted local cache state. */
@@ -175,6 +250,7 @@ export const useLocalCacheStore = create(
           userPreferences: { ...defaultUserPreferences },
           recentFilters: { ...defaultRecentFilters },
           recentlyViewed: [],
+          etagCache: {},
         }),
     }),
 
@@ -182,14 +258,15 @@ export const useLocalCacheStore = create(
     {
       name: STORAGE_KEY,
 
-      // Schema version — bump when state shape changes
-      version: 1,
+      // Schema version — bumped to 2 for the etagCache addition
+      version: 2,
 
       // Only serialize state slices, not action functions
       partialize: (state) => ({
         userPreferences: state.userPreferences,
         recentFilters: state.recentFilters,
         recentlyViewed: state.recentlyViewed,
+        etagCache: state.etagCache,
       }),
 
       /**
@@ -201,9 +278,10 @@ export const useLocalCacheStore = create(
        * @returns {Object} The migrated state
        */
       migrate: (persistedState, version) => {
-        // v0 → v1: no transformation needed for initial release.
-        // Future migrations go here:
-        //   if (version === 1) { /* reshape for v2 */ }
+        // v1 → v2: Add the etagCache slice (missing in v1).
+        if (version === 1) {
+          persistedState.etagCache = {}
+        }
         return persistedState
       },
     }

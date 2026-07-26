@@ -49,11 +49,11 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    # Relationships — NOTE: string-based references to avoid cross-domain model imports
-    listings = relationship("Listing", back_populates="owner")
-    rentals = relationship("Rental", back_populates="student")
-    reviews = relationship("Review", back_populates="author")
-    subscriptions = relationship("Subscription", back_populates="user")
+    # Relationships — NOTE: Removed cross-domain string-based references for strict DB isolation
+    # listings = relationship("Listing", back_populates="owner")
+    # rentals = relationship("Rental", back_populates="student")
+    # reviews = relationship("Review", back_populates="author")
+    # subscriptions = relationship("Subscription", back_populates="user")
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
 

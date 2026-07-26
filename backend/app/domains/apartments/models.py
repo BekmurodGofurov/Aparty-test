@@ -63,7 +63,7 @@ class Listing(Base):
     )
     owner_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
         nullable=False,
     )
     region: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
@@ -107,10 +107,10 @@ class Listing(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    # String-based relationships to avoid cross-domain model imports
-    owner = relationship("User", back_populates="listings")
-    rentals = relationship("Rental", back_populates="listing")
-    reviews = relationship("Review", back_populates="listing")
+    # String-based relationships to avoid cross-domain model imports (Removed for strict database isolation)
+    # owner = relationship("User", back_populates="listings")
+    # rentals = relationship("Rental", back_populates="listing")
+    # reviews = relationship("Review", back_populates="listing")
 
 
 # ---------------------------------------------------------------------------
@@ -129,7 +129,7 @@ class Favorite(Base):
     )
     user_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
         nullable=False,
     )
     listing_id: Mapped[uuid.UUID] = mapped_column(
@@ -141,5 +141,6 @@ class Favorite(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    user = relationship("User")
+    # Removed for strict database isolation
+    # user = relationship("User")
     listing = relationship("Listing")

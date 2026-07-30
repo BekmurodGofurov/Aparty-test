@@ -84,15 +84,16 @@ class OrderService:
         await db.commit()
         await db.refresh(new_request)
 
-        event_payload: dict[str, Any] = {
-            "order_id": new_request.id,
-            "apartment_id": command.apartment_id,
-            "user_id": command.requester_id,
-            "owner_id": command.recipient_id,
-            "message": command.message,
-            "status": new_request.status.value
-        }
+        from app.core.contracts.events import OrderPlacedEvent
+        event_payload = OrderPlacedEvent(
+            order_id=new_request.id,
+            apartment_id=command.apartment_id,
+            user_id=command.requester_id,
+            owner_id=command.recipient_id,
+            message=command.message,
+            status=new_request.status.value
+        )
         
-        await publish("order.placed", event_payload)
+        await publish(event_payload.event_name, event_payload)
         
         return new_request

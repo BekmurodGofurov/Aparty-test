@@ -112,14 +112,16 @@ class ApartmentService:
             premium_expires_at = premium_expires_at.replace(tzinfo=timezone.utc)
         return premium_expires_at > now
 
-async def handle_order_placed(payload: dict) -> None:
+async def handle_order_placed(raw_payload: dict) -> None:
     """
     Reacts to the 'order.placed' event.
     Updates the apartment's availability status.
     """
-    apartment_id = payload.get("apartment_id")
-    if not apartment_id:
-        return
+    from app.core.contracts.events import OrderPlacedEvent
+    
+    # Validate contract
+    payload = OrderPlacedEvent(**raw_payload)
+    apartment_id = payload.apartment_id
         
     async with AsyncSessionLocal() as db:
         try:

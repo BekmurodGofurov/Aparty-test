@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     admin_password: str = "supersecret_dev_password"
     groq_api_key: str = ""
     redis_url: str = "redis://localhost:6379"
+    rabbitmq_url: str = "amqp://guest:guest@localhost/"
     imgbb_api_key: str = ""  # ImgBB API key — used for cloud image uploads
     bot_token: str = ""  # Telegram Bot token — used by the backend to deliver OTP messages
     cors_origins: str = (

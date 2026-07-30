@@ -210,19 +210,21 @@ class UserService:
     async def delete(db: AsyncSession, user: User) -> None:
         await delete_users.delete(db, user)
 
-async def handle_order_placed(payload: dict) -> None:
+async def handle_order_placed(raw_payload: dict) -> None:
     """
     Reacts to the 'order.placed' event.
     Handles user-specific logic (e.g. creating a notification).
     """
-    user_id = payload.get("user_id")
-    order_id = payload.get("order_id")
-    owner_id = payload.get("owner_id")
-    apartment_id = payload.get("apartment_id")
-    message = payload.get("message")
+    from app.core.contracts.events import OrderPlacedEvent
     
-    if not owner_id or not user_id:
-        return
+    # Validate contract
+    payload = OrderPlacedEvent(**raw_payload)
+    
+    user_id = payload.user_id
+    order_id = payload.order_id
+    owner_id = payload.owner_id
+    apartment_id = payload.apartment_id
+    message = payload.message
         
     async with AsyncSessionLocal() as db:
         try:

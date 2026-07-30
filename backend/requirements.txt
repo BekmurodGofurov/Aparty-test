@@ -16,3 +16,4 @@ pytest
 pytest-asyncio
 httpx
 aiosqlite
+aio-pika

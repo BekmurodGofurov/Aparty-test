@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  # 1. Tezkor Xotira (Qora ro'yxat va 6 xonali OTP kodlar uchun)
+  redis:
+    image: redis:alpine
+    container_name: aparty-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - aparty-network
+    restart: unless-stopped
+
+  # API Gateway va IAM Service keyingi bosqichda shu yerga qo'shiladi...
+
+networks:
+  # Barcha mikroservislar bir-biri bilan gaplashadigan yashirin tarmoq
+  aparty-network:
+    driver: bridge

@@ -1,19 +1,66 @@
 version: '3.8'
 
 services:
-  # 1. Tezkor Xotira (Qora ro'yxat va 6 xonali OTP kodlar uchun)
+
+  # ── 1. Redis (OTP store) ───────────────────────────────────────────────────
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
     container_name: aparty-redis
     ports:
-      - "6379:6379"
+      - "6379:6379"          # also exposed to host for local debugging
     networks:
       - aparty-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # API Gateway va IAM Service keyingi bosqichda shu yerga qo'shiladi...
+  # ── 2. IAM Service (FastAPI) ───────────────────────────────────────────────
+  iam-service:
+    build:
+      context: ./microservices/services/iam-service
+      dockerfile: Dockerfile
+    container_name: aparty-iam-service
+    ports:
+      - "8000:8000"          # also exposed for direct Swagger UI access
+    environment:
+      # ── Database (Neon DB) ───────────────────────────────────────────────
+      DATABASE_URL: ${IAM_DATABASE_URL}
+      # ── Redis — uses Docker service name as hostname ──────────────────────
+      REDIS_URL: redis://redis:6379
+      # ── JWT ──────────────────────────────────────────────────────────────
+      JWT_SECRET_KEY: ${IAM_JWT_SECRET_KEY}
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 15
+      REFRESH_TOKEN_EXPIRE_MINUTES: 10080
+      # ── OTP ──────────────────────────────────────────────────────────────
+      OTP_TTL_SECONDS: 120
+      # ── CORS ─────────────────────────────────────────────────────────────
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:5173,https://aparty.uz"
+    networks:
+      - aparty-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── 3. API Gateway (Nginx) ─────────────────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./microservices/api-gateway
+      dockerfile: Dockerfile
+    container_name: aparty-api-gateway
+    ports:
+      - "8080:80"            # all external traffic enters here
+    networks:
+      - aparty-network
+    depends_on:
+      - iam-service
+    restart: unless-stopped
 
 networks:
-  # Barcha mikroservislar bir-biri bilan gaplashadigan yashirin tarmoq
+  # Internal bridge network — all microservices communicate via service names
   aparty-network:
     driver: bridge

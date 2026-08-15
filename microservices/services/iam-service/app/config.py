@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     )
 
     # ── Database ──────────────────────────────────────────────────────────────
-    database_url: str  # must be set via env (e.g. Neon DB asyncpg URL)
+    database_url: str  # must be set via env
 
     # ── Redis ─────────────────────────────────────────────────────────────────
     redis_url: str = "redis://localhost:6379"

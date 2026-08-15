@@ -13,6 +13,16 @@ Aparty is a monorepo for a student housing platform. The current project has:
 - Node.js 20+ recommended
 - PostgreSQL database, currently configured through `backend/.env`
 
+## Microservices Database Mode
+
+Microservices currently run in local-only database mode via Docker Compose:
+
+- `postgres` container (`postgres:16-alpine`) is the only supported DB target now.
+- IAM uses `iam_db`, Catalog uses `catalog_db` on host `postgres` inside the Docker network.
+- SSL/Neon-specific runtime branching is intentionally disabled for now.
+
+TODO: production Neon migration will be handled later as a separate task.
+
 ## Backend Setup
 
 ```bash

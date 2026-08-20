@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     )
 
     database_url: str
+    imgbb_api_key: str | None = None
     rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"
     jwt_secret_key: str = "aparty-secret-key-2024-super-secure"
     jwt_algorithm: str = "HS256"

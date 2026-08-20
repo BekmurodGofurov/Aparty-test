@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     # ── OTP ───────────────────────────────────────────────────────────────────
     otp_ttl_seconds: int = 120
 
+    # ── Root admin (local/test only) ──────────────────────────────────────────
+    admin_username: str = "admin"
+    admin_password: str = "supersecret_dev_password"
+
     # ── CORS ──────────────────────────────────────────────────────────────────
     cors_origins: str = "http://localhost:3000,http://localhost:5173"
 

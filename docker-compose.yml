@@ -1,29 +1,45 @@
 version: '3.8'
 
+# All configuration comes from the root .env file (see .env.example).
+# Required variables have no defaults: compose fails fast when one is missing.
+
+x-shared-env: &shared_env
+  JWT_SECRET_KEY: ${JWT_SECRET_KEY:?set JWT_SECRET_KEY in .env}
+  JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+  JWT_ISSUER: ${JWT_ISSUER:-aparty-iam}
+  JWT_AUDIENCE: ${JWT_AUDIENCE:-aparty-api}
+  CORS_ORIGINS: ${CORS_ORIGINS:?set CORS_ORIGINS in .env}
+
 services:
 
-  # ── 1. Redis (OTP store) ───────────────────────────────────────────────────
+  # ── Redis (login state, refresh sessions, rate limits) ─────────────────────
   redis:
     image: redis:7-alpine
     container_name: aparty-redis
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
-      - "6379:6379"          # also exposed to host for local debugging
+      - "127.0.0.1:6379:6379"   # host access for local debugging only
     networks:
       - aparty-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ── 2. RabbitMQ (Message Broker for Microservices Pub/Sub) ─────────────────
+  # ── RabbitMQ (event broker) ────────────────────────────────────────────────
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: aparty-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?set RABBITMQ_USER in .env}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
     ports:
-      - "5672:5672"
-      - "15672:15672"        # Management Web UI
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"   # Management web UI
     networks:
       - aparty-network
     restart: unless-stopped
@@ -33,21 +49,21 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── Postgres (Local database) ──────────────────────────────────────────────
+  # ── PostgreSQL (one database per service) ──────────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: aparty-postgres
     environment:
-      POSTGRES_USER: aparty
-      POSTGRES_PASSWORD: aparty_local_pass
-      POSTGRES_MULTIPLE_DATABASES: iam_db,catalog_db
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_MULTIPLE_DATABASES: iam_db,catalog_db,orders_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U aparty -d postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -55,24 +71,26 @@ services:
       - aparty-network
     restart: unless-stopped
 
-  # ── 3. IAM Service (FastAPI) ───────────────────────────────────────────────
+  # ── IAM Service ────────────────────────────────────────────────────────────
   iam-service:
     build:
       context: ./microservices/services/iam-service
       dockerfile: Dockerfile
     container_name: aparty-iam-service
-    ports:
-      - "8000:8000"
-    env_file:
-      - ./microservices/services/iam-service/.env
+    expose:
+      - "8000"
     environment:
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-aparty-secret-key-2024-super-secure}
-      JWT_ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 15
-      REFRESH_TOKEN_EXPIRE_MINUTES: 10080
-      OTP_TTL_SECONDS: 120
-      CORS_ORIGINS: "http://localhost:3000,http://localhost:5173,https://aparty.uz"
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/iam_db
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      <<: *shared_env
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      REFRESH_TOKEN_EXPIRE_MINUTES: ${REFRESH_TOKEN_EXPIRE_MINUTES:-10080}
+      TELEGRAM_CLIENT_ID: ${TELEGRAM_CLIENT_ID:-}
+      TELEGRAM_CLIENT_SECRET: ${TELEGRAM_CLIENT_SECRET:-}
+      TELEGRAM_REDIRECT_URI: ${TELEGRAM_REDIRECT_URI:-}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?set ADMIN_USERNAME in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     networks:
       - aparty-network
     depends_on:
@@ -85,22 +103,20 @@ services:
       - 8.8.8.8
       - 1.1.1.1
 
-  # ── 4. Catalog Service (Listings, ImgBB Media, Bookings & Orders) ──────────
+  # ── Catalog Service (listings and image uploads) ───────────────────────────
   catalog-service:
     build:
       context: ./microservices/services/catalog-service
       dockerfile: Dockerfile
     container_name: aparty-catalog-service
-    ports:
-      - "8001:8001"
-    env_file:
-      - ./microservices/services/catalog-service/.env
+    expose:
+      - "8001"
     environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      IMGBB_API_KEY: ${IMGBB_API_KEY}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-aparty-secret-key-2024-super-secure}
-      JWT_ALGORITHM: HS256
-      SERVICE_NAME: catalog-service
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/catalog_db
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      <<: *shared_env
+      IAM_SERVICE_URL: http://iam-service:8000
+      IMGBB_API_KEY: ${IMGBB_API_KEY:-}
     networks:
       - aparty-network
     depends_on:
@@ -113,7 +129,30 @@ services:
       - 8.8.8.8
       - 1.1.1.1
 
-  # ── 5. API Gateway (Nginx) ─────────────────────────────────────────────────
+  # ── Order Service (bookings) ───────────────────────────────────────────────
+  order-service:
+    build:
+      context: ./microservices/services/order-service
+      dockerfile: Dockerfile
+    container_name: aparty-order-service
+    expose:
+      - "8002"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/orders_db
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      <<: *shared_env
+      CATALOG_SERVICE_URL: http://catalog-service:8001
+      IAM_SERVICE_URL: http://iam-service:8000
+    networks:
+      - aparty-network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── API Gateway (Nginx) ────────────────────────────────────────────────────
   api-gateway:
     build:
       context: ./microservices/api-gateway
@@ -126,10 +165,10 @@ services:
     depends_on:
       - iam-service
       - catalog-service
+      - order-service
     restart: unless-stopped
 
 networks:
-  # Internal bridge network — all microservices communicate via service names
   aparty-network:
     driver: bridge
 

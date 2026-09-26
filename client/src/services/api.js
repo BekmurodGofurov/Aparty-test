@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/authStore'
 import { useCacheStore } from '../store/cacheStore'
+import { decodeJwtPayload } from '../utils/jwt'
 import {
   generateCacheKey,
   isCacheable,
@@ -17,6 +18,33 @@ const normalizedBackendUrl = backendUrl.replace(/\/+$/, '')
 const apiBaseUrl = normalizedBackendUrl.endsWith('/api/v1')
   ? normalizedBackendUrl
   : `${normalizedBackendUrl}/api/v1`
+
+// Refresh tokens are single-use, so concurrent 401s must share one refresh: a second call with the
+// already-used token would fail and wrongly sign the user out. Requests of one tab share a promise;
+// several tabs take turns through a Web Lock and reuse the token another tab already refreshed.
+const REFRESH_LOCK = 'aparty-token-refresh'
+let refreshPromise = null
+
+const runExclusively = (task) => (navigator.locks ? navigator.locks.request(REFRESH_LOCK, task) : task())
+
+const refreshAccessToken = (failedToken) => {
+  if (!refreshPromise) {
+    refreshPromise = runExclusively(async () => {
+      const current = localStorage.getItem('accessToken')
+      if (current && current !== failedToken) return current
+
+      const { data } = await axios.post(`${apiBaseUrl}/auth/refresh`, {}, { withCredentials: true })
+      const claims = decodeJwtPayload(data.access_token)
+      const userId = localStorage.getItem('userId') || claims?.sub
+      // The role comes from the new token, so it survives whatever happened to local storage.
+      useAuthStore.getState().setAuth(data.access_token, claims?.role ?? null, userId)
+      return data.access_token
+    }).finally(() => {
+      refreshPromise = null
+    })
+  }
+  return refreshPromise
+}
 
 export const api = axios.create({
   baseURL: apiBaseUrl,
@@ -107,37 +135,16 @@ api.interceptors.response.use(
 
     originalRequest._retry = true
     try {
-      const { data } = await axios.post(
-        `${api.defaults.baseURL}/auth/refresh`,
-        {},
-        { withCredentials: true },
-      )
-      const newToken = data.access_token
-      localStorage.setItem('accessToken', newToken)
-
-      // Update auth store with new token
-      const authStore = useAuthStore.getState()
-      const currentRole = localStorage.getItem('role')
-      const currentUserId = localStorage.getItem('userId')
-      if (currentRole && currentUserId) {
-        authStore.setAuth(newToken, currentRole, currentUserId)
-      }
-
+      const failedToken = originalRequest.headers?.Authorization?.replace('Bearer ', '')
+      const newToken = await refreshAccessToken(failedToken)
       originalRequest.headers.Authorization = `Bearer ${newToken}`
       return api(originalRequest)
     } catch (refreshError) {
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('role')
-      localStorage.removeItem('userId')
-
-      // Clear auth store on logout
-      const authStore = useAuthStore.getState()
-      authStore.clear()
-
-      // Clear cache on logout
-      const cacheStore = useCacheStore.getState()
-      cacheStore.clearCache()
-
+      // Sign out only when the server refused the refresh token. A network error must not log the user out.
+      if (refreshError.response?.status === 401) {
+        useAuthStore.getState().clear()
+        useCacheStore.getState().clearCache()
+      }
       return Promise.reject(refreshError)
     }
   },

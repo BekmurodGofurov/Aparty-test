@@ -9,8 +9,9 @@ import {
 } from './cacheService'
 
 // All requests go through the API gateway (see docker-compose.yml, port 8080).
+// An empty VITE_BACKEND_API means "same origin": the dev server proxies /api to the gateway.
 const DEFAULT_GATEWAY_URL = 'http://localhost:8080'
-const backendUrl = import.meta.env.VITE_BACKEND_API || DEFAULT_GATEWAY_URL
+const backendUrl = import.meta.env.VITE_BACKEND_API ?? DEFAULT_GATEWAY_URL
 
 const normalizedBackendUrl = backendUrl.replace(/\/+$/, '')
 const apiBaseUrl = normalizedBackendUrl.endsWith('/api/v1')

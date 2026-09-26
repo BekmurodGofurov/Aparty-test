@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Briefcase, GraduationCap, Home } from 'lucide-react'
 import { authService } from '../../../services/authService'
+import { userService } from '../../../services/userService'
 import { useAuthStore } from '../../../store/authStore'
 import { getErrorMessage, getHomePath } from '../../../utils/auth'
 import './Auth.scss'
@@ -20,6 +21,21 @@ export function ChooseRolePage() {
   const [error, setError] = useState('')
   const [savingRole, setSavingRole] = useState(null)
 
+  // The role may already be saved on the server while this browser lost it: restore it instead of asking again.
+  useEffect(() => {
+    if (!accessToken || role) return undefined
+    let active = true
+    userService
+      .getCurrentUser()
+      .then((user) => {
+        if (active && user.rol) setAuth(accessToken, user.rol, user.id)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [accessToken, role, setAuth])
+
   if (!accessToken) return <Navigate to="/login" replace />
   if (role) return <Navigate to={getHomePath(role)} replace />
 
@@ -31,6 +47,17 @@ export function ChooseRolePage() {
       setAuth(data.access_token, data.user.role, userId)
       navigate(getHomePath(data.user.role), { replace: true })
     } catch (requestError) {
+      if (requestError.response?.status === 409) {
+        // The server already has a role for this account: use it.
+        try {
+          const user = await userService.getCurrentUser()
+          setAuth(accessToken, user.rol, user.id)
+          navigate(getHomePath(user.rol), { replace: true })
+          return
+        } catch {
+          // fall through to the error message
+        }
+      }
       setError(getErrorMessage(requestError, t('auth.role_error', "Rolni saqlab bo'lmadi. Qayta urinib ko'ring.")))
       setSavingRole(null)
     }

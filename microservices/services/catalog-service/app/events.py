@@ -12,7 +12,12 @@ LISTING_CREATED = "listing.created"
 LISTING_UPDATED = "listing.updated"
 
 
-def listing_event_payload(event: str, listing: Listing, apartment_owner_id: Optional[int] = None) -> dict[str, Any]:
+def listing_event_payload(
+    event: str,
+    listing: Listing,
+    apartment_owner_id: Optional[int] = None,
+    apartment_title: Optional[str] = None,
+) -> dict[str, Any]:
     return {
         "event": event,
         "id": str(listing.id),
@@ -26,8 +31,16 @@ def listing_event_payload(event: str, listing: Listing, apartment_owner_id: Opti
         "source": listing.source.value,
         "parent_listing_id": str(listing.parent_listing_id) if listing.parent_listing_id else None,
         "apartment_owner_id": apartment_owner_id,
+        "apartment_title": apartment_title,
+        "available_spaces": listing.available_spaces,
+        "target_gender": listing.target_gender.value,
     }
 
 
-async def publish_listing_event(event: str, listing: Listing, apartment_owner_id: Optional[int] = None) -> None:
-    await publish_event(event, listing_event_payload(event, listing, apartment_owner_id))
+async def publish_listing_event(
+    event: str,
+    listing: Listing,
+    apartment_owner_id: Optional[int] = None,
+    apartment_title: Optional[str] = None,
+) -> None:
+    await publish_event(event, listing_event_payload(event, listing, apartment_owner_id, apartment_title))

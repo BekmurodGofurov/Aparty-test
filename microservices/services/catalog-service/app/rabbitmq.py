@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+from urllib.parse import urlsplit
 from typing import Any, Dict
 
 import aio_pika
@@ -25,7 +26,7 @@ async def init_rabbitmq() -> None:
     """Initialize robust RabbitMQ connection and exchange."""
     global _connection, _channel, _exchange
     try:
-        logger.info("Connecting to RabbitMQ at %s", settings.rabbitmq_url)
+        logger.info("Connecting to RabbitMQ at %s", urlsplit(settings.rabbitmq_url).hostname)
         _connection = await aio_pika.connect_robust(settings.rabbitmq_url)
         _channel = await _connection.channel()
         _exchange = await _channel.declare_exchange(
@@ -69,3 +70,25 @@ async def publish_event(routing_key: str, payload: Dict[str, Any]) -> None:
         logger.info("Published RabbitMQ event '%s': %s", routing_key, payload)
     except Exception as e:
         logger.error("Error publishing RabbitMQ event '%s': %s", routing_key, e)
+
+
+async def start_consumer(queue_name: str, routing_keys: list[str], handler) -> None:
+    """Consume events bound to `routing_keys`. `handler` receives the decoded JSON payload.
+
+    A failing handler requeues the message once; a second failure drops it.
+    """
+    if not _channel or not _exchange:
+        await init_rabbitmq()
+    if not _channel or not _exchange:
+        raise RuntimeError("RabbitMQ is unavailable")
+
+    queue = await _channel.declare_queue(queue_name, durable=True)
+    for routing_key in routing_keys:
+        await queue.bind(_exchange, routing_key=routing_key)
+
+    async def on_message(message: aio_pika.abc.AbstractIncomingMessage) -> None:
+        async with message.process(requeue=True, reject_on_redelivered=True):
+            await handler(json.loads(message.body))
+
+    await queue.consume(on_message)
+    logger.info("Consuming '%s' from queue '%s'.", ", ".join(routing_keys), queue_name)

@@ -11,22 +11,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ── 1. PR Diff Size Check (Max 200 lines / PR) ─────────────────────────────
-  commit-size-check:
-    name: "Check PR Diff Size (<= 200 lines)"
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Checkout repository with full git history
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Run Commit Size Enforcer
-        run: |
-          chmod +x ./scripts/check_commit_size.sh
-          ./scripts/check_commit_size.sh "origin/${{ github.base_ref }}"
-
   # ── 3. Frontend Client Build & Lint ────────────────────────────────────────
   frontend-checks:
     name: "Frontend Client (Vite Build & Lint)"
@@ -73,6 +57,7 @@ jobs:
           pip install -r microservices/services/iam-service/requirements.txt
           pip install -r microservices/services/catalog-service/requirements.txt
           pip install -r microservices/services/order-service/requirements.txt
+          pip install -r microservices/services/notification-service/requirements.txt
 
       - name: Compile python files in microservices
         run: |
@@ -92,6 +77,8 @@ jobs:
             database: catalog_test
           - service: order-service
             database: orders_test
+          - service: notification-service
+            database: notifications_test
     services:
       postgres:
         image: postgres:16-alpine

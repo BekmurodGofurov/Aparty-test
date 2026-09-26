@@ -77,6 +77,32 @@ async def _confirmed_count(db: AsyncSession, listing_id: uuid.UUID) -> int:
     return result.scalar_one()
 
 
+async def _approver_ids(db: AsyncSession, booking: Booking) -> list[int]:
+    """Who can answer this booking: the listing owner and, for a roommate request, everyone living in the apartment."""
+    ids = {booking.listing_owner_id}
+    if booking.is_roommate_request:
+        residents = await db.execute(
+            select(Booking.user_id).where(
+                Booking.apartment_listing_id == booking.apartment_listing_id,
+                Booking.status == BookingStatus.confirmed,
+                Booking.end_date >= date.today(),
+            )
+        )
+        ids.update(residents.scalars())
+    ids.discard(booking.user_id)
+    return sorted(ids)
+
+
+async def _publish(db: AsyncSession, event: str, booking: Booking, actor_id: int) -> None:
+    await publish_booking_event(
+        event,
+        booking,
+        listing_confirmed_count=await _confirmed_count(db, booking.listing_id),
+        actor_id=actor_id,
+        approver_ids=await _approver_ids(db, booking),
+    )
+
+
 async def _get_booking(id: uuid.UUID, db: AsyncSession) -> Booking:
     booking = await db.get(Booking, id)
     if not booking:
@@ -167,7 +193,7 @@ async def create_booking(
     await db.commit()
     await db.refresh(booking)
 
-    await publish_booking_event(EVENT_BOOKING_CREATED, booking, await _confirmed_count(db, booking.listing_id))
+    await _publish(db, EVENT_BOOKING_CREATED, booking, user_id)
     return booking
 
 
@@ -245,5 +271,5 @@ async def update_booking_status(
     await db.commit()
     await db.refresh(booking)
 
-    await publish_booking_event(EVENT_BOOKING_UPDATED, booking, await _confirmed_count(db, booking.listing_id))
+    await _publish(db, EVENT_BOOKING_UPDATED, booking, user_id)
     return booking

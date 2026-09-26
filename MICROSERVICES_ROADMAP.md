@@ -21,7 +21,7 @@
 | 3 | IAM Service | FastAPI + Redis | `iam_db` | Telegram login (OIDC), JWT, roles, profiles | Done |
 | 4 | Catalog Service | FastAPI | `catalog_db` | Listings, roommate ads, image upload | Done |
 | 5 | Order Service | FastAPI | `orders_db` | Booking requests | Done |
-| 6 | Notification Service | FastAPI | `notifications_db` (PostgreSQL) | Site bell, Telegram messages, owner notice for roommate ads | Next |
+| 6 | Notification Service | FastAPI | `notifications_db` | Site bell, Telegram messages, owner notice for roommate ads | Done |
 | 7 | Search Service | FastAPI + Meilisearch/Elasticsearch | index | Fast search fed by `listing.*` events | Later (Catalog search in PostgreSQL is enough for now) |
 
 ## 3. Plan
@@ -31,21 +31,21 @@
 - IAM: Telegram login, role selection, rotating refresh sessions, rate limits.
 - Catalog: listings CRUD, search, image upload, roommate ads, role rules, first RabbitMQ consumer.
 - Order: booking requests with overlap and capacity rules, roommate approval by residents.
+- Notification: booking and roommate-ad events become site notifications and Telegram messages.
 - Frontend talks only to the gateway for auth, listings, bookings and roommate ads.
 - Tests for every service against real PostgreSQL, run in CI.
 
 ### Next
-1. **Notification Service.** Consume `booking.created`, `booking.updated` and roommate `listing.created` events. Store notifications in PostgreSQL. Serve `/api/v1/notifications` for the site bell. Send Telegram messages (login grants `telegram:bot_access`). Notify an apartment's owner when tenants post a roommate ad.
-2. **Transactional outbox** so events are not lost when RabbitMQ is down.
-3. **Frontend migration** of the remaining pages that still call removed endpoints: admin panel, favorites, reviews, chat.
-4. **Alembic migrations** to replace the development `ALTER TABLE` compatibility code in `init_db`.
-5. **Search Service**, when listing volume needs it.
+1. **Transactional outbox** so events are not lost when RabbitMQ is down.
+2. **Frontend migration** of the remaining pages that still call removed endpoints: admin panel, favorites, reviews, chat.
+3. **Alembic migrations** to replace the development `ALTER TABLE` compatibility code in `init_db`.
+4. **Search Service**, when listing volume needs it.
 
 ## 4. Strict rules
 
 1. **DB isolation:** no service reads another service's database. Use REST or events.
 2. **Contracts first:** agree the Pydantic schema between services before implementing.
 3. **English everywhere:** code, comments, database, API payloads, commit messages.
-4. **Small PRs:** a PR's total diff should stay within 200 changed lines (see [docs/BRANCH_PROTECTION.md](docs/BRANCH_PROTECTION.md)). Every change goes through a PR and merges only when CI is green.
+4. **Focused PRs:** every change goes through a PR and merges only when CI is green (see [docs/BRANCH_PROTECTION.md](docs/BRANCH_PROTECTION.md)).
 5. **Resilience:** if the Notification Service is down, booking must still work; events wait in the queue.
 6. **Tests:** all work must pass its tests. New endpoints and functions update the docs.

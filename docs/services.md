@@ -8,6 +8,7 @@ All client traffic enters through the Nginx API gateway (`http://localhost:8080`
 | iam-service | 8000 | `iam_db` | Telegram login, JWT, user profiles |
 | catalog-service | 8001 | `catalog_db` | Listings and image uploads |
 | order-service | 8002 | `orders_db` | Booking requests (no payments) |
+| notification-service | 8003 | `notifications_db` | Site notifications and Telegram messages |
 
 Infrastructure: PostgreSQL, Redis (login state, refresh sessions, rate limits; password protected), RabbitMQ (`aparty.events` topic exchange). Their host ports are bound to `127.0.0.1` only.
 
@@ -18,6 +19,7 @@ Infrastructure: PostgreSQL, Redis (login state, refresh sessions, rate limits; p
 | `/api/v1/auth/`, `/api/v1/users/` | iam-service |
 | `/api/v1/listings`, `/api/v1/media/` | catalog-service |
 | `/api/v1/bookings` | order-service |
+| `/api/v1/notifications` | notification-service |
 
 `/api/v1/users/public` is internal: the gateway answers 404 for it.
 
@@ -117,7 +119,28 @@ Rules:
 - The owner cannot book their own listing (400). Unknown, inactive or non-active listings return 404. If Catalog is down, creation returns 503.
 - Status changes: the owner can move `pending` to `confirmed`, `rejected` or `cancelled`, and `confirmed` to `cancelled`. The requester can move `pending` or `confirmed` to `cancelled`. Anything else returns 409.
 
-Events published: `booking.created`, `booking.updated`. Both carry `apartment_listing_id` and `is_roommate_request`.
+Events published: `booking.created`, `booking.updated`. Both carry `apartment_listing_id`, `is_roommate_request`, `listing_title`, `actor_id` (who made the change) and `approver_ids` (who can answer the request, never the requester).
+
+## Notification Service
+
+Turns events into notifications shown in the site's bell and sent to the user's Telegram. Nothing here is called by other services: it only consumes RabbitMQ events (queue `notification-service.events`), so booking and listings keep working when it is down and the events wait in the queue.
+
+| Event | Who is notified | Text |
+|---|---|---|
+| `booking.created` | `approver_ids`: the listing owner and, for a roommate request, everyone living in the apartment | New booking request, or new roommate request, with the requester's name |
+| `booking.updated` `confirmed` or `rejected` | the requester | Your request was accepted or declined |
+| `booking.updated` `cancelled` | the other side: the approvers if the requester cancelled, otherwise the requester | Booking cancelled |
+| `listing.created` with `source: roommate` | `apartment_owner_id` | "Your tenants are looking for N more people" |
+
+The requester's name comes from IAM; if IAM is down the text says "Foydalanuvchi". The same event delivered twice creates one notification (`dedupe_key`).
+
+Telegram: a user's Telegram id is their id in Aparty, so the service sends the message with the bot (`BOT_TOKEN`) to `chat_id = user id`. The login grants the bot permission to write first. Delivery never blocks the site notification: the result is stored as `telegram_status` (`sent`, `failed`, `skipped` when there is no token). `SITE_URL` adds a link to the message. The bot token is never logged.
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/api/v1/notifications/me` | `limit` (1 to 100, default 30) and `unread_only`. Returns `notifications` (newest first: `id`, `type`, `title`, `body`, `target_url`, `is_read`, `created_at`) and `unread_count` (all unread, not only the returned page) |
+| PATCH | `/api/v1/notifications/{id}/read` | Own notifications only |
+| PATCH | `/api/v1/notifications/read-all` | Returns `updated` |
 
 ## Roommates
 
@@ -132,7 +155,7 @@ Tenants who rent an apartment can look for people to share it with. This works e
 7. When confirmed roommate bookings fill the offered places, Catalog (consuming `booking.updated`, which carries `listing_confirmed_count`) marks the ad occupied and hides it from search. If a place frees up it reopens, unless the poster closed it by hand.
 8. Deleting the apartment closes its ads.
 
-The `listing.created` event of an ad carries `source: roommate`, `parent_listing_id` and `apartment_owner_id`. Notifying the apartment's owner ("your tenants are looking for N more people") is planned for the Notification service.
+The `listing.created` event of an ad carries `source: roommate`, `parent_listing_id`, `apartment_owner_id`, `apartment_title`, `available_spaces` and `target_gender`. The Notification Service uses it to tell the apartment's owner that the tenants are looking for more people.
 
 Roommate ads are found with `owner_role=student`. A roommate booking never conflicts with the tenant's own booking of the apartment.
 

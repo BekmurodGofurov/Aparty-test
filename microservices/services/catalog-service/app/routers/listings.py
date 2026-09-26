@@ -270,7 +270,9 @@ async def create_roommate_listing(
     await db.commit()
 
     created = await _reload_listing(listing.id, db)
-    await publish_listing_event(LISTING_CREATED, created, apartment_owner_id=apartment.owner_id)
+    await publish_listing_event(
+        LISTING_CREATED, created, apartment_owner_id=apartment.owner_id, apartment_title=apartment.title
+    )
     return await _serialize(created)
 
 

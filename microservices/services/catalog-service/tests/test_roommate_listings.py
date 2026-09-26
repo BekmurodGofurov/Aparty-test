@@ -73,6 +73,9 @@ async def test_event_tells_who_owns_the_apartment(client, apartment, published_e
     assert payload["source"] == "roommate"
     assert payload["parent_listing_id"] == apartment["id"]
     assert payload["apartment_owner_id"] == OWNER
+    assert payload["apartment_title"] == apartment["title"]
+    assert payload["available_spaces"] == 1
+    assert payload["target_gender"] == "female"
     assert payload["owner_id"] == STUDENT
 
 

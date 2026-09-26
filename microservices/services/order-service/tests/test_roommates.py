@@ -214,3 +214,25 @@ async def test_no_internal_endpoints_are_exposed(client, apartment):
     tenancy = apartment["tenancy"]
     assert (await client.get(f"/internal/v1/bookings/{tenancy['id']}/tenancy")).status_code == 404
 
+
+
+async def test_events_name_the_actor_and_who_can_answer(client, catalog, create_booking, apartment, published_events):
+    await add_resident(client, catalog, create_booking, apartment["apartment"])
+    request = (await request_spot(client, apartment["roommate_listing"], NEWCOMER)).json()
+
+    created = published_events[-1][1]
+    assert created["event"] == "booking.created"
+    assert created["actor_id"] == NEWCOMER
+    assert created["listing_title"] == "Test flat"
+    assert created["approver_ids"] == sorted({TENANT, CO_TENANT})  # the poster and the co-resident, not the requester
+
+    await client.patch(f"{BASE}/{request['id']}/status", json={"status": "confirmed"}, headers=auth_headers(CO_TENANT))
+    updated = published_events[-1][1]
+    assert updated["event"] == "booking.updated"
+    assert updated["actor_id"] == CO_TENANT
+    assert NEWCOMER not in updated["approver_ids"]
+
+
+async def test_events_for_an_ordinary_booking_list_only_the_owner(create_booking, catalog, published_events):
+    await create_booking(catalog.add())
+    assert published_events[-1][1]["approver_ids"] == [OWNER_ID]

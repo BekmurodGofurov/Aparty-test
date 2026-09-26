@@ -150,7 +150,7 @@ export default function ListingCard({ listing, onUnfavorite = null }) {
           </div>
 
           <div className="price-glass">
-            <span className="price-value">${listing.price_usd}</span>
+            <span className="price-value">${listing.price}</span>
             <span className="price-unit">{t('card.per_month')}</span>
           </div>
         </div>

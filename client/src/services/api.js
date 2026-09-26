@@ -6,28 +6,16 @@ import {
   isCacheable,
   getCachedData,
   setCachedData,
-  clearCachePattern
 } from './cacheService'
 
-const backendUrl = import.meta.env.VITE_BACKEND_API || 'http://127.0.0.1:8000'
+// All requests go through the API gateway (see docker-compose.yml, port 8080).
+const DEFAULT_GATEWAY_URL = 'http://localhost:8080'
+const backendUrl = import.meta.env.VITE_BACKEND_API || DEFAULT_GATEWAY_URL
 
 const normalizedBackendUrl = backendUrl.replace(/\/+$/, '')
 const apiBaseUrl = normalizedBackendUrl.endsWith('/api/v1')
   ? normalizedBackendUrl
   : `${normalizedBackendUrl}/api/v1`
-
-const getLocalFallbackBaseUrl = (baseUrl) => {
-  if (!baseUrl) return null
-  if (baseUrl.includes('://127.0.0.1:8000')) {
-    return baseUrl.replace('://127.0.0.1:8000', '://localhost:8000')
-  }
-  if (baseUrl.includes('://localhost:8000')) {
-    return baseUrl.replace('://localhost:8000', '://127.0.0.1:8000')
-  }
-  return null
-}
-
-const isNetworkError = (error) => Boolean(error?.config && !error.response)
 
 export const api = axios.create({
   baseURL: apiBaseUrl,
@@ -96,15 +84,6 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    if (isNetworkError(error) && !originalRequest?._localFallbackTried) {
-      const fallbackBaseUrl = getLocalFallbackBaseUrl(originalRequest.baseURL || api.defaults.baseURL)
-      if (fallbackBaseUrl) {
-        originalRequest._localFallbackTried = true
-        originalRequest.baseURL = fallbackBaseUrl
-        return api(originalRequest)
-      }
-    }
-
     // If cache was available, return it on error
     if (originalRequest?._useCache && originalRequest?._cachedData) {
       return Promise.resolve({
@@ -120,8 +99,7 @@ api.interceptors.response.use(
     if (
       error.response?.status !== 401 ||
       originalRequest?._retry ||
-      originalRequest?.url?.includes('/auth/login') ||
-      originalRequest?.url?.includes('/auth/admin-login')
+      originalRequest?.url?.includes('/auth/')
     ) {
       return Promise.reject(error)
     }

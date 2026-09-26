@@ -143,7 +143,7 @@ export function MyRoom() {
                     onClick={() => setActiveRoomId(room.id)}
                   >
                     <strong>{room.listing.address || `${room.listing.district}, ${room.listing.region}`}</strong>
-                    <span>${room.price_usd}/oy</span>
+                    <span>${room.price}/oy</span>
                   </button>
                 ))}
               </div>

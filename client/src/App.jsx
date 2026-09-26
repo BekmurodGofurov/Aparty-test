@@ -24,12 +24,14 @@ import { MaklerPayments } from './pages/makler/MaklerPayments'
 import { MaklerProfile } from './pages/makler/MaklerProfile'
 import { MaklerSubscription } from './pages/makler/MaklerSubscription'
 import { MyRoom } from './pages/user/my-room/MyRoom'
+import { MyBookings } from './pages/user/bookings/MyBookings'
 import { OwnerCreate } from './pages/owner/OwnerCreate'
 import { OwnerDashboard } from './pages/owner/OwnerDashboard'
 import { OwnerEdit } from './pages/owner/OwnerEdit'
 import { OwnerProfile } from './pages/owner/OwnerProfile'
 import { UserProfile } from './pages/user/profile/UserProfile'
-import { RegisterPage } from './pages/shared/auth/RegisterPage'
+import { TelegramCallbackPage } from './pages/shared/auth/TelegramCallbackPage'
+import { ChooseRolePage } from './pages/shared/auth/ChooseRolePage'
 import { PropertySearch } from './pages/shared/property-search/PropertySearch'
 import { MapPage } from './pages/shared/map/MapPage'
 import { GlobalLayout } from './components/layout/GlobalLayout'
@@ -56,10 +58,13 @@ function AppContent() {
           
           {/* Protected Auth Routes */}
           <Route path="/login" element={<ProtectedAuthRoute><LoginPage /></ProtectedAuthRoute>} />
-          <Route path="/register" element={<ProtectedAuthRoute><RegisterPage /></ProtectedAuthRoute>} />
+          <Route path="/register" element={<Navigate to="/login" replace />} />
+          <Route path="/auth/telegram/callback" element={<TelegramCallbackPage />} />
+          <Route path="/choose-role" element={<ChooseRolePage />} />
 
           {/* Student Routes */}
           <Route path="/profile" element={<UserProfile />} />
+          <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/my-room" element={<RoleRoute role="student"><MyRoom /></RoleRoute>} />
 
           {/* Owner Routes */}

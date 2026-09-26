@@ -93,7 +93,7 @@ export function AdminUserDetail() {
                 ) : listings.map((listing) => (
                   <tr key={listing.id} onClick={() => navigate(`/admin/listings/${listing.id}`)}>
                     <td>{listing.address || `${listing.district}, ${listing.region}`}</td>
-                    <td>{Number(listing.price_usd || 0).toLocaleString('uz-UZ')} USD</td>
+                    <td>{Number(listing.price || 0).toLocaleString('uz-UZ')} USD</td>
                     <td><span className={`pill ${listing.is_active ? 'active' : 'inactive'}`}>{listing.is_active ? 'Faol' : 'Nofaol'}</span></td>
                     <td>{listing.reviews_count || 0}</td>
                     <td>{formatDate(listing.created_at)}</td>

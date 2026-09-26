@@ -67,7 +67,7 @@ export function AdminListingDetail() {
             <p className="eyebrow">E'lon tafsilotlari</p>
             <h1>{listing?.address || `${listing?.district || ''}, ${listing?.region || ''}`}</h1>
             <div className="meta-row">
-              <span>{Number(listing?.price_usd || 0).toLocaleString('uz-UZ')} USD</span>
+              <span>{Number(listing?.price || 0).toLocaleString('uz-UZ')} USD</span>
               <span><CalendarDays size={15} /> {formatDate(listing?.created_at)}</span>
               <span><MessageSquare size={15} /> {reviews.length} izoh</span>
             </div>

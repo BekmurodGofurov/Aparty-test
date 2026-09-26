@@ -48,7 +48,7 @@ const getListingTitle = (listing = {}) => {
 const getListingImages = (listing = {}) => listing.images || []
 const getListingRooms = (listing = {}) => listing.rooms_count ?? 0
 const getListingSpaces = (listing = {}) => listing.available_spaces ?? 0
-const getListingPrice = (listing = {}) => listing.price_usd ?? 0
+const getListingPrice = (listing = {}) => listing.price ?? 0
 const isListingActive = (listing = {}) => Boolean(listing.is_active)
 const isListingPremium = (listing = {}) => Boolean(listing.is_premium)
 

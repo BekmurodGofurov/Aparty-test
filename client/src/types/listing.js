@@ -13,7 +13,7 @@ export const listingShape = {
   longitude: 0,
   rooms_count: 1,
   area_m2: null,
-  price_usd: 0,
+  price: 0,
   target_gender: 'mixed',
   source: 'owner',
   max_guests: 1,

@@ -74,7 +74,7 @@ export function AdminListings() {
     return listings.filter((listing) => {
       const isActive = listing.is_active ?? false
       const isPremium = listing.is_premium ?? false
-      const price = listing.price_usd
+      const price = listing.price
 
       const matchesQuery = !query || [
         listing.id,
@@ -198,7 +198,7 @@ export function AdminListings() {
                     paginatedListings.map((listing) => {
                       const isActive = listing.is_active ?? false
                       const isPremium = listing.is_premium ?? false
-                      const price = listing.price_usd ?? 0
+                      const price = listing.price ?? 0
 
                       return (
                         <tr key={listing.id} onClick={() => navigate(`/admin/listings/${listing.id}`)} className="clickable-row">

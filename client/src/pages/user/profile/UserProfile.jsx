@@ -315,7 +315,7 @@ export function UserProfile() {
                         <span className="sep">•</span>
                         <span>{listing.available_spaces} bo'sh joy</span>
                         <span className="sep">•</span>
-                        <span className="time">${listing.price_usd}/oy</span>
+                        <span className="time">${listing.price}/oy</span>
                       </div>
                     </div>
                     <ChevronRight size={18} />
@@ -370,7 +370,7 @@ export function UserProfile() {
                     <p className="rev-comment">"{request.message || 'So‘rov yuborilgan'}"</p>
                     <div className="rev-footer">
                       <span>{formatDate(request.created_at)}</span>
-                      <span>${request.listing?.price_usd}/oy</span>
+                      <span>${request.listing?.price}/oy</span>
                     </div>
                   </GlassCard>
                 ))}
@@ -392,7 +392,7 @@ export function UserProfile() {
                       <button className="btn-terminate" type="button" onClick={() => navigate('/my-room')}>Ochish</button>
                     </div>
                     <div className="room-profile-meta">
-                      <span><DollarSign size={14}/> ${activeRoom.price_usd}/oy</span>
+                      <span><DollarSign size={14}/> ${activeRoom.price}/oy</span>
                       <span><Clock size={14}/> To'lovga {activeRoom.payment_days_left} kun qoldi</span>
                       <span><UserCheck size={14}/> {activeRoom.owner.full_name}</span>
                     </div>

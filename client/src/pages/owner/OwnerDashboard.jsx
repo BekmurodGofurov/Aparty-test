@@ -70,7 +70,7 @@ const getListingTitle = (listing = {}) => {
 const getListingImages = (listing = {}) => listing.images || []
 const getListingRooms = (listing = {}) => listing.rooms_count ?? 0
 const getListingSpaces = (listing = {}) => listing.available_spaces ?? 0
-const getListingPrice = (listing = {}) => listing.price_usd ?? 0
+const getListingPrice = (listing = {}) => listing.price ?? 0
 const isListingActive = (listing = {}) => Boolean(listing.is_active)
 const getRentalStudent = (rental = {}) => rental.student || rental.tenant || {}
 
@@ -132,7 +132,7 @@ export function OwnerDashboard() {
     const occupied = rentals.filter((rental) => rental.is_active).length
     const monthlyRevenue = rentals
       .filter((rental) => rental.is_active)
-      .reduce((sum, rental) => sum + Number(rental.price_usd || 0), 0)
+      .reduce((sum, rental) => sum + Number(rental.price || 0), 0)
 
     return { activeAds, inactiveAds, occupied, monthlyRevenue }
   }, [listings, rentals])
@@ -472,7 +472,7 @@ export function OwnerDashboard() {
                       <span><CalendarDays size={14} /> Berilgan: {formatDate(rental.start_date)}</span>
                       <span><Wallet size={14} /> Pul olish: {getNextPaymentDate(rental.start_date)}</span>
                     </div>
-                    <strong>${rental.price_usd}/oy</strong>
+                    <strong>${rental.price}/oy</strong>
                   </article>
                 ))}
               </div>

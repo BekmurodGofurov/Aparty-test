@@ -49,7 +49,7 @@ pip install -r requirements-dev.txt
 TEST_DATABASE_URL=postgresql+asyncpg://<user>@localhost:5432/<service>_test pytest
 ```
 
-Bot tests: `cd bot && pip install -r requirements-dev.txt && pytest`. Frontend: `cd client && npm run build`.
+Bot tests: `cd bot && pip install -r requirements-dev.txt && pytest`. Frontend: `cd client && npm test && npm run build`.
 
 ## Contributing
 

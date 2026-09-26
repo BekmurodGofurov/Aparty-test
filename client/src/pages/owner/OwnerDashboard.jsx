@@ -21,18 +21,17 @@ import {
 import { useAuthStore } from '../../store/authStore'
 import {
   activateListingBasic,
-  acceptRentalRequest,
   deleteListing,
+  getIncomingBookings,
   getMyListings,
-  getOwnerRentals,
-  getRentalRequestInbox,
   markListingAvailable,
   markListingOccupied,
-  rejectRentalRequest,
-  sendRentalRequestMessage,
+  updateBookingStatus,
   upgradeListingToPremium,
 } from '../../services/listingService'
+import { authService } from '../../services/authService'
 import { userService } from '../../services/userService'
+import { activeRentals, indexById, toRequest } from '../../utils/bookingAdapters'
 import './OwnerDashboard.scss'
 
 const formatDate = (value) => {
@@ -80,9 +79,7 @@ export function OwnerDashboard() {
   const clearAuth = useAuthStore((s) => s.clear)
   const [owner, setOwner] = useState(null)
   const [listings, setListings] = useState([])
-  const [rentals, setRentals] = useState([])
-  const [requests, setRequests] = useState([])
-  const [requestReplies, setRequestReplies] = useState({})
+  const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [activatingId, setActivatingId] = useState(null)
   const [promoListing, setPromoListing] = useState(null)
@@ -92,18 +89,17 @@ export function OwnerDashboard() {
     const fetchOwnerDashboard = async () => {
       try {
         setLoading(true)
-        const [profileData, listingData, rentalData, requestData] = await Promise.all([
+        const [profile, myListings, incoming] = await Promise.allSettled([
           userService.getCurrentUser(),
           getMyListings(),
-          getOwnerRentals(),
-          getRentalRequestInbox(),
+          getIncomingBookings(),
         ])
-        setOwner(profileData)
-        setListings(Array.isArray(listingData) ? listingData : [])
-        setRentals(Array.isArray(rentalData) ? rentalData : [])
-        setRequests(Array.isArray(requestData) ? requestData : [])
-      } catch (error) {
-        console.error('Error fetching owner dashboard:', error)
+        if (profile.status === 'fulfilled') setOwner(profile.value)
+        if (myListings.status === 'fulfilled') setListings(Array.isArray(myListings.value) ? myListings.value : [])
+        if (incoming.status === 'fulfilled') setBookings(Array.isArray(incoming.value) ? incoming.value : [])
+        for (const result of [profile, myListings, incoming]) {
+          if (result.status === 'rejected') console.error('Error fetching owner dashboard:', result.reason)
+        }
       } finally {
         setLoading(false)
       }
@@ -116,6 +112,10 @@ export function OwnerDashboard() {
 
     void fetchOwnerDashboard()
   }, [accessToken, navigate])
+
+  const listingsById = useMemo(() => indexById(listings), [listings])
+  const requests = useMemo(() => bookings.map((booking) => toRequest(booking, listingsById)), [bookings, listingsById])
+  const rentals = useMemo(() => activeRentals(bookings, listingsById), [bookings, listingsById])
 
   const rentalsByListingId = useMemo(() => {
     return rentals.reduce((acc, rental) => {
@@ -163,21 +163,12 @@ export function OwnerDashboard() {
   }
 
   const handleRequestDecision = async (requestId, action) => {
-    const updated = action === 'accept'
-      ? await acceptRentalRequest(requestId)
-      : await rejectRentalRequest(requestId)
-    setRequests((prev) => prev.map((item) => (item.id === requestId ? updated : item)))
-    if (action === 'accept') {
-      const rentalData = await getOwnerRentals()
-      setRentals(Array.isArray(rentalData) ? rentalData : [])
+    try {
+      const updated = await updateBookingStatus(requestId, action === 'accept' ? 'confirmed' : 'rejected')
+      setBookings((prev) => prev.map((item) => (item.id === requestId ? { ...item, ...updated } : item)))
+    } catch (error) {
+      window.alert(error.response?.data?.detail || "Holatni o'zgartirib bo'lmadi.")
     }
-  }
-
-  const handleRequestReply = async (requestId) => {
-    const text = requestReplies[requestId]?.trim()
-    if (!text) return
-    await sendRentalRequestMessage(requestId, text)
-    setRequestReplies((prev) => ({ ...prev, [requestId]: '' }))
   }
 
   const handleListingOccupancy = async (listing, occupied) => {
@@ -205,7 +196,12 @@ export function OwnerDashboard() {
     }
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authService.logout()
+    } catch {
+      // Signing out locally must always work, even when the API is unavailable.
+    }
     clearAuth()
     navigate('/')
   }
@@ -225,13 +221,13 @@ export function OwnerDashboard() {
       <div className="owner-dashboard__shell">
         <section className="owner-profile-hero">
           <div className="owner-avatar" aria-hidden="true">
-            {owner?.profile_photo_url ? <img src={owner.profile_photo_url} alt="" /> : <UserRound size={38} />}
+            {owner?.rasm_url ? <img src={owner.rasm_url} alt="" /> : <UserRound size={38} />}
           </div>
           <div className="owner-identity">
             <p className="owner-eyebrow">Uy egasi hisobi</p>
             <h1>{owner?.full_name || owner?.ism || 'Uy egasi'}</h1>
             <div className="owner-badges">
-              <span><BadgeCheck size={15} /> {owner?.verified ? 'Tasdiqlangan' : 'Tasdiqlanmagan'}</span>
+              <span><BadgeCheck size={15} /> {owner?.is_verified ? 'Tasdiqlangan' : 'Tasdiqlanmagan'}</span>
               <span><Phone size={15} /> {owner?.phone || owner?.telefon || '-'}</span>
             </div>
           </div>
@@ -407,23 +403,12 @@ export function OwnerDashboard() {
                         <p>{request.requester.phone}</p>
                       </div>
                       <span className={`owner-status owner-status--${request.status === 'pending' ? 'active' : request.status === 'accepted' ? 'occupied' : 'inactive'}`}>
-                        {request.status}
+                        {request.statusLabel}
                       </span>
                     </div>
                     <div className="owner-rental-meta">
-                      <span><Home size={14} /> {request.listing.address || `${request.listing.district}, ${request.listing.region}`}</span>
+                      <span><Home size={14} /> {request.listing.address || [request.listing.district, request.listing.region].filter(Boolean).join(', ')}</span>
                       {request.message && <span><MessageCircle size={14} /> {request.message}</span>}
-                    </div>
-                    <div className="owner-request-reply">
-                      <input
-                        value={requestReplies[request.id] || ''}
-                        onChange={(event) => setRequestReplies((prev) => ({ ...prev, [request.id]: event.target.value }))}
-                        placeholder="Guest userga xabar..."
-                      />
-                      <button type="button" className="owner-icon-btn" onClick={() => handleRequestReply(request.id)}>
-                        <MessageCircle size={16} />
-                        Yuborish
-                      </button>
                     </div>
                     {request.status === 'pending' && (
                       <div className="owner-listing-actions owner-listing-actions--inline">

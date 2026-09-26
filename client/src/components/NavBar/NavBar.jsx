@@ -4,6 +4,7 @@ import { useThemeStore } from '../../store/themeStore'
 import { useTranslation } from 'react-i18next'
 import { userService } from '../../services/userService'
 import { notificationService } from '../../services/notificationService'
+import { formatTimeAgo } from '../../utils/time'
 import { api } from '../../services/api'
 import { useCacheStore } from '../../store/cacheStore'
 import { Bell, Home, LogOut, MessageCircle, Sun, Moon, User, Search, Menu, X, ChevronDown, MapPinned, Plus, Crown, LayoutDashboard } from 'lucide-react'
@@ -335,7 +336,7 @@ export function NavBar() {
                                 <div className="notif-content">
                                   <div className="notif-top">
                                     <span className="notif-title">{item.title}</span>
-                                    <span className="notif-time">Hozir</span>
+                                    <span className="notif-time">{formatTimeAgo(item.created_at)}</span>
                                   </div>
                                   {item.body && <p className="notif-body">{item.body}</p>}
                                 </div>

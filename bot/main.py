@@ -3,12 +3,9 @@ import asyncio
 import logging
 from aiogram import Bot, Dispatcher
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.fsm.storage.memory import MemoryStorage
 
 from config.settings import settings
 from handlers import start
-from handlers import registration
-from handlers import login
 
 
 # Configure logging
@@ -45,13 +42,10 @@ async def main():
     """Start the bot"""
     # Initialize bot and dispatcher
     bot = Bot(token=settings.BOT_TOKEN)
-    storage = MemoryStorage()
-    dp = Dispatcher(storage=storage)
+    dp = Dispatcher()
     
     # Register routers
     dp.include_router(start.router)
-    dp.include_router(registration.router)
-    dp.include_router(login.router)
     
     logger.info("Bot started polling...")
     try:

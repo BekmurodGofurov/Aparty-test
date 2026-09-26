@@ -1,21 +1,15 @@
 import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { getHomePath } from '../../utils/auth'
 
 /**
- * Protects auth pages (login/register) - redirects authenticated users to their dashboard
+ * Protects auth pages (login) - redirects authenticated users to their dashboard,
+ * or to role selection when they have not chosen a role yet.
  */
 export function ProtectedAuthRoute({ children }) {
   const { accessToken, role } = useAuthStore()
 
-  if (accessToken && role) {
-    // User is authenticated - redirect to appropriate dashboard
-    if (role === 'admin') return <Navigate to="/admin" replace />
-    if (role === 'owner') return <Navigate to="/owner" replace />
-    if (role === 'makler') return <Navigate to="/makler" replace />
-    if (role === 'broker') return <Navigate to="/broker" replace />
-    // Default redirect for other roles (student, etc.)
-    return <Navigate to="/" replace />
-  }
+  if (accessToken) return <Navigate to={getHomePath(role)} replace />
 
   return children
 }

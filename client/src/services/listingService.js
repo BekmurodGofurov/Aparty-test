@@ -18,6 +18,45 @@ export const getMyListings = async () => {
   return data
 }
 
+export const createBooking = async ({ listingId, startDate, endDate, message }) => {
+  const { data } = await api.post('/bookings', {
+    listing_id: listingId,
+    start_date: startDate,
+    end_date: endDate,
+    message: message || null,
+  })
+  return data
+}
+
+export const createRoommateListing = async ({ apartmentId, ...ad }) => {
+  const { data } = await api.post(`/listings/${apartmentId}/roommate`, {
+    residents_male: ad.residentsMale,
+    residents_female: ad.residentsFemale,
+    residents_children: ad.residentsChildren,
+    available_spaces: ad.availableSpaces,
+    target_gender: ad.targetGender,
+    available_from: ad.availableFrom || null,
+    price: ad.price,
+    description: ad.description || null,
+  })
+  return data
+}
+
+export const getMyBookings = async () => {
+  const { data } = await api.get('/bookings')
+  return data
+}
+
+export const getIncomingBookings = async (listingId) => {
+  const { data } = await api.get('/bookings/incoming', { params: listingId ? { listing_id: listingId } : {} })
+  return data
+}
+
+export const updateBookingStatus = async (id, status) => {
+  const { data } = await api.patch(`/bookings/${id}/status`, { status })
+  return data
+}
+
 export const getOwnerRentals = async () => {
   const { data } = await api.get('/rentals/owner/me')
   return data

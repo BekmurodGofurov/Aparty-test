@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 from app.config import settings
@@ -34,3 +35,8 @@ async def get_db():
 async def init_db() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+        # Local/dev compatibility migration only: create_all() does not alter existing tables.
+        # Production must use explicit migrations.
+        await conn.execute(text("ALTER TABLE users ALTER COLUMN role DROP NOT NULL"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_username VARCHAR(64)"))

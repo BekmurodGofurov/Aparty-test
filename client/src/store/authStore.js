@@ -9,9 +9,10 @@ export const useAuthStore = create((set) => ({
   
   setAuth: (accessToken, role, userId) => {
     localStorage.setItem('accessToken', accessToken)
-    localStorage.setItem('role', role)
+    if (role) localStorage.setItem('role', role)
+    else localStorage.removeItem('role')
     localStorage.setItem('userId', userId)
-    set({ accessToken, role, userId, isInitialized: true })
+    set({ accessToken, role: role || null, userId, isInitialized: true })
   },
   
   // Initialize auth state from localStorage (called on app load)

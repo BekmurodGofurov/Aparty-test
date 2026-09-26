@@ -5,6 +5,12 @@ export const DEFAULT_ANDIJAN_LOCATION = {
   lng: 72.3442,
 }
 
+// Tashkent city center. Keep in sync with DEFAULT_LATITUDE/LONGITUDE in catalog-service constants.
+export const DEFAULT_LISTING_LOCATION = {
+  lat: 41.311081,
+  lng: 69.240562,
+}
+
 export function getDistanceKm(from, to) {
   if (!from || !to) return null
 

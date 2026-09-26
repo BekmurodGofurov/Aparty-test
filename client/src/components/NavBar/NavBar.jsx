@@ -131,6 +131,7 @@ export function NavBar() {
   const roleLink = currentRole === 'owner'  ? { to: '/owner',  label: t('nav.owner',  'Dashboard') }
                  : isBrokerRole ? { to: brokerBasePath, label: currentRole === 'broker' ? t('nav.broker', 'Broker') : t('nav.makler', 'Makler') }
                  : currentRole === 'admin'  ? { to: '/admin',  label: t('nav.admin',  'Admin') }
+                 : currentRole === 'student' ? { to: '/my-bookings', label: t('nav.bookings', 'Bronlarim') }
                  : null
   const profilePath = currentRole === 'admin' ? '/admin/profile' : currentRole === 'owner' ? '/owner/profile' : isBrokerRole ? `${brokerBasePath}/profile` : '/profile'
   const dashboardPath = roleLink?.to || '/'

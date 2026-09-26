@@ -1,295 +1,55 @@
 # Aparty
 
-Aparty is a monorepo for a student housing platform. The current project has:
+Aparty is a student housing platform: listings, bookings and roommate ads. It is a monorepo of small services behind one gateway.
 
-- `backend/` - FastAPI API, SQLAlchemy models, Alembic migrations, uploads, and demo data scripts.
-- `client/` - React + Vite frontend.
-- `database/` - standalone database helpers and raw SQL examples.
-- `bot/` - Telegram bot registration flow.
+| Path | What it is |
+|---|---|
+| `client/` | React + Vite frontend |
+| `microservices/api-gateway/` | Nginx gateway, the single public entry point (port 8080) |
+| `microservices/services/iam-service/` | Telegram login, roles, JWT, profiles |
+| `microservices/services/catalog-service/` | Listings, roommate ads, image upload |
+| `microservices/services/order-service/` | Booking requests |
+| `bot/` | Telegram bot (greets users and links to the site) |
+| `landing_page/` | Static landing page |
+| `docs/` | Documentation |
 
-## Requirements
+Each service owns its PostgreSQL database and talks to the others over REST or RabbitMQ events. See [docs/services.md](docs/services.md) for endpoints, login flow, roles, roommate ads and configuration, and [MICROSERVICES_ROADMAP.md](MICROSERVICES_ROADMAP.md) for scope and next steps.
 
-- Python 3.11+ recommended
-- Node.js 20+ recommended
-- PostgreSQL database, currently configured through `backend/.env`
+## Run everything with Docker
 
-## Microservices Database Mode
-
-Microservices currently run in local-only database mode via Docker Compose:
-
-- `postgres` container (`postgres:16-alpine`) is the only supported DB target now.
-- IAM uses `iam_db`, Catalog uses `catalog_db` on host `postgres` inside the Docker network.
-- SSL/Neon-specific runtime branching is intentionally disabled for now.
-
-TODO: production Neon migration will be handled later as a separate task.
-
-## Backend Setup
+Requirements: Docker with Compose.
 
 ```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+cp .env.example .env     # fill in every value, see the comments inside
+docker compose up --build
+curl localhost:8080/health
 ```
 
-Backend runs at:
+`docker compose` refuses to start when a required variable is missing. Databases are created from `postgres-init/`; on an existing Postgres volume, create a missing database by hand, for example `docker compose exec postgres psql -U <user> -c "CREATE DATABASE orders_db"`.
 
-```text
-http://127.0.0.1:8000
-```
+Telegram login needs a bot with Web Login enabled in @BotFather. Put its client id, secret and the frontend callback URL in `.env` (`TELEGRAM_CLIENT_ID`, `TELEGRAM_CLIENT_SECRET`, `TELEGRAM_REDIRECT_URI`). Until then the login button reports that Telegram login is not configured.
 
-Health check:
-
-```bash
-curl http://127.0.0.1:8000/api/v1/health
-```
-
-Expected response:
-
-```json
-{"status":"ok"}
-```
-
-## Client Setup
+## Frontend
 
 ```bash
 cd client
+cp .env.example .env     # VITE_BACKEND_API points at the gateway
 npm install
 npm run dev
 ```
 
-Client runs at Vite's local URL, usually:
+## Tests
 
-```text
-http://localhost:5173
-```
-
-The client uses this API base URL by default:
-
-```text
-http://localhost:8000/api/v1
-```
-
-To override it, create `client/.env`:
-
-```env
-VITE_API_BASE_URL=http://localhost:8000/api/v1
-```
-
-## Environment
-
-`backend/.env` is used by `app.config.Settings`. Main variables:
-
-```env
-DATABASE_URL=postgresql+asyncpg://...
-SYNC_DATABASE_URL=postgresql+psycopg://...
-JWT_SECRET_KEY=change-me
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REFRESH_TOKEN_EXPIRE_MINUTES=10080
-DB_CONNECT_TIMEOUT_SECONDS=5
-COOKIE_SECURE=false
-GEMINI_API_KEY=
-```
-
-Do not commit real secrets.
-
-## Database And Migrations
-
-Alembic is configured in `backend/alembic.ini`.
+Service tests run against a real PostgreSQL database whose name ends with `_test`.
 
 ```bash
-cd backend
-source .venv/bin/activate
-alembic upgrade head
+cd microservices/services/<service>
+pip install -r requirements-dev.txt
+TEST_DATABASE_URL=postgresql+asyncpg://<user>@localhost:5432/<service>_test pytest
 ```
 
-Useful database files:
+Bot tests: `cd bot && pip install -r requirements-dev.txt && pytest`. Frontend: `cd client && npm run build`.
 
-- `database/sql/create_tables.sql`
-- `database/sql/insert_seed.sql`
-- `database/sql/select_examples.sql`
-- `database/sql/update_examples.sql`
-- `backend/scripts/demo_data.py`
-- `backend/scripts/fast_seed.py`
+## Contributing
 
-The current demo database contains listings, users, roles, favorites, payments, reviews, rentals, subscriptions, and listing payments.
-
-## Demo Accounts
-
-Use these accounts only for local/demo testing.
-
-Owner:
-
-```text
-phone: +998903330000
-password: password123
-```
-
-Makler/Broker:
-
-```text
-phone: +998902220000
-password: password123
-```
-
-Admin:
-
-```text
-phone: +998900000001
-password: admin123
-```
-
-Admin must log in through the admin portal:
-
-```text
-http://localhost:5173/login?admin=true
-```
-
-If an admin uses the normal login page, the backend intentionally returns `403 Forbidden` with:
-
-```text
-Admin panelga kirish uchun maxsus portal'dan foydalaning
-```
-
-## Main API Routes
-
-Base URL:
-
-```text
-/api/v1
-```
-
-Auth:
-
-- `POST /auth/register`
-- `POST /auth/login`
-- `POST /auth/admin-login`
-- `POST /auth/refresh`
-- `POST /auth/logout`
-- `GET /auth/me`
-- `GET /users/me`
-
-Listings:
-
-- `GET /listings/search`
-- `GET /listings/me`
-- `GET /listings/{listing_id}`
-- `POST /listings/`
-- `PUT /listings/{listing_id}`
-- `PATCH /listings/{listing_id}`
-- `POST /listings/{listing_id}/upgrade-to-premium`
-
-Other modules:
-
-- `GET /favorites/me`
-- `POST /favorites/{listing_id}`
-- `POST /reviews/`
-- `GET /reviews/listing/{listing_id}`
-- `GET /subscriptions/me`
-- `POST /subscriptions/{plan_id}`
-- `POST /upload/image`
-- `POST /ai/chat`
-- `GET /admin/dashboard`
-- `GET /admin/users`
-- `GET /admin/listings`
-
-## Roles
-
-Current role names:
-
-- `student`
-- `owner`
-- `makler`
-- `admin`
-
-Listing creation is allowed for:
-
-- `owner`
-- `makler`
-
-Admin login is separated from normal login by design.
-
-## Frontend Routes
-
-Public:
-
-- `/`
-- `/search`
-- `/listing/:id`
-- `/login`
-- `/register`
-
-User:
-
-- `/profile`
-- `/my-room`
-
-Owner:
-
-- `/owner`
-- `/owner/create`
-- `/owner/listing/:id/edit`
-
-Makler:
-
-- `/makler`
-- `/makler/create`
-- `/makler/subscription`
-
-Admin:
-
-- `/admin`
-- `/admin/listings`
-- `/admin/users`
-- `/admin/complaints`
-- `/admin/revenue`
-
-## Telegram Bot
-
-Bot setup:
-
-```bash
-cd bot
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python main.py
-```
-
-Bot settings are loaded from `bot/.env`.
-
-## Development Checks
-
-Backend import/OpenAPI smoke check:
-
-```bash
-cd backend
-source .venv/bin/activate
-python -c "from app.main import app; print(len(app.openapi()['paths']))"
-```
-
-Client build:
-
-```bash
-cd client
-npm run build
-```
-
-Client lint:
-
-```bash
-cd client
-npm run lint
-```
-
-Note: full lint may still report older unrelated frontend lint issues. For small changes, run ESLint against the files you touched.
-
-## Common Notes
-
-- If `/search` shows no listings, check the API response from `/api/v1/listings/search?page=1&limit=12`.
-- `200 OK` with `success: true` and non-empty `listings` means the backend is returning data correctly.
-- `success: false` means the client should show the backend error instead of "Nothing found".
-- `/auth/login` is for normal users only.
-- `/auth/admin-login` is for admins only.
+Use a feature branch and open a pull request to `main`; merges need a green CI. Keep code, comments and commit messages in English, keep values in configuration rather than in code, and update the docs when you add an endpoint. See [docs/BRANCH_PROTECTION.md](docs/BRANCH_PROTECTION.md).

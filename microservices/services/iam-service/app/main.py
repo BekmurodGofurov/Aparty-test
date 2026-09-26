@@ -11,7 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import init_db
 from app.redis_client import close_redis, init_redis
-from app.routers import auth
+from app.constants import API_PREFIX
+from app.routers import auth, users
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,8 +23,8 @@ async def lifespan(app: FastAPI):
     """Startup and shutdown lifecycle for IAM service."""
     # ── Startup ───────────────────────────────────────────────────────────────
     logger.info("IAM Service starting up...")
-    await init_db()          # Create tables if they don't exist (dev mode)
-    await init_redis()       # Open Redis connection pool
+    await init_db()
+    await init_redis()
     logger.info("IAM Service ready.")
 
     yield
@@ -38,8 +39,7 @@ app = FastAPI(
     title="Aparty — IAM Service",
     description=(
         "Identity & Access Management microservice.\n\n"
-        "Handles user registration, OTP-based authentication (via Telegram bot), "
-        "and JWT issuance."
+        "Handles Telegram login, user profiles and JWT issuance."
     ),
     version="1.0.0",
     docs_url="/docs",
@@ -57,7 +57,8 @@ app.add_middleware(
 )
 
 # ── Routers ───────────────────────────────────────────────────────────────────
-app.include_router(auth.router, prefix="/api/v1")
+app.include_router(auth.router, prefix=API_PREFIX)
+app.include_router(users.router, prefix=API_PREFIX)
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

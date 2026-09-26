@@ -920,6 +920,29 @@ html[data-theme="light"] .listing-hero-bg {
   }
 }
 
+.booking-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    opacity: 0.8;
+  }
+
+  input {
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+  }
+}
+
 .booking-request-text {
   width: 100%;
   min-height: 82px;

@@ -8,6 +8,7 @@ RUN rm /etc/nginx/conf.d/default.conf
 
 # Copy our custom gateway config
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY proxy.conf /etc/nginx/proxy.conf
 
 EXPOSE 80
 

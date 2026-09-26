@@ -1,10 +1,4 @@
-"""IAM Service — SQLAlchemy ORM models.
-
-Mirrors the `users` table schema from the monolith (backend/app/domains/users/models.py).
-Only the User model is needed here; notifications are out-of-scope for IAM.
-
-RULE: Import ONLY from app.database (for Base). Never import from other services.
-"""
+"""IAM Service ORM models."""
 
 from __future__ import annotations
 
@@ -28,14 +22,16 @@ class UserRole(str, enum.Enum):
 class User(Base):
     __tablename__ = "users"
 
-    # Primary key IS the Telegram ID (BigInteger). Set by the caller — no autoincrement.
+    # Primary key is the Telegram user id.
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
     full_name: Mapped[str] = mapped_column(String(100), nullable=False)
     phone: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
-    role: Mapped[UserRole] = mapped_column(
+    # None until the user picks a role after the first Telegram login.
+    role: Mapped[Optional[UserRole]] = mapped_column(
         Enum(UserRole, name="user_role", create_constraint=False),
-        nullable=False,
+        nullable=True,
     )
+    telegram_username: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     university: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     profile_picture_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)

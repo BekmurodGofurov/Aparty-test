@@ -26,7 +26,7 @@ const normalizeListing = (listing, userLocation) => {
   return {
     id: listing.id,
     title: listing.address || `${listing.district || 'Andijon'}dagi ${rooms} xonali uy`,
-    price: Number(listing.price_usd || 0),
+    price: Number(listing.price || 0),
     currency: '$',
     rooms,
     area: Number(listing.area_m2 || 0) || Math.max(28, rooms * 22),

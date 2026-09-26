@@ -634,3 +634,42 @@
   .hero-content .title-premium { font-size: 2rem; }
   .liquid-card { border-radius: 32px !important; }
 }
+
+// ── Role selection after the first Telegram login ────────────────────────────
+.role-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.role-choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--auth-border, rgba(255, 255, 255, 0.18));
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+
+  span {
+    font-size: 13px;
+    opacity: 0.75;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-3px);
+    border-color: currentColor;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+}

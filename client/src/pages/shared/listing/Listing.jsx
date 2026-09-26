@@ -29,11 +29,12 @@ import {
   Wifi,
   X,
 } from 'lucide-react'
-import { createRentalRequest, getListingById } from '../../../services/listingService'
+import { createBooking, createRentalRequest, getListingById } from '../../../services/listingService'
 import { favoritesService } from '../../../services/favoritesService'
 import { useAuthStore } from '../../../store/authStore'
 import { ListingMap } from '../../../components/listing/ListingMap'
 import { ReviewSection } from '../../../components/listing/ReviewSection'
+import { RoommateAdForm, RoommateAdInfo } from '../../../components/listing/RoommateAd'
 import { ListingDetailSkeleton } from '../../../components/ui/ListingDetailSkeleton.jsx'
 import './Listing.scss'
 
@@ -44,7 +45,7 @@ export function Listing() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { accessToken, role } = useAuthStore()
+  const { accessToken, role, userId } = useAuthStore()
   const [listing, setListing] = useState(null)
   const [activeImage, setActiveImage] = useState(0)
   const [saved, setSaved] = useState(false)
@@ -52,6 +53,8 @@ export function Listing() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [requestMessage, setRequestMessage] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [requestStatus, setRequestStatus] = useState('')
   const [requestLoading, setRequestLoading] = useState(false)
 
@@ -134,8 +137,10 @@ export function Listing() {
     src,
     title: index === 0 ? t('listing.premium_residence') : index === 1 ? t('listing.modern_apartment') : t('listing.student_friendly_home'),
     meta: `${listing.district}, ${listing.region}`,
-    price: Math.max(Number(listing.price_usd || 0) - index * 35, 0),
+    price: Math.max(Number(listing.price || 0) - index * 35, 0),
   }))
+
+  const today = new Date().toISOString().slice(0, 10)
 
   const nextImage = () => setActiveImage((v) => (v + 1) % images.length)
   const prevImage = () => setActiveImage((v) => (v - 1 + images.length) % images.length)
@@ -143,9 +148,10 @@ export function Listing() {
 
   const handleBookingRequest = async () => {
     if (!accessToken) { setRequestStatus("Avval tizimga kiring, keyin band qilish so'rovini yuborasiz."); return }
+    if (!startDate || !endDate) { setRequestStatus("Kirish va chiqish sanalarini tanlang."); return }
     try {
       setRequestLoading(true); setRequestStatus('')
-      await createRentalRequest({ listing_id: listing.id, message: requestMessage || `Salom, ${title} bo'yicha kelishmoqchiman.` })
+      await createBooking({ listingId: listing.id, startDate, endDate, message: requestMessage })
       setRequestStatus("So'rov yuborildi. Egasi yoki broker dashboardida ko'radi.")
       setRequestMessage('')
     } catch (err) {
@@ -172,6 +178,9 @@ export function Listing() {
     } finally { setRequestLoading(false) }
   }
 
+  // Tenants (not the apartment's owner) can look for roommates for an apartment on the platform.
+  const canPostRoommateAd =
+    Boolean(accessToken) && ['student', 'makler'].includes(role) && !listing.parent_listing_id && String(listing.owner_id) !== String(userId)
   const ownerPhoneLink = listing.owner_phone ? `tel:${String(listing.owner_phone).replace(/\s/g, '')}` : null
   const ownerTelegramId = Number(listing.owner_telegram_id)
   const hasLikelyTelegramId = Number.isFinite(ownerTelegramId) && ownerTelegramId >= 10000 && ownerTelegramId < 10000000000
@@ -316,6 +325,9 @@ export function Listing() {
               )}
             </motion.section>
 
+            {listing.parent_listing_id && <RoommateAdInfo listing={listing} />}
+            {canPostRoommateAd && <RoommateAdForm apartmentId={listing.id} />}
+
             {/* Description */}
             <motion.section className="desc panel-card" initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={spring}>
               <div className="section-heading">
@@ -369,7 +381,7 @@ export function Listing() {
             transition={spring}
           >
             <div className="booking-price">
-              <span>${listing.price_usd}</span>
+              <span>${listing.price}</span>
               <small>/ {t('listing.per_month')}</small>
             </div>
 
@@ -389,12 +401,22 @@ export function Listing() {
             </div>
 
             <div className="booking-details">
-              <span><CalendarDays size={17} /> {t('listing.first_month')}: ${listing.price_usd}</span>
+              <span><CalendarDays size={17} /> {t('listing.first_month')}: ${listing.price}</span>
               <span><ShieldCheck size={17} /> {listing.source === 'makler' ? t('listing.makler_notice') : t('listing.owner_notice')}</span>
             </div>
 
             {(!role || role === 'student') && (
               <>
+                <div className="booking-dates">
+                  <label>
+                    Kirish
+                    <input type="date" value={startDate} min={today} onChange={(e) => setStartDate(e.target.value)} />
+                  </label>
+                  <label>
+                    Chiqish
+                    <input type="date" value={endDate} min={startDate || today} onChange={(e) => setEndDate(e.target.value)} />
+                  </label>
+                </div>
                 <textarea
                   className="booking-request-text"
                   value={requestMessage}

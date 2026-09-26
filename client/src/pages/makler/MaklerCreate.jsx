@@ -34,6 +34,7 @@ import { REGIONS_DATA } from '../../data/regions'
 import './MaklerCreate.scss'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+import { DEFAULT_LISTING_LOCATION } from '../../utils/geo'
 
 const defaultMarkerIcon = L.icon({
   iconUrl: markerIcon,
@@ -56,8 +57,8 @@ const amenitiesList = [
 ]
 
 const propertyTypes = [
-  { value: 'full', label: "To'liq kvartira", help: 'Butun uy bitta ijarachiga beriladi' },
-  { value: 'shared', label: 'Kishi boshiga', help: "Joylar alohida ijaraga beriladi" },
+  { value: 'full_unit', label: "To'liq kvartira", help: 'Butun uy bitta ijarachiga beriladi' },
+  { value: 'shared_room', label: 'Kishi boshiga', help: "Joylar alohida ijaraga beriladi" },
 ]
 
 const genderOptions = [
@@ -105,15 +106,15 @@ export function MaklerCreate() {
     region: '',
     district: '',
     address: '',
-    rental_type: 'full',
+    rental_type: 'full_unit',
     rooms_count: 1,
     floor: 1,
     total_floors: 1,
     max_guests: 1,
     available_spaces: 1,
-    price_usd: 100,
-    latitude: 41.311081,
-    longitude: 69.240562,
+    price: 100,
+    latitude: DEFAULT_LISTING_LOCATION.lat,
+    longitude: DEFAULT_LISTING_LOCATION.lng,
     images: [],
     target_gender: 'mixed',
     amenities: {
@@ -137,7 +138,7 @@ export function MaklerCreate() {
 
   const handleChange = (event) => {
     const { name, value } = event.target
-    const numericFields = ['rooms_count', 'floor', 'total_floors', 'max_guests', 'available_spaces', 'price_usd']
+    const numericFields = ['rooms_count', 'floor', 'total_floors', 'max_guests', 'available_spaces', 'price']
     setForm((prev) => ({
       ...prev,
       [name]: numericFields.includes(name) ? Number(value) : value,
@@ -159,8 +160,8 @@ export function MaklerCreate() {
     setForm((prev) => ({
       ...prev,
       rental_type: type,
-      max_guests: type === 'full' ? 1 : Math.max(prev.max_guests, 2),
-      available_spaces: type === 'full' ? 1 : Math.max(prev.available_spaces, 1),
+      max_guests: type === 'full_unit' ? 1 : Math.max(prev.max_guests, 2),
+      available_spaces: type === 'full_unit' ? 1 : Math.max(prev.available_spaces, 1),
     }))
   }
 
@@ -236,9 +237,9 @@ export function MaklerCreate() {
         rooms_count: form.rooms_count,
         floor: form.floor,
         total_floors: form.total_floors,
-        max_guests: form.rental_type === 'full' ? 1 : form.max_guests,
-        available_spaces: form.rental_type === 'full' ? 1 : form.available_spaces,
-        price_usd: form.price_usd,
+        max_guests: form.rental_type === 'full_unit' ? 1 : form.max_guests,
+        available_spaces: form.rental_type === 'full_unit' ? 1 : form.available_spaces,
+        price: form.price,
         latitude: form.latitude,
         longitude: form.longitude,
         images: form.images,
@@ -524,15 +525,15 @@ export function MaklerCreate() {
 
               <div className="owner-form-grid owner-form-grid--three">
                 <div className="owner-field">
-                  <label htmlFor="price_usd">{form.rental_type === 'full' ? 'Oylik narx' : 'Kishi boshiga narx'}</label>
+                  <label htmlFor="price">{form.rental_type === 'full_unit' ? 'Oylik narx' : 'Kishi boshiga narx'}</label>
                   <div className="owner-field__with-icon">
                     <CircleDollarSign size={18} />
                     <input
-                      id="price_usd"
+                      id="price"
                       type="number"
-                      name="price_usd"
+                      name="price"
                       min="1"
-                      value={form.price_usd}
+                      value={form.price}
                       onChange={handleChange}
                     />
                   </div>
@@ -546,7 +547,7 @@ export function MaklerCreate() {
                     name="max_guests"
                     min="1"
                     value={form.max_guests}
-                    disabled={form.rental_type === 'full'}
+                    disabled={form.rental_type === 'full_unit'}
                     onChange={handleChange}
                   />
                 </div>
@@ -559,7 +560,7 @@ export function MaklerCreate() {
                     name="available_spaces"
                     min="1"
                     value={form.available_spaces}
-                    disabled={form.rental_type === 'full'}
+                    disabled={form.rental_type === 'full_unit'}
                     onChange={handleChange}
                   />
                 </div>
@@ -624,11 +625,11 @@ export function MaklerCreate() {
                 </div>
                 <div>
                   <span>Ijara</span>
-                  <strong>{form.rental_type === 'full' ? "To'liq" : 'Joy'}</strong>
+                  <strong>{form.rental_type === 'full_unit' ? "To'liq" : 'Joy'}</strong>
                 </div>
                 <div>
                   <span>Narx</span>
-                  <strong>${form.price_usd}</strong>
+                  <strong>${form.price}</strong>
                 </div>
               </div>
 

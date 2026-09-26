@@ -21,19 +21,18 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import {
-  acceptRentalRequest,
   activateListingBasic,
   deleteListing,
+  getIncomingBookings,
   getMyListings,
-  getRentalRequestInbox,
   markListingAvailable,
   markListingOccupied,
-  rejectRentalRequest,
-  sendRentalRequestMessage,
+  updateBookingStatus,
   upgradeListingToPremium,
 } from '../../services/listingService'
+import { authService } from '../../services/authService'
 import { userService } from '../../services/userService'
-import { api } from '../../services/api'
+import { indexById, toRequest } from '../../utils/bookingAdapters'
 import './MaklerDashboard.scss'
 
 const getListingTitle = (listing = {}) => {
@@ -52,6 +51,8 @@ const getListingPrice = (listing = {}) => listing.price ?? 0
 const isListingActive = (listing = {}) => Boolean(listing.is_active)
 const isListingPremium = (listing = {}) => Boolean(listing.is_premium)
 
+const FREE_PLAN = { is_active: true, limit: 5, plan: 'Bepul' }
+
 const getSubscriptionStatus = (subscription) => {
   if (!subscription) return true
   return Boolean(subscription.is_active ?? true)
@@ -66,9 +67,8 @@ export function MaklerDashboard() {
   const roleLabel = role === 'broker' ? 'Broker' : 'Makler'
   const [broker, setBroker] = useState(null)
   const [listings, setListings] = useState([])
-  const [requests, setRequests] = useState([])
-  const [requestReplies, setRequestReplies] = useState({})
-  const [subscription, setSubscription] = useState(null)
+  const [bookings, setBookings] = useState([])
+  const subscription = FREE_PLAN
   const [loading, setLoading] = useState(true)
   const [activatingId, setActivatingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
@@ -77,18 +77,17 @@ export function MaklerDashboard() {
     const fetchBrokerDashboard = async () => {
       try {
         setLoading(true)
-        const [profileData, listingData, subscriptionResponse, requestData] = await Promise.all([
+        const [profile, myListings, incoming] = await Promise.allSettled([
           userService.getCurrentUser(),
           getMyListings(),
-          api.get('/subscriptions/me'),
-          getRentalRequestInbox(),
+          getIncomingBookings(),
         ])
-        setBroker(profileData)
-        setListings(Array.isArray(listingData) ? listingData : [])
-        setSubscription(subscriptionResponse.data?.[0] || { is_active: true, limit: 5, plan: 'Bepul' })
-        setRequests(Array.isArray(requestData) ? requestData : [])
-      } catch (error) {
-        console.error("Makler ma'lumotlarini yuklashda xatolik:", error)
+        if (profile.status === 'fulfilled') setBroker(profile.value)
+        if (myListings.status === 'fulfilled') setListings(Array.isArray(myListings.value) ? myListings.value : [])
+        if (incoming.status === 'fulfilled') setBookings(Array.isArray(incoming.value) ? incoming.value : [])
+        for (const result of [profile, myListings, incoming]) {
+          if (result.status === 'rejected') console.error("Makler ma'lumotlarini yuklashda xatolik:", result.reason)
+        }
       } finally {
         setLoading(false)
       }
@@ -102,6 +101,8 @@ export function MaklerDashboard() {
     void fetchBrokerDashboard()
   }, [accessToken, navigate])
 
+  const requests = useMemo(() => bookings.map((booking) => toRequest(booking, indexById(listings))), [bookings, listings])
+
   const stats = useMemo(() => {
     const activeAds = listings.filter((listing) => isListingActive(listing)).length
     const inactiveAds = listings.filter((listing) => !isListingActive(listing)).length
@@ -114,23 +115,23 @@ export function MaklerDashboard() {
   const subscriptionActive = getSubscriptionStatus(subscription)
   const listingLimit = Math.max(Number(subscription?.limit ?? subscription?.listings_limit ?? 5), 1)
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authService.logout()
+    } catch {
+      // Signing out locally must always work, even when the API is unavailable.
+    }
     clearAuth()
     navigate('/')
   }
 
   const handleRequestDecision = async (requestId, action) => {
-    const updated = action === 'accept'
-      ? await acceptRentalRequest(requestId)
-      : await rejectRentalRequest(requestId)
-    setRequests((prev) => prev.map((item) => (item.id === requestId ? updated : item)))
-  }
-
-  const handleRequestReply = async (requestId) => {
-    const text = requestReplies[requestId]?.trim()
-    if (!text) return
-    await sendRentalRequestMessage(requestId, text)
-    setRequestReplies((prev) => ({ ...prev, [requestId]: '' }))
+    try {
+      const updated = await updateBookingStatus(requestId, action === 'accept' ? 'confirmed' : 'rejected')
+      setBookings((prev) => prev.map((item) => (item.id === requestId ? { ...item, ...updated } : item)))
+    } catch (error) {
+      window.alert(error.response?.data?.detail || "Holatni o'zgartirib bo'lmadi.")
+    }
   }
 
   const handleListingOccupancy = async (listing, occupied) => {
@@ -193,13 +194,13 @@ export function MaklerDashboard() {
       <div className="broker-dashboard__shell">
         <section className="broker-profile-hero">
           <div className="broker-avatar" aria-hidden="true">
-            {broker?.profile_photo_url || broker?.rasm_url ? <img src={broker.profile_photo_url || broker.rasm_url} alt="" /> : <UserRound size={38} />}
+            {broker?.rasm_url ? <img src={broker.rasm_url} alt="" /> : <UserRound size={38} />}
           </div>
           <div className="broker-identity">
             <p className="broker-eyebrow">{roleLabel} account</p>
             <h1>{broker?.full_name || broker?.ism || roleLabel}</h1>
             <div className="broker-badges">
-              <span><BadgeCheck size={15} /> {broker?.verified ? 'Tasdiqlangan' : 'Tasdiqlanmagan'}</span>
+              <span><BadgeCheck size={15} /> {broker?.is_verified ? 'Tasdiqlangan' : 'Tasdiqlanmagan'}</span>
               <span><Phone size={15} /> {broker?.phone || broker?.telefon || '-'}</span>
               <span><WalletCards size={15} /> {subscription?.plan || 'Bepul'} plan</span>
             </div>
@@ -368,22 +369,11 @@ export function MaklerDashboard() {
                         <div className="broker-listing-title-row">
                           <h3>{request.requester.full_name}</h3>
                           <span className={`broker-status broker-status--${request.status === 'pending' ? 'active' : 'inactive'}`}>
-                            {request.status}
+                            {request.statusLabel}
                           </span>
                         </div>
                         <p>{request.message || request.requester.phone}</p>
                       </div>
-                    </div>
-                    <div className="broker-request-reply">
-                      <input
-                        value={requestReplies[request.id] || ''}
-                        onChange={(event) => setRequestReplies((prev) => ({ ...prev, [request.id]: event.target.value }))}
-                        placeholder="Guest userga xabar..."
-                      />
-                      <button className="broker-icon-btn" type="button" onClick={() => handleRequestReply(request.id)}>
-                        <MessageCircle size={16} />
-                        Yuborish
-                      </button>
                     </div>
                     {request.status === 'pending' && (
                       <div className="broker-listing-actions">

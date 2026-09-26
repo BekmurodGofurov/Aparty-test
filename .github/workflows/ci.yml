@@ -27,57 +27,6 @@ jobs:
           chmod +x ./scripts/check_commit_size.sh
           ./scripts/check_commit_size.sh "origin/${{ github.base_ref }}"
 
-  # ── 2. Backend Automated Testing ───────────────────────────────────────────
-  backend-tests:
-    name: "Backend Tests (Pytest + PostgreSQL + Redis)"
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: aparty_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
-      - name: Install backend dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
-
-      - name: Run Pytest test suite
-        env:
-          TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/aparty_test
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET_KEY: test-secret-key-super-secure-ci-cd-123
-        run: |
-          pytest -v
-
   # ── 3. Frontend Client Build & Lint ────────────────────────────────────────
   frontend-checks:
     name: "Frontend Client (Vite Build & Lint)"

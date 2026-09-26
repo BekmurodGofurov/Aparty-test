@@ -17,6 +17,6 @@
 ## ✅ Quality Checklist
 - [ ] **Tests:** New or existing automated tests pass locally.
 - [ ] **Branch Protection:** This PR targets `main` from a dedicated feature/bugfix branch.
-- [ ] **Green CI:** All GitHub Actions checks (`commit-size-check`, `backend-tests`, `frontend-checks`, `docker-compose-validation`) are green.
+- [ ] **Green CI:** All GitHub Actions checks (`commit-size-check`, `microservice-tests`, `bot-tests`, `frontend-checks`, `docker-compose-validation`) are green.
 - [ ] **English Convention:** All variable names, comments, and commit messages are in English.
 - [ ] **Database Isolation:** No cross-database queries or foreign keys between microservices.

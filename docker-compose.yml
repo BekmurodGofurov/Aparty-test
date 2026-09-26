@@ -56,7 +56,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
-      POSTGRES_MULTIPLE_DATABASES: iam_db,catalog_db,orders_db
+      POSTGRES_MULTIPLE_DATABASES: iam_db,catalog_db,orders_db,notifications_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d
@@ -152,6 +152,33 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # ── Notification Service (site bell and Telegram messages) ─────────────────
+  notification-service:
+    build:
+      context: ./microservices/services/notification-service
+      dockerfile: Dockerfile
+    container_name: aparty-notification-service
+    expose:
+      - "8003"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/notifications_db
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      <<: *shared_env
+      IAM_SERVICE_URL: http://iam-service:8000
+      BOT_TOKEN: ${BOT_TOKEN:-}
+      SITE_URL: ${SITE_URL:-}
+    networks:
+      - aparty-network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+
   # ── API Gateway (Nginx) ────────────────────────────────────────────────────
   api-gateway:
     build:
@@ -166,6 +193,7 @@ services:
       - iam-service
       - catalog-service
       - order-service
+      - notification-service
     restart: unless-stopped
 
 networks:

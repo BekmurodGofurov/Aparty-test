@@ -34,6 +34,10 @@ jobs:
         working-directory: ./client
         run: npm run lint || true
 
+      - name: Run unit tests
+        working-directory: ./client
+        run: npm test
+
       - name: Run Vite production build
         working-directory: ./client
         run: npm run build

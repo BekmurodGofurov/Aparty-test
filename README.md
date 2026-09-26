@@ -9,6 +9,7 @@ Aparty is a student housing platform: listings, bookings and roommate ads. It is
 | `microservices/services/iam-service/` | Telegram login, roles, JWT, profiles |
 | `microservices/services/catalog-service/` | Listings, roommate ads, image upload |
 | `microservices/services/order-service/` | Booking requests |
+| `microservices/services/notification-service/` | Site notifications and Telegram messages |
 | `bot/` | Telegram bot (greets users and links to the site) |
 | `landing_page/` | Static landing page |
 | `docs/` | Documentation |

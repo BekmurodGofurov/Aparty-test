@@ -35,4 +35,4 @@ description: Aparty project rules and scope. Use for any work in this repo - wri
 ## Git
 - **Never run `git commit` or `git push` without asking the user first, every time.** Earlier approval does not carry over.
 - **Do not add Claude attribution** to commits or PRs: no `Co-Authored-By`, no "Generated with Claude Code".
-- Keep commits small (under about 200 lines) and PRs reviewable.
+- Commit in logical steps with clear English messages. There is no line limit for PRs.

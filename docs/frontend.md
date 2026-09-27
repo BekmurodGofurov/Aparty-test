@@ -26,10 +26,11 @@ People contact each other through Telegram (`owner_telegram_url`) or by phone. T
 
 ## Speed and traffic
 
-- Pages load on demand (`React.lazy`), so the first visit downloads only what it opens. The map library loads only with the map and the create/edit forms.
-- GET responses are cached in `localStorage` (`services/httpCache.js`): search 1 minute, a listing 2 minutes, saved listings 2 minutes, own profile 5 minutes. Keys include the signed-in user's id, so accounts never share data. Bookings, incoming requests, own listings and notifications are never cached.
+- Pages load on demand (`React.lazy`), so the first visit downloads only what it opens. Right after that, the rest of the pages are fetched in the background while the browser is idle (`App.jsx`), so opening any other page afterwards needs no network round trip for its code. The map library still loads only with the map and the create/edit forms.
+- GET responses are cached in `localStorage` (`services/httpCache.js`): search and a listing detail 1–2 minutes (public), saved listings and own profile 2–5 minutes, own listings/bookings/incoming requests 20 seconds (short, and cleared immediately by any booking write — see below). Keys include the signed-in user's id, so accounts never share data. Notifications are never cached. Two requests for the same params, in any key order, hit the same cache entry.
+- Since React Router unmounts a page when you navigate away, a page's own component state can't survive a visit away and back — only the cache can. The pages people move between constantly (home, search, a listing, profile, both dashboards, saved bookings) read `services/browserCache.js`'s `peekCache()` as their *initial* state, so revisiting one already fetched this session paints the last-known content immediately and refreshes it in the background, instead of showing a loading screen again on every visit.
 - Identical GET requests that are already running share one network call.
-- A write (create, edit, delete, save, book) drops the cache entries it could change. Signing out clears the cache.
+- A write (create, edit, delete, save, book, answer a booking) drops the cache entries it could change. Signing out clears the cache.
 - Notifications refresh every 60 seconds, and not while the tab is hidden.
 - Photos are shrunk in the browser (longest side 1600 px, JPEG) before upload.
 - The refresh token lives in an httpOnly cookie. The access token and role are kept in `localStorage`.

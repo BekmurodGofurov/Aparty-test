@@ -543,8 +543,8 @@ html[data-theme="light"] .listing-hero-bg {
   height: 66px;
   border-radius: 22px;
   color: #fff;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  // A plain --color-surface background (white in light mode) left this white icon invisible.
+  background: rgba(232, 131, 0, 0.92);
 }
 
 .listing-error-actions {
@@ -873,10 +873,10 @@ html[data-theme="light"] .listing-hero-bg {
   height: 48px;
   border-radius: 18px;
   color: #fff;
-  background: var(--color-surface);
+  // A plain --color-surface background (white in light mode) left this white initial unreadable.
+  background: rgba(232, 131, 0, 0.92);
   font-size: 1rem;
   font-weight: 900;
-  border: 1px solid var(--color-border);
 }
 
 .booking-mini-stats {
@@ -991,8 +991,9 @@ html[data-theme="light"] .listing-hero-bg {
 .booking-primary {
   border: 0;
   color: #fff;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  // A plain --color-surface background (white in light mode) left this white text unreadable.
+  // Matches this page's own accent (see .booking-secondary's hover and .premium above).
+  background: rgba(232, 131, 0, 0.92);
 
   &:disabled {
     cursor: progress;

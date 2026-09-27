@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -23,7 +23,6 @@ import {
   WashingMachine,
   Wifi,
   X,
-  Zap,
 } from 'lucide-react'
 import { RegionSelect } from './RegionSelect'
 import { REGIONS_DATA } from '../../data/regions'
@@ -145,7 +144,6 @@ export function FilterPanel({
   activeFilterCount = 0,
 }) {
   const { t } = useTranslation()
-  const [smartQuery, setSmartQuery] = useState('')
 
   const amenities = [
     { key: 'wifi', label: t('search.wifi'), icon: <Wifi size={17} /> },
@@ -158,35 +156,9 @@ export function FilterPanel({
     { key: 'kitchen', label: t('search.kitchen'), icon: <ChefHat size={17} /> },
   ]
 
-  const searchHint = useMemo(() => {
-    if (filters.district) return filters.district
-    if (filters.region) return filters.region
-    return t('search.region_placeholder')
-  }, [filters.district, filters.region, t])
-
   const priceMax = Number(filters.price_max || 1000)
   const priceMin = Number(filters.price_min || 0)
   const pricePercent = Math.min(100, Math.max(0, (priceMax / 1000) * 100))
-
-  const handleSmartSearch = (value) => {
-    setSmartQuery(value)
-    const normalized = value.trim().toLowerCase()
-    if (!normalized) return
-
-    const matchedRegion = Object.keys(REGIONS_DATA).find((region) => region.toLowerCase().includes(normalized))
-    if (matchedRegion) {
-      setFilter('region', matchedRegion)
-      return
-    }
-
-    Object.entries(REGIONS_DATA).some(([region, districts]) => {
-      const district = districts.find((item) => item.toLowerCase().includes(normalized))
-      if (!district) return false
-      setFilter('region', region)
-      setFilter('district', district)
-      return true
-    })
-  }
 
   return (
     <motion.div
@@ -203,7 +175,6 @@ export function FilterPanel({
             <Sparkles size={13} />
             {t('search.filters')}
           </span>
-          <h2>Smart match</h2>
         </div>
         <div className="lux-head-actions">
           {activeFilterCount > 0 && <span className="lux-active-badge">{activeFilterCount}</span>}
@@ -216,25 +187,6 @@ export function FilterPanel({
       </div>
 
       <form onSubmit={(event) => applyFilters(event)} className="lux-filter-form">
-        <motion.div className="lux-search-card" whileHover={{ y: -3 }} transition={spring}>
-          <div className="lux-search-glow" aria-hidden="true" />
-          <Search className="lux-search-icon" size={21} />
-          <input
-            type="search"
-            value={smartQuery}
-            onChange={(event) => handleSmartSearch(event.target.value)}
-            placeholder={`Search ${searchHint}`}
-            aria-label="Search by region or district"
-          />
-          <motion.span
-            className="lux-search-pulse"
-            animate={{ opacity: smartQuery ? 1 : 0.45, scale: smartQuery ? 1.08 : 1 }}
-            transition={spring}
-          >
-            <Zap size={15} />
-          </motion.span>
-        </motion.div>
-
         <AccordionSection
           icon={<MapPin size={18} />}
           title={t('search.location', { defaultValue: t('search.region') })}

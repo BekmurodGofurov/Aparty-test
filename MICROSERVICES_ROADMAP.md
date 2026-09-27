@@ -37,7 +37,7 @@
 
 ### Next
 1. **Transactional outbox** so events are not lost when RabbitMQ is down.
-2. **Frontend migration** of the remaining pages that still call removed endpoints: admin panel, favorites, reviews, chat.
+2. **Reviews and an admin panel** need backend endpoints first. The frontend no longer calls anything the backend lacks: saved listings live in Catalog, and people contact each other through Telegram.
 3. **Alembic migrations** to replace the development `ALTER TABLE` compatibility code in `init_db`.
 4. **Search Service**, when listing volume needs it.
 

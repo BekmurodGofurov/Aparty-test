@@ -73,13 +73,6 @@
   justify-content: space-between;
   gap: 14px;
   padding: 8px 6px 18px;
-
-  h2 {
-    margin: 4px 0 0;
-    font-size: 1.38rem;
-    letter-spacing: 0;
-    line-height: 1.05;
-  }
 }
 
 .lux-kicker {
@@ -134,82 +127,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.lux-search-card {
-  position: relative;
-  display: grid;
-  grid-template-columns: 44px 1fr 38px;
-  align-items: center;
-  min-height: 62px;
-  margin-bottom: 2px;
-  border-radius: 24px;
-  border: 1px solid var(--panel-line);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  overflow: hidden;
-
-  &:focus-within {
-    border-color: var(--panel-line-bright);
-  border: 1px solid var(--color-border);
-  }
-
-  input {
-    height: 100%;
-    border: 0;
-    padding: 0 8px 0 0;
-    background: transparent;
-    color: var(--panel-text);
-  border: 1px solid var(--color-border);
-    transform: none;
-    font-weight: 750;
-    letter-spacing: 0;
-
-    &:focus,
-    &:hover {
-      background: transparent;
-  border: 1px solid var(--color-border);
-      border: 0;
-      transform: none;
-    }
-
-    &::placeholder {
-      color: var(--panel-subtle);
-      font-weight: 650;
-    }
-  }
-}
-
-.lux-search-glow {
-  position: absolute;
-  inset: -1px;
-  opacity: 0;
-  background: var(--color-surface);
-  transform: translateX(-70%);
-
-  .lux-search-card:focus-within & {
-    opacity: 1;
-  }
-}
-
-.lux-search-icon {
-  margin-left: 16px;
-  color: var(--panel-accent);
-  filter: drop-shadow(0 0 14px var(--panel-glow));
-}
-
-.lux-search-pulse {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  margin-right: 8px;
-  color: var(--panel-accent);
-  background: color-mix(in srgb, var(--panel-glow) 30%, transparent);
 }
 
 .lux-filter-section {
@@ -746,9 +663,5 @@
 
   .lux-pill-grid.compact {
     grid-template-columns: 1fr;
-  }
-
-  .lux-panel-head h2 {
-    font-size: 1.22rem;
   }
 }

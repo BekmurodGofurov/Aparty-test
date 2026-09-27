@@ -189,9 +189,10 @@
 .owner-profile-page__primary,
 .broker-profile-page__primary,
 .btn-primary {
-  background: var(--color-surface);
+  // A plain --color-surface background (white in light mode) left this white text unreadable.
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary, #7c3aed));
   color: #fff !important;
-  border-color: color-mix(in srgb, var(--dash-accent) 56%, white 18%) !important;
+  border-color: transparent !important;
 }
 
 .stat-card,

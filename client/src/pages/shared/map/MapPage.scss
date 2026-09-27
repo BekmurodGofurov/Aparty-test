@@ -81,7 +81,9 @@
 
     &:hover {
       color: #fff;
-  background: var(--color-surface);
+      // Brightens the same glass-over-map overlay instead of jumping to --color-surface, which is
+      // solid white in light mode — that turned this hover state into a blank white square.
+      background: rgba(255,255,255,0.18);
       transform: translateY(-2px) scale(1.04);
     }
   }
@@ -102,8 +104,8 @@
     border: 1px solid rgba(255,255,255,0.62);
     border-radius: 999px;
     color: #fff;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+    // A plain --color-surface background (white in light mode) left this white price unreadable.
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary, #7c3aed));
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 950;
@@ -111,14 +113,12 @@
     &:hover {
       transform: translateY(-3px) scale(1.05);
       border-color: rgba(56,189,248,0.86);
-  border: 1px solid var(--color-border);
     }
   }
 
   &.active button {
     border-color: rgba(125,211,252,0.95);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+    background: linear-gradient(135deg, var(--color-primary-light), var(--color-secondary, #7c3aed));
   }
 
   &.simple button {
@@ -197,12 +197,13 @@
   width: min(340px, calc(100% - 32px));
   padding: 20px;
   border-radius: 24px;
-  color: #fff;
+  // Sits on --color-surface (white in light mode); hardcoded light text was unreadable there.
+  color: var(--color-text);
   text-align: center;
   transform: translateX(-50%);
 
   span {
-    color: rgba(226,232,240,0.72);
+    color: var(--color-muted);
     font-size: 0.82rem;
   }
 }
@@ -226,7 +227,10 @@
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.18);
   border-radius: 32px;
-  color: #fff;
+  // A plain --color-surface background (white in light mode) left this hardcoded white text
+  // unreadable, so it follows the theme instead — .sheet-title-row below does the same for its
+  // own heading/price text that used to override this with more hardcoded light colors.
+  color: var(--color-text);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
 }
@@ -390,9 +394,11 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 18px;
 
+  // These sit directly on the modal's --color-surface background (white in light mode), so
+  // hardcoded light text stayed readable in dark mode only; both now follow the theme.
   h2 {
     margin: 0;
-    color: #fff;
+    color: var(--color-text);
     font-size: clamp(1.45rem, 3vw, 2.3rem);
     line-height: 1.04;
   }
@@ -402,19 +408,19 @@
     align-items: center;
     gap: 7px;
     margin: 10px 0 0;
-    color: rgba(226,232,240,0.74);
+    color: var(--color-muted);
     font-size: 0.92rem;
   }
 
   strong {
-    color: #fff;
+    color: var(--color-text);
     font-size: clamp(1.55rem, 3vw, 2.35rem);
     line-height: 1;
     text-shadow: 0 0 24px rgba(56,189,248,0.28);
 
     small {
       margin-left: 3px;
-      color: rgba(226,232,240,0.64);
+      color: var(--color-muted);
       font-size: 0.86rem;
       font-weight: 800;
     }
@@ -465,10 +471,10 @@
   text-decoration: none;
 }
 
+// A plain --color-surface background (white in light mode) left this white text unreadable.
 .sheet-details-btn {
   color: #fff;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary, #7c3aed));
 }
 
 .sheet-call-btn {
@@ -494,7 +500,9 @@
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.16);
   border-radius: 32px;
-  color: #fff;
+  // A plain --color-surface background (white in light mode) left this hardcoded light text
+  // unreadable, so both follow the theme instead.
+  color: var(--color-text);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   text-align: center;
@@ -510,14 +518,14 @@
   h2 {
     position: relative;
     margin: 14px 0 9px;
-    color: #fff;
+    color: var(--color-text);
     font-size: 1.45rem;
   }
 
   p,
   small {
     position: relative;
-    color: rgba(226,232,240,0.76);
+    color: var(--color-muted);
   }
 
   p {
@@ -540,8 +548,8 @@
   height: 62px;
   border-radius: 24px;
   color: #fff;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  // A plain --color-surface background (white in light mode) left this white icon invisible.
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary, #7c3aed));
 
   &::after {
     content: "";
@@ -566,9 +574,10 @@
   border-radius: 17px;
 }
 
+// A plain --color-surface background (white in light mode) left this white text unreadable.
 .permission-primary {
   color: #fff;
-  background: var(--color-surface);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary, #7c3aed));
 }
 
 .permission-secondary {

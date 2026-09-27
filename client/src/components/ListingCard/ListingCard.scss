@@ -118,9 +118,10 @@
   padding: 0 10px;
   border-radius: 999px;
   color: #fff;
-  background: var(--color-surface);
+  // Matches the "premium" badge on the listing detail page (Listing.scss's .hero-chip.premium):
+  // a plain --color-surface background (white in light mode) left this white text unreadable.
+  background: rgba(232, 131, 0, 0.92);
   border: 1px solid rgba(255,255,255,0.22);
-  border: 1px solid var(--color-border);
   font-size: 0.61rem;
   font-weight: 860;
   letter-spacing: 0.075em;

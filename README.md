@@ -14,7 +14,7 @@ Aparty is a student housing platform: listings, bookings and roommate ads. It is
 | `landing_page/` | Static landing page |
 | `docs/` | Documentation |
 
-Each service owns its PostgreSQL database and talks to the others over REST or RabbitMQ events. See [docs/services.md](docs/services.md) for endpoints, login flow, roles, roommate ads and configuration, and [MICROSERVICES_ROADMAP.md](MICROSERVICES_ROADMAP.md) for scope and next steps.
+Each service owns its PostgreSQL database and talks to the others over REST or RabbitMQ events. See [docs/services.md](docs/services.md) for endpoints, login flow, roles, roommate ads and configuration, [docs/frontend.md](docs/frontend.md) for the web app, and [MICROSERVICES_ROADMAP.md](MICROSERVICES_ROADMAP.md) for scope and next steps.
 
 ## Run everything with Docker
 

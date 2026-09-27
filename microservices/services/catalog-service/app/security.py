@@ -44,6 +44,14 @@ def get_current_user(authorization: Optional[str] = Header(None, alias="Authoriz
         raise _error(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token.") from exc
 
 
+def get_optional_user_id(authorization: Optional[str] = Header(None, alias="Authorization")) -> Optional[int]:
+    """For public endpoints that personalise the response: a missing or invalid token means anonymous."""
+    try:
+        return get_current_user(authorization).id
+    except HTTPException:
+        return None
+
+
 def get_current_user_id(user: CurrentUser = Depends(get_current_user)) -> int:
     return user.id
 

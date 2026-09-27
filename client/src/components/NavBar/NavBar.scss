@@ -397,10 +397,6 @@ background: var(--gradient-primary-hover) !important; }
     span { display: flex; }
   }
 
-  .messages-nav-btn {
-    @include tablet { display: none; }
-  }
-
   .notification-dropdown {
     position: relative;
 

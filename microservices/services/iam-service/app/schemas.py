@@ -73,6 +73,7 @@ class PublicProfileOut(BaseModel):
     id: int
     full_name: str
     phone: Optional[str] = None
+    telegram_username: Optional[str] = None
     is_verified: bool
 
     model_config = ConfigDict(from_attributes=True)

@@ -152,10 +152,10 @@ export function FilterPanel({
     { key: 'gas', label: t('search.gas'), icon: <Flame size={17} /> },
     { key: 'water', label: t('search.water'), icon: <Droplets size={17} /> },
     { key: 'tv', label: t('search.tv'), icon: <Tv size={17} /> },
-    { key: 'ac', label: t('search.ac'), icon: <Snowflake size={17} /> },
-    { key: 'washer', label: t('search.washer'), icon: <WashingMachine size={17} /> },
+    { key: 'air_conditioner', label: t('search.ac'), icon: <Snowflake size={17} /> },
+    { key: 'washing_machine', label: t('search.washer'), icon: <WashingMachine size={17} /> },
     { key: 'fridge', label: t('search.fridge'), icon: <Refrigerator size={17} /> },
-    { key: 'kitchenware', label: t('search.kitchen'), icon: <ChefHat size={17} /> },
+    { key: 'kitchen', label: t('search.kitchen'), icon: <ChefHat size={17} /> },
   ]
 
   const searchHint = useMemo(() => {
@@ -303,15 +303,15 @@ export function FilterPanel({
           <div className="lux-pill-grid">
             {[
               { id: '', label: t('search.apartment_type_all'), icon: <Building2 size={16} /> },
-              { id: 'apartment', label: t('search.apartment_type_entire'), icon: <Home size={16} /> },
-              { id: 'dormitory', label: t('search.apartment_type_per_bed'), icon: <BedDouble size={16} /> },
+              { id: 'full_unit', label: t('search.apartment_type_entire'), icon: <Home size={16} /> },
+              { id: 'shared_room', label: t('search.apartment_type_per_bed'), icon: <BedDouble size={16} /> },
             ].map((type) => (
               <PillButton
                 key={type.id || 'all'}
-                active={filters.apartmentType === type.id}
+                active={filters.rental_type === type.id}
                 icon={type.icon}
                 label={type.label}
-                onClick={() => setFilter('apartmentType', type.id)}
+                onClick={() => setFilter('rental_type', type.id)}
               />
             ))}
           </div>

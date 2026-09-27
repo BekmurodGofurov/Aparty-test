@@ -3,27 +3,24 @@
  * Aurora Glass Design — Immersive, conversion-focused, elegant
  */
 
-import { useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   MapPin, Home, Users, Star, Shield,
   CheckCircle, Sparkles, ChevronRight, Zap,
-  TrendingUp, Clock, ArrowRight, Building, Key,
-  Grid, Compass, Box, Ruler
+  TrendingUp, Clock, ArrowRight,
 } from 'lucide-react'
 import { PremiumListingCard } from '../../../components/listing/PremiumListingCard'
 import { HomeSearchBar } from '../../../components/search/HomeSearchBar'
+import { ListingCardSkeleton } from '../../../components/ui/ListingCardSkeleton.jsx'
+import { searchListings } from '../../../services/listingService'
+import { PLACEHOLDER_IMAGE } from '../../../utils/images'
 import { useAuthStore } from '../../../store/authStore'
 import { useThemeStore } from '../../../store/themeStore'
 import './HomePremium.scss'
 
-// ── CONSTANTS & FAKE DATA (Backend Offline Fallback) ─────────────────────────
-const DISTRICTS = [
-  'Andijon shahar', 'Asaka', 'Shahrixon', 'Jalolquduq',
-  'Xo\'jaobod', 'Oltinko\'l', 'Baliqchi', 'Buloqboshi',
-  'Izboskan', 'Marhamat', 'Ulug\'nor', 'Qo\'rg\'ontepa',
-]
+const HOME_LISTING_LIMIT = 8
 
 const TRUST_BADGES = [
   { icon: CheckCircle, label: 'Ishonchli va tekshirilgan',  key: 'verified' },
@@ -31,58 +28,31 @@ const TRUST_BADGES = [
   { icon: Sparkles,    label: 'Talabalar uchun qulay',   key: 'student' },
 ]
 
-const STATS = [
-  { icon: MapPin,      value: '12,000+', label: 'Faol e\'lonlar' },
-  { icon: Users,       value: '8,500+', label: 'Foydalanuvchilar' },
-  { icon: Home,        value: '95%',    label: 'Muvaffaqiyatli ijara' },
-  { icon: Star,        value: '4.9',    label: 'O\'rtacha reyting' },
+// Tabs over the real catalog: each one is a search filter the backend understands.
+const LISTING_TABS = [
+  { key: 'all',      label: 'Barchasi',             filters: {} },
+  { key: 'roommate', label: 'Sherik izlayotganlar', filters: { owner_role: 'student' } },
+  { key: 'room',     label: 'Xonalar',              filters: { rental_type: 'shared_room' } },
 ]
 
 const HOW_STEPS = [
   { num: '01', emoji: '🔍', title: 'Qidiring va toping', desc: 'O\'zingizga mos kvartirani lokatsiya, narx va xonalar soni bo\'yicha filterlang.' },
-  { num: '02', emoji: '💬', title: 'To\'g\'ridan-to\'g\'ri aloqa', desc: 'Hech qanday maklerlarsiz, to\'g\'ridan-to\'g\'ri uy egasi bilan bog\'laning va gaplashing.' },
-  { num: '03', emoji: '🏠', title: 'Ko\'chib o\'ting',  desc: 'Shartnomani tasdiqlang va yangi uyingizga xotirjam ko\'chib o\'ting.' },
-]
-
-const TESTIMONIALS = [
-  { name: 'Zarina K.',    role: 'Talaba', avatar: '👩‍🎓',    quote: 'Aparty orqali Andijon Davlat Universiteti yonidan juda arzon va qulay xona topdim. AI qidiruvi ajoyib ishladi!', rating: 5 },
-  { name: 'Sardor M.',   role: 'Yosh oila',   avatar: '👨‍👩‍👦',    quote: 'Uylanishim arafasida edim, maklerlarga pul to\'lashni xohlamagandim. Sayt orqali to\'g\'ridan-to\'g\'ri uy egasi bilan kelishdik.', rating: 5 },
-  { name: 'Nodira S.',   role: 'Uy egasi',   avatar: '👩‍💼', quote: 'Ijarachilarni topish endi juda oson. Sayt orqali 2 kun ichida ishonchli talaba qizlarni topdim.', rating: 5 },
+  { num: '02', emoji: '💬', title: 'Telegram orqali bog\'laning', desc: 'Band qilish so\'rovini yuboring yoki uy egasiga to\'g\'ridan-to\'g\'ri Telegramda yozing.' },
+  { num: '03', emoji: '🏠', title: 'Ko\'chib o\'ting',  desc: 'So\'rov qabul qilingach, uy egasi bilan kelishing va yangi uyingizga ko\'chib o\'ting.' },
 ]
 
 const ADVANTAGES = [
-  { icon: Shield, title: '100% Xavfsiz', desc: 'Barcha uy egalari shaxsni tasdiqlovchi hujjatlar orqali tekshirilgan.' },
-  { icon: Sparkles, title: 'AI Qidiruv', desc: 'Sun\'iy intellekt sizning talablaringizga 99% mos tushuvchi uyni topadi.' },
   { icon: Home, title: 'Komissiyasiz', desc: 'Ijarachilar uchun mutlaqo bepul. Maklerlarga ortiqcha pul to\'lamaysiz.' },
-  { icon: Clock, title: 'Tezkor aloqa', desc: 'Uy egasi bilan to\'g\'ridan-to\'g\'ri chat orqali bog\'laning va darhol ko\'chib o\'ting.' }
+  { icon: Clock, title: 'Tezkor aloqa', desc: 'Uy egasi bilan Telegram yoki telefon orqali darhol bog\'laning.' },
+  { icon: Users, title: 'Sherik topish', desc: 'Kvartirada yashovchilar bo\'sh joy uchun sherik izlab e\'lon berishi mumkin.' },
+  { icon: Shield, title: 'Telegram orqali kirish', desc: 'Parol kerak emas: hisobingiz Telegram raqamingiz bilan tasdiqlanadi.' },
 ]
-
-const LOCATIONS = [
-  { name: 'Andijon shahar markazi', count: '340+ e\'lon', img: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=75&w=1200&auto=format&fit=crop' },
-  { name: 'ADU atrofi', count: '120+ e\'lon', img: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=75&w=1200&auto=format&fit=crop' },
-  { name: 'Asaka tumani', count: '85+ e\'lon', img: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?q=75&w=1200&auto=format&fit=crop' },
-]
-
-// Realistic Demo Listings
-const DEMO_LISTINGS = [
-  { id: '101', region: 'Andijon', district: 'Andijon shahar', address: 'Navoiy shoh ko\'chasi, 12-dom', price: 250, rooms_count: 2, is_premium: true, owner_verified: true, images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop'], area_m2: 65, floor: '3/4', wifi: true, type: 'family' },
-  { id: '102', region: 'Andijon', district: 'Andijon shahar', address: 'Bobur maydoni yonida', price: 180, rooms_count: 1, is_premium: false, owner_verified: true, images: ['https://images.unsplash.com/photo-1502672260266-1c1de2d93688?q=80&w=1980&auto=format&fit=crop'], area_m2: 40, floor: '2/5', wifi: true, type: 'student' },
-  { id: '103', region: 'Andijon', district: 'Asaka', address: 'Markaziy shifoxona ro\'parasida', price: 300, rooms_count: 3, is_premium: true, owner_verified: true, images: ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2075&auto=format&fit=crop'], area_m2: 90, floor: '1/4', wifi: false, type: 'luxury' },
-  { id: '104', region: 'Andijon', district: 'Shahrixon', address: 'Bozor yonida, tinch mahalla', price: 150, rooms_count: 2, is_premium: false, owner_verified: false, images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop'], area_m2: 55, floor: '1/1', wifi: true, type: 'student' },
-  { id: '105', region: 'Andijon', district: 'Andijon shahar', address: 'Makro supermarketi ustida', price: 400, rooms_count: 4, is_premium: true, owner_verified: true, images: ['https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?q=80&w=2070&auto=format&fit=crop'], area_m2: 120, floor: '5/7', wifi: true, type: 'luxury' },
-  { id: '106', region: 'Andijon', district: 'Andijon shahar', address: 'Universitet yotoqxonasi yonida', price: 120, rooms_count: 1, is_premium: false, owner_verified: true, images: ['https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=2070&auto=format&fit=crop'], area_m2: 35, floor: '4/4', wifi: true, type: 'student' },
-  { id: '107', region: 'Andijon', district: 'Xo\'jaobod', address: 'Katta yo\'l yoqasida', price: 200, rooms_count: 2, is_premium: false, owner_verified: false, images: ['https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070&auto=format&fit=crop'], area_m2: 60, floor: '2/2', wifi: false, type: 'family' },
-  { id: '108', region: 'Andijon', district: 'Andijon shahar', address: 'Eski shahar, milliy uslubda', price: 280, rooms_count: 3, is_premium: true, owner_verified: true, images: ['https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2070&auto=format&fit=crop'], area_m2: 85, floor: '1/2', wifi: true, type: 'luxury' },
-]
-
-// ── DECORATIVE BACKGROUND COMPONENT (REDESIGNED) ─────────────────────────────
-const SectionDecor = ({ count = 8 }) => null;
 
 // ── COMPONENT ────────────────────────────────────────────────────────────────
 export function HomePremium() {
   const navigate  = useNavigate()
   const { t }     = useTranslation()
-  const { role }  = useAuthStore()
+  const role = useAuthStore((state) => state.role)
   const { theme } = useThemeStore()
   const isLight   = theme === 'light'
 
@@ -99,17 +69,30 @@ export function HomePremium() {
     ? { color: '#57534E' }
     : { color: '#94A3B8' }
 
-  // Use DEMO data immediately for instant load and premium feel
-  const listings = DEMO_LISTINGS
-  const [activeFilter, setActiveFilter] = useState('featured')
+  const [activeFilter, setActiveFilter] = useState(LISTING_TABS[0].key)
+  const [listings, setListings] = useState([])
+  const [totalListings, setTotalListings] = useState(null)
+  const [status, setStatus] = useState('loading')
 
-  const displayListings = useMemo(() => {
-    let src = listings;
-    if (activeFilter === 'featured') src = listings.filter(l => l.is_premium)
-    if (activeFilter === 'student') src = listings.filter(l => l.type === 'student')
-    if (activeFilter === 'luxury') src = listings.filter(l => l.type === 'luxury')
-    return src.slice(0, 8)
-  }, [listings, activeFilter])
+  const selectTab = (key) => {
+    if (key === activeFilter) return
+    setStatus('loading')
+    setActiveFilter(key)
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    const tab = LISTING_TABS.find((item) => item.key === activeFilter)
+    searchListings(tab.filters, 1, HOME_LISTING_LIMIT)
+      .then((data) => {
+        if (cancelled) return
+        setListings(data.listings || [])
+        if (activeFilter === LISTING_TABS[0].key) setTotalListings(data.total ?? null)
+        setStatus('ready')
+      })
+      .catch(() => { if (!cancelled) setStatus('error') })
+    return () => { cancelled = true }
+  }, [activeFilter])
 
   return (
     <main className="home-premium">
@@ -121,7 +104,9 @@ export function HomePremium() {
         {/* Background image layer - static for performance */}
         <div className="hero-bg absolute inset-0 z-0" aria-hidden>
           <img
-            src="/premium_dark_interior_hero_1777829975835.png"
+            src="/hero.jpg"
+            fetchPriority="high"
+            decoding="async"
             alt=""
             className="hero-bg-img"
           />
@@ -161,17 +146,17 @@ export function HomePremium() {
 
 
             {/* ── QUICK STATS ──────────────────────────────────────────── */}
-            <div className="hero-stats">
-              {STATS.map(({ icon: Icon, value, label }) => (
-                <div key={label} className="hero-stat">
-                  <div className="stat-icon"><Icon size={18} /></div>
+            {totalListings !== null && (
+              <div className="hero-stats">
+                <div className="hero-stat">
+                  <div className="stat-icon"><MapPin size={18} /></div>
                   <div className="stat-body">
-                    <strong>{value}</strong>
-                    <span>{t(label)}</span>
+                    <strong>{totalListings}</strong>
+                    <span>{t("Faol e'lonlar")}</span>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -185,7 +170,6 @@ export function HomePremium() {
           FEATURED LISTINGS
       ══════════════════════════════════════════════════════════════════ */}
       <section className="home-section featured-section">
-        <SectionDecor count={15} />
         <div className="section-container">
           {/* Header */}
           <div className="section-head">
@@ -200,16 +184,11 @@ export function HomePremium() {
 
             {/* Filter pills */}
             <div className="filter-pills">
-              {[
-                { key: 'all',      label: 'Barchasi' },
-                { key: 'featured', label: 'TOP E\'lonlar' },
-                { key: 'student',  label: 'Talabalar uchun' },
-                { key: 'luxury',   label: 'Premium / Luxury' },
-              ].map(({ key, label }) => (
+              {LISTING_TABS.map(({ key, label }) => (
                 <button
                   key={key}
                   className={`pill ${activeFilter === key ? 'active' : ''}`}
-                  onClick={() => setActiveFilter(key)}
+                  onClick={() => selectTab(key)}
                 >
                   {label}
                 </button>
@@ -218,29 +197,33 @@ export function HomePremium() {
           </div>
 
           {/* Grid */}
-          <div key={activeFilter} className="listings-grid">
-              {displayListings.length > 0 ? (
-                    displayListings.map(listing => (
-                      <div key={listing.id}>
-                        <PremiumListingCard
-                          id={listing.id}
-                          image={listing.images?.[0] || '/placeholder-apartment.jpg'}
-                          title={listing.address || `${listing.district || ''}, ${listing.region || ''}`}
-                          location={`${listing.district || ''}, ${listing.region || ''}`}
-                          price={listing.price}
-                          rooms={listing.rooms_count}
-                          isPremium={listing.is_premium}
-                          isVerified={listing.owner_verified}
-                          onClick={() => navigate(`/listing/${listing.id}`)}
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <div className="empty-filter-state" style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-                      Bu bo'limda hozircha e'lonlar yo'q
-                    </div>
-                  )
-              }
+          <div className="listings-grid">
+            {status === 'loading' && Array.from({ length: 4 }, (_, index) => <ListingCardSkeleton key={index} />)}
+            {status === 'error' && (
+              <div className="empty-filter-state" style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
+                E'lonlarni yuklab bo'lmadi. Keyinroq qayta urinib ko'ring.
+              </div>
+            )}
+            {status === 'ready' && listings.length === 0 && (
+              <div className="empty-filter-state" style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
+                Bu bo'limda hozircha e'lonlar yo'q
+              </div>
+            )}
+            {status === 'ready' && listings.map((listing) => (
+              <PremiumListingCard
+                key={listing.id}
+                id={listing.id}
+                image={listing.images?.[0] || PLACEHOLDER_IMAGE}
+                title={listing.address || `${listing.district || ''}, ${listing.region || ''}`}
+                location={`${listing.district || ''}, ${listing.region || ''}`}
+                price={listing.price}
+                rooms={listing.rooms_count}
+                isPremium={listing.is_premium}
+                isVerified={listing.owner_verified}
+                isFavorite={listing.is_favorite}
+                onClick={() => navigate(`/listing/${listing.id}`)}
+              />
+            ))}
           </div>
 
           {/* View all CTA */}
@@ -254,69 +237,9 @@ export function HomePremium() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          POPULAR LOCATIONS
-      ══════════════════════════════════════════════════════════════════ */}
-      <section className="home-section locations-section">
-        <SectionDecor count={12} />
-        <div className="section-container">
-          <div className="section-head centered">
-            <p className="section-eyebrow" style={eyebrowStyle}><MapPin size={14} /> Eng ommabop hududlar</p>
-            <h2 className="section-title" style={titleStyle}>Qayerda yashashni xohlaysiz?</h2>
-            <p className="section-sub" style={subStyle}>Andijonning eng qaynoq va talabgor hududlaridagi takliflar</p>
-          </div>
-
-          <div className="locations-grid">
-            {LOCATIONS.map((loc) => (
-              <div
-                key={loc.name}
-                className="location-card"
-                onClick={() => navigate(`/search?tuman=${loc.name}`)}
-              >
-                <img src={loc.img} alt={loc.name} className="loc-img" loading="lazy" decoding="async" />
-                <div className="loc-content">
-                  <h3>{loc.name}</h3>
-                  <span>{loc.count}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════
-          AI RECOMMENDATION SECTION
-      ══════════════════════════════════════════════════════════════════ */}
-      <section className="home-section ai-recommendation">
-        <div className="section-container">
-          <div className="ai-banner-card">
-            <div className="ai-content">
-              <div className="ai-badge"><Zap size={16} /> AI Tavsiya</div>
-              <h2>O'zingizga mos uyni topishga qiynalyapsizmi?</h2>
-              <p>Bizning sun'iy intellekt yordamchimiz sizning byudjetingiz, o'qish yoki ish joyingizga eng yaqin va qulay variantlarni 5 soniyada topib beradi.</p>
-              <button className="btn-ai-solid" onClick={() => document.querySelector('.chat-toggle-btn')?.click()}>
-                <Sparkles size={18} />
-                AI yordamchidan so'rash
-              </button>
-            </div>
-            <div className="ai-visual">
-              {/* Decorative AI visual element */}
-              <div className="glass-mockup">
-                <div className="mockup-header"><div className="dots"></div></div>
-                <div className="mockup-body">
-                  <div className="chat-bubble user">"ADU yonidan 150$ gacha xona kerak"</div>
-                  <div className="chat-bubble ai">"Tushundim! ADU ga 5 minutlik piyoda masofada 3 ta ajoyib variant topdim..."</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════
           HOW IT WORKS
       ══════════════════════════════════════════════════════════════════ */}
       <section className="home-section how-section">
-        <SectionDecor count={10} />
         <div className="section-container">
           <div className="section-head centered">
             <p className="section-eyebrow" style={eyebrowStyle}><Clock size={14} /> {t('home.how_label', 'Qanday ishlaydi')}</p>
@@ -366,34 +289,6 @@ export function HomePremium() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          TESTIMONIALS
-      ══════════════════════════════════════════════════════════════════ */}
-      <section className="home-section testimonials-section">
-        <div className="section-container">
-          <div className="section-head centered">
-            <p className="section-eyebrow" style={eyebrowStyle}><Star size={14} /> {t('home.testimonials_label', 'Fikrlar')}</p>
-            <h2 className="section-title" style={titleStyle}>{t('home.testimonials_title', 'Foydalanuvchilar nima deydi')}</h2>
-          </div>
-
-          <div className="testimonials-grid">
-            {TESTIMONIALS.map(t_ => (
-              <div key={t_.name} className="testimonial-card">
-                <div className="t-stars">{'⭐'.repeat(t_.rating)}</div>
-                <p className="t-quote">"{t(t_.quote)}"</p>
-                <div className="t-author">
-                  <span className="t-avatar">{t_.avatar}</span>
-                  <div>
-                    <strong>{t_.name}</strong>
-                    <span>{t(t_.role)}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════
           OWNER CTA
       ══════════════════════════════════════════════════════════════════ */}
       <section className="home-section owner-cta-section">
@@ -419,7 +314,7 @@ export function HomePremium() {
 
               <button
                 className="btn-owner-cta"
-                onClick={() => navigate(role ? (role === 'makler' ? '/makler/create' : '/owner/create') : '/register')}
+                onClick={() => navigate(role ? (role === 'makler' ? '/makler/create' : '/owner/create') : '/login')}
               >
                 {role ? t('home.owner_cta_btn_logged', "E'lon joylash") : t('home.owner_cta_btn', 'Hozir boshlash')}
                 <ArrowRight size={18} />

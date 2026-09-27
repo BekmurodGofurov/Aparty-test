@@ -38,7 +38,8 @@ from app.schemas import (
     RoommateListingCreate,
     UpgradeToPremiumResponse,
 )
-from app.security import CurrentUser, get_current_user_id, require_roles
+from app.security import CurrentUser, get_current_user_id, get_optional_user_id, require_roles
+from app.services.favorites import favorite_listing_ids
 
 router = APIRouter(prefix=f"{API_PREFIX}/listings", tags=["Listings"])
 
@@ -83,7 +84,7 @@ ROOMMATE_LOCKED_FIELDS = frozenset(
      "longitude", "rooms_count", "area_m2", "max_guests", "rental_type"}
 )
 
-AMENITY_FILTERS = ("wifi", "air_conditioner", "washing_machine", "kitchen", "move_in_ready")
+AMENITY_FILTERS = ("wifi", "gas", "water", "tv", "air_conditioner", "washing_machine", "fridge", "kitchen", "move_in_ready")
 
 
 def _image_record_data(item: Any, index: int) -> dict[str, Any]:
@@ -169,7 +170,7 @@ async def _reload_listing(id: uuid.UUID, db: AsyncSession) -> Listing:
     return result.scalar_one()
 
 
-async def _owner_profiles(listings: list[Listing]) -> dict[int, PublicProfile]:
+async def owner_profiles(listings: list[Listing]) -> dict[int, PublicProfile]:
     return await fetch_public_profiles(listing.owner_id for listing in listings)
 
 
@@ -180,7 +181,7 @@ def _replace_images(listing: Listing, images: list[Any]) -> None:
 
 
 async def _serialize(listing: Listing) -> dict[str, Any]:
-    profiles = await _owner_profiles([listing])
+    profiles = await owner_profiles([listing])
     return listing_to_out(listing, profiles.get(listing.owner_id))
 
 
@@ -288,12 +289,17 @@ async def search_listings(
     rooms_count: Optional[int] = Query(None, ge=1),
     available_spaces: Optional[int] = Query(None, ge=0),
     wifi: Optional[bool] = None,
+    gas: Optional[bool] = None,
+    water: Optional[bool] = None,
+    tv: Optional[bool] = None,
     air_conditioner: Optional[bool] = None,
     washing_machine: Optional[bool] = None,
+    fridge: Optional[bool] = None,
     kitchen: Optional[bool] = None,
     move_in_ready: Optional[bool] = None,
     page: int = Query(1, ge=1),
     limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    user_id: Optional[int] = Depends(get_optional_user_id),
     db: AsyncSession = Depends(get_db),
 ) -> ListingSearchResponse:
     filters = [
@@ -327,8 +333,12 @@ async def search_listings(
 
     amenity_values = {
         "wifi": wifi,
+        "gas": gas,
+        "water": water,
+        "tv": tv,
         "air_conditioner": air_conditioner,
         "washing_machine": washing_machine,
+        "fridge": fridge,
         "kitchen": kitchen,
         "move_in_ready": move_in_ready,
     }
@@ -347,10 +357,11 @@ async def search_listings(
         .limit(limit)
     )
     listings = (await db.execute(stmt)).scalars().unique().all()
-    profiles = await _owner_profiles(listings)
+    profiles = await owner_profiles(listings)
+    favorite_ids = await favorite_listing_ids(db, user_id, [item.id for item in listings])
 
     return ListingSearchResponse(
-        listings=[listing_to_card(item, profiles.get(item.owner_id)) for item in listings],
+        listings=[listing_to_card(item, profiles.get(item.owner_id), item.id in favorite_ids) for item in listings],
         total=total,
         page=page,
         pages=math.ceil(total / limit) if total else 0,
@@ -369,7 +380,7 @@ async def get_my_listings(
         .order_by(Listing.created_at.desc())
     )
     listings = (await db.execute(stmt)).scalars().unique().all()
-    profiles = await _owner_profiles(listings)
+    profiles = await owner_profiles(listings)
     return [listing_to_card(item, profiles.get(item.owner_id)) for item in listings]
 
 
@@ -391,12 +402,18 @@ async def get_listing_booking_info(id: uuid.UUID, db: AsyncSession = Depends(get
 
 
 @router.get("/{id}", response_model=ListingOut)
-async def get_listing(id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
-    """Get a listing by id and count the view."""
+async def get_listing(
+    id: uuid.UUID,
+    user_id: Optional[int] = Depends(get_optional_user_id),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Get a listing by id and count the view. A signed-in user also learns whether they saved it."""
     await _load_listing(id, db)
     await db.execute(update(Listing).where(Listing.id == id).values(views_count=Listing.views_count + 1))
     await db.commit()
-    return await _serialize(await _reload_listing(id, db))
+    listing = await _serialize(await _reload_listing(id, db))
+    listing["is_favorite"] = bool(await favorite_listing_ids(db, user_id, [id]))
+    return listing
 
 
 @router.put("/{id}", response_model=ListingOut)

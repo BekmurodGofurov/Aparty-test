@@ -5,16 +5,16 @@ import { useAuthStore } from '../../store/authStore'
 import { userService } from '../../services/userService'
 import { uploadService } from '../../services/uploadService'
 import './MaklerProfile.scss'
+import { getErrorMessage } from '../../utils/auth'
 
 export function MaklerProfile() {
   const navigate = useNavigate()
   const accessToken = useAuthStore((s) => s.accessToken)
-  const role = useAuthStore((s) => s.role)
   const clearAuth = useAuthStore((s) => s.clear)
-  const basePath = role === 'broker' ? '/broker' : '/makler'
-  const roleLabel = role === 'broker' ? 'Broker' : 'Makler'
+  const basePath = '/makler'
+  const roleLabel = 'Makler'
   const [broker, setBroker] = useState(null)
-  const [form, setForm] = useState({ ism: '', telefon: '', rasm_url: '' })
+  const [form, setForm] = useState({ ism: '', rasm_url: '' })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -27,7 +27,6 @@ export function MaklerProfile() {
         setBroker(data)
         setForm({
           ism: data.ism || '',
-          telefon: data.telefon || '',
           rasm_url: data.rasm_url || '',
         })
       } catch {
@@ -65,21 +64,20 @@ export function MaklerProfile() {
       // Auto-save the profile picture to database
       setSaving(true)
       try {
-        const updated = await userService.updateProfile(updatedForm)
+        const updated = await userService.updateProfile({ ism: updatedForm.ism, rasm_url: updatedForm.rasm_url })
         setBroker(updated)
         setForm({
           ism: updated.ism || '',
-          telefon: updated.telefon || '',
           rasm_url: updated.rasm_url || '',
         })
         window.dispatchEvent(new CustomEvent('user-updated', { detail: updated }))
       } catch (saveErr) {
-        setError(saveErr.response?.data?.detail || 'Rasm saqlashda xatolik yuz berdi')
+        setError(getErrorMessage(saveErr, 'Rasm saqlashda xatolik yuz berdi'))
       } finally {
         setSaving(false)
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Rasm yuklashda xatolik yuz berdi')
+      setError(getErrorMessage(err, 'Rasm yuklashda xatolik yuz berdi'))
     } finally {
       setUploading(false)
       event.target.value = ''
@@ -91,16 +89,15 @@ export function MaklerProfile() {
     setSaving(true)
     setError('')
     try {
-      const updated = await userService.updateProfile(form)
+      const updated = await userService.updateProfile({ ism: form.ism, rasm_url: form.rasm_url })
       setBroker(updated)
       setForm({
         ism: updated.ism || '',
-        telefon: updated.telefon || '',
         rasm_url: updated.rasm_url || '',
       })
       window.dispatchEvent(new CustomEvent('user-updated', { detail: updated }))
     } catch (err) {
-      setError(err.response?.data?.detail || 'Profilni saqlashda xatolik yuz berdi')
+      setError(getErrorMessage(err, 'Profilni saqlashda xatolik yuz berdi'))
     } finally {
       setSaving(false)
     }
@@ -159,7 +156,7 @@ export function MaklerProfile() {
               <label htmlFor="broker-phone">Telefon</label>
               <div className="broker-profile-field__with-icon">
                 <Phone size={18} />
-                <input id="broker-phone" name="telefon" value={form.telefon} onChange={handleChange} />
+                <input id="broker-phone" name="telefon" value={broker?.telefon || ''} readOnly />
               </div>
             </div>
             <button className="broker-profile-page__primary" type="submit" disabled={saving || uploading}>

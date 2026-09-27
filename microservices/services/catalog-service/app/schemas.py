@@ -134,10 +134,12 @@ class ListingOut(BaseModel):
     expires_at: Optional[datetime] = None
     owner_full_name: Optional[str] = None
     owner_phone: Optional[str] = None
+    owner_telegram_url: Optional[str] = None
     owner_role: Optional[str] = None
     owner_verified: bool = False
     rating: Optional[float] = None
     reviews_count: int = 0
+    is_favorite: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -178,9 +180,11 @@ class ListingCard(BaseModel):
     owner_role: str = "owner"
     owner_full_name: str = ""
     owner_phone: Optional[str] = None
+    owner_telegram_url: Optional[str] = None
     owner_verified: bool = False
     rating: Optional[float] = None
     reviews_count: int = 0
+    is_favorite: bool = False
     created_at: datetime
 
 
@@ -191,6 +195,15 @@ class ListingSearchResponse(BaseModel):
     total: int
     page: int
     pages: int
+
+
+class FavoriteStatus(str, enum.Enum):
+    added = "added"
+    removed = "removed"
+
+
+class FavoriteToggleResponse(BaseModel):
+    status: FavoriteStatus
 
 
 class ActivateListingResponse(BaseModel):

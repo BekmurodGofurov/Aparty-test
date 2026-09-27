@@ -18,6 +18,7 @@ class PublicProfile(BaseModel):
     id: int
     full_name: str
     phone: Optional[str] = None
+    telegram_username: Optional[str] = None
     is_verified: bool = False
 
 

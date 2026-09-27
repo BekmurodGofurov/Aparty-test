@@ -34,6 +34,7 @@ import './OwnerCreate.scss'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { DEFAULT_LISTING_LOCATION } from '../../utils/geo'
+import { getErrorMessage } from '../../utils/auth'
 
 const defaultMarkerIcon = L.icon({
   iconUrl: markerIcon,
@@ -49,10 +50,10 @@ const amenitiesList = [
   { key: 'gas', label: 'Gaz', icon: Fan },
   { key: 'water', label: 'Suv', icon: Bath },
   { key: 'tv', label: 'TV', icon: Tv },
-  { key: 'ac', label: 'Konditsioner', icon: Fan },
-  { key: 'washer', label: 'Kir mashinasi', icon: WashingMachine },
+  { key: 'air_conditioner', label: 'Konditsioner', icon: Fan },
+  { key: 'washing_machine', label: 'Kir mashinasi', icon: WashingMachine },
   { key: 'fridge', label: 'Sovutkich', icon: Refrigerator },
-  { key: 'kitchenware', label: 'Oshxona jihozlari', icon: LampDesk },
+  { key: 'kitchen', label: 'Oshxona jihozlari', icon: LampDesk },
 ]
 
 const propertyTypes = [
@@ -119,10 +120,10 @@ export function OwnerCreate() {
       gas: false,
       water: false,
       tv: false,
-      ac: false,
-      washer: false,
+      air_conditioner: false,
+      washing_machine: false,
       fridge: false,
-      kitchenware: false,
+      kitchen: false,
     },
   })
 
@@ -215,7 +216,7 @@ export function OwnerCreate() {
         images: [...prev.images, ...uploaded.map((item) => item.url)].slice(0, 5),
       }))
     } catch (err) {
-      setError(err.response?.data?.detail || 'Rasm yuklashda xatolik yuz berdi')
+      setError(getErrorMessage(err, 'Rasm yuklashda xatolik yuz berdi'))
     } finally {
       setUploadingImages(false)
       event.target.value = ''
@@ -256,7 +257,7 @@ export function OwnerCreate() {
       await createListing(payload)
       navigate('/owner')
     } catch (err) {
-      setError(err.response?.data?.detail || 'Kvartira yaratishda xatolik yuz berdi')
+      setError(getErrorMessage(err, 'Kvartira yaratishda xatolik yuz berdi'))
     } finally {
       setLoading(false)
     }
@@ -275,7 +276,7 @@ export function OwnerCreate() {
             <h1>Yangi kvartira qo'shish</h1>
             <div className="owner-create__status">
               <ShieldCheck size={16} />
-              Saqlangandan keyin nofaol holatda turadi
+              Saqlangandan keyin e'lon darhol saytda ko'rinadi
             </div>
           </div>
         </section>

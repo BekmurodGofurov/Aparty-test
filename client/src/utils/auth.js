@@ -1,8 +1,6 @@
 const HOME_PATHS = {
-  admin: '/admin',
   owner: '/owner',
   makler: '/makler',
-  broker: '/broker',
   student: '/profile',
 }
 

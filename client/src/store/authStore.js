@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { browserCache } from '../services/browserCache'
 
 export const useAuthStore = create((set) => ({
   // Initialize from localStorage
@@ -33,6 +34,7 @@ export const useAuthStore = create((set) => ({
     localStorage.removeItem('accessToken')
     localStorage.removeItem('role')
     localStorage.removeItem('userId')
+    browserCache.clear()
     set({ accessToken: null, role: null, userId: null, isInitialized: true })
   },
 }))

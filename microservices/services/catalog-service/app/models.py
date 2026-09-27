@@ -106,6 +106,20 @@ class Listing(Base):
         return f"<Listing id={self.id} owner_id={self.owner_id} title={self.title} status={self.status}>"
 
 
+class Favorite(Base):
+    """A listing a user saved. The user lives in IAM, so it is referenced by id only."""
+
+    __tablename__ = "favorites"
+
+    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
+    listing_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("listings.id", ondelete="CASCADE"), primary_key=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
 class ListingImage(Base):
     __tablename__ = "listing_images"
 

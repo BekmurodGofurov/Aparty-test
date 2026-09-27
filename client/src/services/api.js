@@ -1,13 +1,7 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/authStore'
-import { useCacheStore } from '../store/cacheStore'
+import { browserCache } from './browserCache'
 import { decodeJwtPayload } from '../utils/jwt'
-import {
-  generateCacheKey,
-  isCacheable,
-  getCachedData,
-  setCachedData,
-} from './cacheService'
 
 // All requests go through the API gateway (see docker-compose.yml, port 8080).
 // An empty VITE_BACKEND_API means "same origin": the dev server proxies /api to the gateway.
@@ -52,78 +46,59 @@ export const api = axios.create({
   timeout: 15000,
 })
 
-// Cache request interceptor - Check cache before making request
+const networkAdapter = axios.getAdapter(api.defaults.adapter)
+// Identical GETs that are already on their way share one request.
+const inFlight = new Map()
+
+const signedInUserId = (token) => (token ? decodeJwtPayload(token)?.sub ?? null : null)
+
+const cloneResponse = (response) => ({ ...response, data: structuredClone(response.data) })
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
 
-  // Check cache for GET requests
-  const cacheStore = useCacheStore.getState()
-  if (cacheStore.cacheEnabled && isCacheable(config)) {
-    const cacheKey = generateCacheKey(config)
-    const cachedData = getCachedData(cacheKey)
+  if ((config.method || 'get').toLowerCase() !== 'get') return config
 
-    if (cachedData) {
-      // Return cached data by resolving the promise
-      config._useCache = true
-      config._cachedData = cachedData
-      config._cacheKey = cacheKey
+  const userId = signedInUserId(token)
+  const rule = browserCache.ruleFor(config.url, userId)
+  if (!rule) return config
+
+  const key = browserCache.keyFor(userId, config.url, config.params)
+  const cached = browserCache.get(key)
+  config.adapter = (adapterConfig) => {
+    if (cached !== undefined) {
+      return Promise.resolve({ data: cached, status: 200, statusText: 'OK', headers: {}, config: adapterConfig, request: {} })
     }
+    if (!inFlight.has(key)) {
+      inFlight.set(
+        key,
+        networkAdapter(adapterConfig)
+          .then((response) => {
+            browserCache.set(key, response.data, rule.ttl)
+            return response
+          })
+          .finally(() => inFlight.delete(key)),
+      )
+    }
+    return inFlight.get(key).then(cloneResponse)
   }
-
   return config
 })
 
 api.interceptors.response.use(
   (response) => {
-    // Cache GET responses
-    const cacheStore = useCacheStore.getState()
-    if (cacheStore.cacheEnabled && isCacheable(response.config)) {
-      const cacheKey = generateCacheKey(response.config)
-      setCachedData(cacheKey, response.data, response.config.url)
-      cacheStore.updateCacheStats()
-    }
-
-    // Invalidate related caches on mutations
     const method = response.config.method?.toUpperCase()
-    if (method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH') {
-      const url = response.config.url
-
-      if (url.includes('/listings')) {
-        cacheStore.invalidateListings()
-      }
-      if (url.includes('/users')) {
-        cacheStore.invalidateUser()
-      }
-      if (url.includes('/favorites')) {
-        cacheStore.invalidateUser()
-      }
-      if (url.includes('/rentals')) {
-        cacheStore.invalidateRentals()
-      }
-      if (url.includes('/reviews')) {
-        cacheStore.invalidateReviews()
-      }
+    if (method && method !== 'GET') {
+      browserCache.invalidateForWrite(response.config.url)
     }
 
     return response
   },
   async (error) => {
     const originalRequest = error.config
-
-    // If cache was available, return it on error
-    if (originalRequest?._useCache && originalRequest?._cachedData) {
-      return Promise.resolve({
-        ...originalRequest,
-        data: originalRequest._cachedData,
-        status: 200,
-        statusText: 'OK (from cache)',
-        headers: {},
-        config: originalRequest,
-      })
-    }
 
     if (
       error.response?.status !== 401 ||
@@ -143,7 +118,6 @@ api.interceptors.response.use(
       // Sign out only when the server refused the refresh token. A network error must not log the user out.
       if (refreshError.response?.status === 401) {
         useAuthStore.getState().clear()
-        useCacheStore.getState().clearCache()
       }
       return Promise.reject(refreshError)
     }

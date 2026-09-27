@@ -11,7 +11,6 @@ import {
   MapPin,
   Maximize2,
   Phone,
-  Star,
   X,
 } from 'lucide-react'
 import { formatDistance } from '../../utils/geo'
@@ -101,27 +100,28 @@ export function PropertyBottomSheet({ property, onClose }) {
               </div>
 
               <div className="sheet-signal-row">
-                <span><Star size={16} fill="currentColor" /> {property.rating}</span>
                 <span><Eye size={16} /> {(property.views || 0).toLocaleString()} ko'rish</span>
                 <span><Home size={16} /> {formatDistance(property.distanceKm)}</span>
               </div>
 
               <div className="sheet-stats">
                 <span><BedDouble size={17} /> {property.rooms} xona</span>
-                <span><Maximize2 size={17} /> {property.area} m2</span>
-                <span><Home size={17} /> {property.floor}-qavat</span>
+                {property.area && <span><Maximize2 size={17} /> {property.area} m2</span>}
+                {property.floor != null && <span><Home size={17} /> {property.floor}-qavat</span>}
               </div>
 
-              <p className="sheet-description">{property.description}</p>
+              {property.description && <p className="sheet-description">{property.description}</p>}
 
               <div className="sheet-actions">
                 <Link className="sheet-details-btn" to={`/listing/${property.id}`}>
                   Batafsil
                 </Link>
-                <a className="sheet-call-btn" href={`tel:${property.phone}`}>
-                  <Phone size={18} />
-                  Qo'ng'iroq
-                </a>
+                {property.phone && (
+                  <a className="sheet-call-btn" href={`tel:${property.phone}`}>
+                    <Phone size={18} />
+                    Qo'ng'iroq
+                  </a>
+                )}
               </div>
             </div>
           </motion.aside>

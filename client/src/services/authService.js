@@ -12,11 +12,6 @@ export const authService = {
     return data
   },
 
-  adminLogin: async ({ username, password }) => {
-    const { data } = await api.post('/auth/admin-login', { username, password })
-    return data
-  },
-
   // Returns a new access token that carries the chosen role.
   chooseRole: async (role) => {
     const { data } = await api.put('/users/me/role', { role })

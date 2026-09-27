@@ -6,7 +6,7 @@ All client traffic enters through the Nginx API gateway (`http://localhost:8080`
 |---|---|---|---|
 | api-gateway | 8080 (public) | none | Routes `/api/v1/*` to the services below |
 | iam-service | 8000 | `iam_db` | Telegram login, JWT, user profiles |
-| catalog-service | 8001 | `catalog_db` | Listings and image uploads |
+| catalog-service | 8001 | `catalog_db` | Listings, saved listings and image uploads |
 | order-service | 8002 | `orders_db` | Booking requests (no payments) |
 | notification-service | 8003 | `notifications_db` | Site notifications and Telegram messages |
 
@@ -17,7 +17,7 @@ Infrastructure: PostgreSQL, Redis (login state, refresh sessions, rate limits; p
 | Path prefix | Service |
 |---|---|
 | `/api/v1/auth/`, `/api/v1/users/` | iam-service |
-| `/api/v1/listings`, `/api/v1/media/` | catalog-service |
+| `/api/v1/listings`, `/api/v1/favorites`, `/api/v1/media/` | catalog-service |
 | `/api/v1/bookings` | order-service |
 | `/api/v1/notifications` | notification-service |
 
@@ -78,24 +78,26 @@ A user who has not chosen a role gets 403 on these actions.
 | GET / PUT | `/api/v1/users/me` | Current profile. Editable: name, university, picture. The phone number comes from Telegram and cannot be changed |
 | PUT | `/api/v1/users/me/role` | Body: `role` (`student`, `owner` or `makler`). Only once. Returns a new access token |
 | GET | `/api/v1/users/{id}` | Own profile, or any profile for admin |
-| GET | `/api/v1/users/public?ids=1,2` | Internal. Up to 100 ids. Returns `id`, `full_name`, `phone`, `is_verified` |
+| GET | `/api/v1/users/public?ids=1,2` | Internal. Up to 100 ids. Returns `id`, `full_name`, `phone`, `telegram_username`, `is_verified` |
 
 ## Catalog Service
 
 | Method | Path | Notes |
 |---|---|---|
 | POST | `/api/v1/listings` | Create (owner or makler) |
-| GET | `/api/v1/listings/search` | Filters: region, district, target_gender, rental_type, owner_role, price_min/max, rooms_count, available_spaces, wifi, air_conditioner, washing_machine, kitchen, move_in_ready; `page`, `limit` (max 100) |
+| GET | `/api/v1/listings/search` | Filters: region, district, target_gender, rental_type, owner_role, price_min/max, rooms_count, available_spaces, wifi, gas, water, tv, air_conditioner, washing_machine, fridge, kitchen, move_in_ready (the amenity names the create form saves); `page`, `limit` (max 100). Public; with a valid token each card also says `is_favorite` |
 | GET | `/api/v1/listings/me` | Own listings |
-| GET | `/api/v1/listings/{id}` | Detail, counts a view |
+| GET | `/api/v1/listings/{id}` | Detail, counts a view. With a valid token it also says `is_favorite` |
 | GET | `/api/v1/listings/{id}/booking-info` | Internal, used by order-service. Does not count a view |
 | PUT / PATCH | `/api/v1/listings/{id}` | Owner only |
 | DELETE | `/api/v1/listings/{id}` | Soft delete, owner only |
 | POST | `/api/v1/listings/{apartment_id}/roommate` | A tenant looks for roommates. See "Roommates" |
 | POST | `/api/v1/listings/{id}/mark-occupied`, `mark-available`, `activate-basic` | Owner only |
+| GET | `/api/v1/favorites/me` | Saved listings of the current user as cards, most recently saved first. Deleted listings are left out |
+| POST | `/api/v1/favorites/{listing_id}` | Saves the listing, or removes it when it is already saved. Returns `status`: `added` or `removed`. Any chosen role. 404 for an unknown or deleted listing |
 | POST | `/api/v1/media/upload`, `/api/v1/media/image` | Image upload to ImgBB (any chosen role). jpg, jpeg, png, webp, up to `MAX_UPLOAD_SIZE_BYTES` |
 
-Owner name, phone and verified flag are fetched from IAM (`/users/public`). If IAM is unavailable the listing is still served with empty owner details.
+Owner name, phone, Telegram link and verified flag are fetched from IAM (`/users/public`). `owner_telegram_url` is `https://t.me/<username>`, or `null` when the owner has no Telegram username; the site then shows the phone number only. A roommate ad shows the tenant who posted it, so its link opens a chat with that tenant. If IAM is unavailable the listing is still served with empty owner details.
 
 Events published: `listing.created`, `listing.updated` (also sent for deletes, with `status: deleted`).
 

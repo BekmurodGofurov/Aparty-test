@@ -22,23 +22,24 @@ import {
   Share2,
   Snowflake,
   Sparkles,
-  Star,
   Tv,
   Users,
   WashingMachine,
   Wifi,
   X,
 } from 'lucide-react'
-import { createBooking, createRentalRequest, getListingById } from '../../../services/listingService'
+import { createBooking, getListingById } from '../../../services/listingService'
 import { favoritesService } from '../../../services/favoritesService'
 import { useAuthStore } from '../../../store/authStore'
 import { ListingMap } from '../../../components/listing/ListingMap'
-import { ReviewSection } from '../../../components/listing/ReviewSection'
 import { RoommateAdForm, RoommateAdInfo } from '../../../components/listing/RoommateAd'
+import { SimilarListings } from '../../../components/listing/SimilarListings'
+import { todayLocalIso } from '../../../utils/time'
 import { ListingDetailSkeleton } from '../../../components/ui/ListingDetailSkeleton.jsx'
 import './Listing.scss'
+import { getErrorMessage } from '../../../utils/auth'
+import { PLACEHOLDER_IMAGE } from '../../../utils/images'
 
-const FALLBACK_IMG = 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1400&q=82'
 const spring = { type: 'spring', stiffness: 360, damping: 34, mass: 0.8 }
 
 export function Listing() {
@@ -66,20 +67,11 @@ export function Listing() {
     setListing(null)
     setActiveImage(0)
     void getListingById(id)
-      .then((data) => { if (cancelled) return; setListing(data) })
+      .then((data) => { if (cancelled) return; setListing(data); setSaved(Boolean(data.is_favorite)) })
       .catch((err) => { if (cancelled) return; const status = err?.response?.status; setError(status === 404 || status === 422 ? 'not_found' : 'load_failed') })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [id])
-
-  useEffect(() => {
-    if (!id || !accessToken) { setSaved(false); return }
-    let active = true
-    void favoritesService.getMyFavorites()
-      .then((items) => { if (active) setSaved(Array.isArray(items) && items.some((item) => String(item.id) === String(id))) })
-      .catch(() => { if (active) setSaved(false) })
-    return () => { active = false }
-  }, [accessToken, id])
 
   useEffect(() => {
     if (!previewOpen) return undefined
@@ -90,7 +82,7 @@ export function Listing() {
   }, [previewOpen])
 
   const images = useMemo(() => {
-    const gallery = listing?.images?.length ? listing.images : [FALLBACK_IMG]
+    const gallery = listing?.images?.length ? listing.images : [PLACEHOLDER_IMAGE]
     return gallery
   }, [listing])
 
@@ -99,10 +91,10 @@ export function Listing() {
     ['gas', t('search.gas'), <Flame size={19} />],
     ['water', t('search.water'), <Droplets size={19} />],
     ['fridge', t('search.fridge'), <Refrigerator size={19} />],
-    ['kitchenware', t('search.kitchen'), <ChefHat size={19} />],
-    ['ac', t('search.ac'), <Snowflake size={19} />],
+    ['kitchen', t('search.kitchen'), <ChefHat size={19} />],
+    ['air_conditioner', t('search.ac'), <Snowflake size={19} />],
     ['tv', t('search.tv'), <Tv size={19} />],
-    ['washer', t('search.washer'), <WashingMachine size={19} />],
+    ['washing_machine', t('search.washer'), <WashingMachine size={19} />],
   ]), [t])
 
   if (loading) return <ListingDetailSkeleton />
@@ -129,18 +121,10 @@ export function Listing() {
   }
 
   const isSharedRoom = listing.rooms_count === 1
-  const activeSrc = images[activeImage] || FALLBACK_IMG
-  const rating = typeof listing.rating === 'number' ? listing.rating.toFixed(1) : t('listing.new')
+  const activeSrc = images[activeImage] || PLACEHOLDER_IMAGE
   const title = listing.address || `${listing.rooms_count} ${t('listing.rooms_count')} uy`
   const fullAddress = `${listing.district}, ${listing.region}`
-  const similarListings = images.slice(0, 3).map((src, index) => ({
-    src,
-    title: index === 0 ? t('listing.premium_residence') : index === 1 ? t('listing.modern_apartment') : t('listing.student_friendly_home'),
-    meta: `${listing.district}, ${listing.region}`,
-    price: Math.max(Number(listing.price || 0) - index * 35, 0),
-  }))
-
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayLocalIso()
 
   const nextImage = () => setActiveImage((v) => (v + 1) % images.length)
   const prevImage = () => setActiveImage((v) => (v - 1 + images.length) % images.length)
@@ -155,7 +139,7 @@ export function Listing() {
       setRequestStatus("So'rov yuborildi. Egasi yoki broker dashboardida ko'radi.")
       setRequestMessage('')
     } catch (err) {
-      setRequestStatus(err.response?.data?.detail || "So'rov yuborishda xatolik bo'ldi.")
+      setRequestStatus(getErrorMessage(err, "So'rov yuborishda xatolik bo'ldi."))
     } finally { setRequestLoading(false) }
   }
 
@@ -163,28 +147,14 @@ export function Listing() {
     if (!accessToken) { navigate('/login'); return }
     const previous = saved; setSaved(!previous)
     try { const result = await favoritesService.toggleFavorite(listing.id); setSaved(result.status === 'added') }
-    catch (err) { setSaved(previous); setRequestStatus(err.response?.data?.detail || "Saqlashda xatolik bo'ldi.") }
-  }
-
-  const handleTelegramContact = async () => {
-    if (ownerTelegramLink) { window.location.assign(ownerTelegramLink); return }
-    if (!accessToken) { navigate('/login'); return }
-    try {
-      setRequestLoading(true)
-      const request = await createRentalRequest({ listing_id: listing.id, message: requestMessage || `Salom, ${title} bo'yicha Telegram o'rniga shu chatda bog'lanmoqchiman.` })
-      navigate(`/messages?request=${request.id}`)
-    } catch (err) {
-      setRequestStatus(err.response?.data?.detail || "Chat ochishda xatolik bo'ldi.")
-    } finally { setRequestLoading(false) }
+    catch (err) { setSaved(previous); setRequestStatus(getErrorMessage(err, "Saqlashda xatolik bo'ldi.")) }
   }
 
   // Tenants (not the apartment's owner) can look for roommates for an apartment on the platform.
   const canPostRoommateAd =
     Boolean(accessToken) && ['student', 'makler'].includes(role) && !listing.parent_listing_id && String(listing.owner_id) !== String(userId)
   const ownerPhoneLink = listing.owner_phone ? `tel:${String(listing.owner_phone).replace(/\s/g, '')}` : null
-  const ownerTelegramId = Number(listing.owner_telegram_id)
-  const hasLikelyTelegramId = Number.isFinite(ownerTelegramId) && ownerTelegramId >= 10000 && ownerTelegramId < 10000000000
-  const ownerTelegramLink = listing.owner_telegram_url || (hasLikelyTelegramId ? `tg://user?id=${ownerTelegramId}` : null)
+  const ownerTelegramLink = listing.owner_telegram_url || null
 
   return (
     <main className="listing-page">
@@ -229,7 +199,7 @@ export function Listing() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.98 }}
                       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                      onError={(e) => { e.currentTarget.src = FALLBACK_IMG }}
+                      onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE }}
                     />
                   </AnimatePresence>
                   <span className="image-open-hint">
@@ -245,8 +215,6 @@ export function Listing() {
                     {listing.is_premium && (
                       <span className="hero-chip premium"><Sparkles size={13} /> {t('listing.premium')}</span>
                     )}
-                    <span className="hero-chip"><Star size={13} fill="currentColor" /> {rating}</span>
-                    <span className="hero-chip">{t('listing.new')}</span>
                   </div>
                   <div className="hero-actions">
                     <button type="button" aria-label={t('listing.share')}><Share2 size={16} /></button>
@@ -292,7 +260,7 @@ export function Listing() {
                     whileTap={{ scale: 0.96 }}
                     transition={spring}
                   >
-                    <img src={src} alt={`${index + 1}`} onError={(e) => { e.currentTarget.src = FALLBACK_IMG }} />
+                    <img src={src} alt={`${index + 1}`} onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE }} />
                   </motion.button>
                 ))}
               </div>
@@ -366,9 +334,6 @@ export function Listing() {
               <ListingMap lat={listing.latitude} lng={listing.longitude} address={listing.address} />
             </motion.section>
 
-            {/* Reviews */}
-            <ReviewSection listingId={listing.id} />
-
           </div>{/* /left-col */}
         </div>{/* /listing-left */}
 
@@ -395,7 +360,6 @@ export function Listing() {
             </div>
 
             <div className="booking-mini-stats">
-              <span><Star size={15} fill="currentColor" /> {rating}</span>
               <span><Eye size={15} /> {listing.views_count ?? 0}</span>
               <span><ShieldCheck size={15} /> {t('listing.verified')}</span>
             </div>
@@ -436,41 +400,18 @@ export function Listing() {
               disabled={!ownerPhoneLink}>
               {t('listing.contact')}
             </button>
-            <button className="booking-secondary" type="button"
-              onClick={handleTelegramContact}
-              disabled={requestLoading}>
-              {t('listing.telegram')}
-            </button>
+            {ownerTelegramLink && (
+              <button className="booking-secondary" type="button"
+                onClick={() => window.open(ownerTelegramLink, '_blank', 'noopener,noreferrer')}>
+                {t('listing.telegram')}
+              </button>
+            )}
           </motion.div>
         </aside>
 
       </div>{/* /listing-two-col  ← sticky releases here */}
 
-      {/* ══ O'xshash e'lonlar — 100% kenglik, sticky shu yerda to'xtaydi ══ */}
-      <motion.section
-        className="similar-section similar-section--full"
-        initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={spring}
-      >
-        <div className="section-heading">
-          <span>{t('listing.explore')}</span>
-          <h2>{t('listing.similar_listings')}</h2>
-        </div>
-        <div className="similar-grid">
-          {similarListings.map((item, index) => (
-            <article className="similar-card" key={`${item.src}-${index}`}>
-              <img src={item.src} alt={item.title} />
-              <div>
-                <strong>{item.title}</strong>
-                <small>{item.meta}</small>
-                <span>${item.price} / oy</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </motion.section>
+      <SimilarListings listing={listing} />
 
       {/* Fullscreen gallery preview */}
       <AnimatePresence>

@@ -24,5 +24,7 @@ MAX_PAGE_SIZE = 100
 ALLOWED_IMAGE_EXTENSIONS = frozenset({"jpg", "jpeg", "png", "webp"})
 ALLOWED_IMAGE_CONTENT_TYPES = frozenset({"image/jpeg", "image/png", "image/webp"})
 
+TELEGRAM_LINK_BASE = "https://t.me/"
+
 BOOKING_UPDATED_ROUTING_KEY = "booking.updated"
 BOOKING_CONSUMER_QUEUE = "catalog-service.booking-events"

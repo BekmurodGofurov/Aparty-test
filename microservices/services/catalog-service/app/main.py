@@ -12,6 +12,7 @@ from app.config import settings
 from app.consumers import run_booking_consumer
 from app.database import init_db
 from app.rabbitmq import close_rabbitmq, init_rabbitmq
+from app.routers.favorites import router as favorites_router
 from app.routers.listings import router as listings_router
 from app.routers.media import router as media_router
 
@@ -51,6 +52,7 @@ app.add_middleware(
 )
 
 app.include_router(listings_router)
+app.include_router(favorites_router)
 app.include_router(media_router)
 
 

@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { searchListings } from '../services/listingService'
+import { emptyAmenities } from '../utils/amenities'
+import { getErrorMessage } from '../utils/auth'
 
 const initialFilters = {
   region: '',
@@ -11,18 +13,12 @@ const initialFilters = {
   available_spaces: '',
   owner_role: '',
   move_in_ready: false,
-  apartmentType: '',
-  amenities: {
-    wifi: false,
-    gas: false,
-    water: false,
-    tv: false,
-    ac: false,
-    washer: false,
-    fridge: false,
-    kitchenware: false,
-  },
+  rental_type: '',
+  amenities: emptyAmenities(),
 }
+
+// Only the newest request may update the list, so a slow answer to an old filter cannot overwrite it.
+let latestRequest = 0
 
 export const useListingStore = create((set, get) => ({
   filters: initialFilters,
@@ -31,6 +27,7 @@ export const useListingStore = create((set, get) => ({
   page: 1,
   pages: 1,
   loading: false,
+  loadingMore: false,
   error: '',
   setFilter: (key, value) => set((state) => ({ filters: { ...state.filters, [key]: value } })),
   setAmenity: (key, value) =>
@@ -41,7 +38,7 @@ export const useListingStore = create((set, get) => ({
       },
     })),
   clearFilters: () => set({
-    filters: { ...initialFilters, amenities: { ...initialFilters.amenities } },
+    filters: { ...initialFilters, amenities: emptyAmenities() },
     page: 1,
     error: '',
   }),
@@ -50,7 +47,7 @@ export const useListingStore = create((set, get) => ({
       ...initialFilters,
       ...nextFilters,
       amenities: {
-        ...initialFilters.amenities,
+        ...emptyAmenities(),
         ...(nextFilters.amenities || {}),
       },
     },
@@ -58,7 +55,9 @@ export const useListingStore = create((set, get) => ({
     error: '',
   }),
   fetchResults: async (page = 1, filtersOverride) => {
-    set({ loading: true, error: '' })
+    const append = page > 1
+    const requestId = ++latestRequest
+    set(append ? { loadingMore: true, error: '' } : { loading: true, error: '' })
     try {
       const filters = filtersOverride || get().filters
       const normalized = {}
@@ -73,25 +72,26 @@ export const useListingStore = create((set, get) => ({
         normalized[key] = value
       })
       const data = await searchListings(normalized, page)
-      if (data.success === false) {
-        throw new Error(data.message || 'Listings load failed')
-      }
-      set({
-        results: Array.isArray(data.listings) ? data.listings : [],
+      if (requestId !== latestRequest) return
+      const listings = Array.isArray(data.listings) ? data.listings : []
+      set((state) => ({
+        results: append ? [...state.results, ...listings] : listings,
         total: data.total ?? 0,
         page: data.page ?? page,
         pages: data.pages ?? 1,
-      })
+      }))
     } catch (error) {
-      set({
-        results: [],
-        total: 0,
-        page,
-        pages: 1,
-        error: error?.message || 'Listings load failed',
-      })
+      if (requestId !== latestRequest) return
+      set((state) => ({
+        results: append ? state.results : [],
+        total: append ? state.total : 0,
+        page: append ? state.page : page,
+        pages: append ? state.pages : 1,
+        error: getErrorMessage(error, error?.message || 'Listings load failed'),
+      }))
     } finally {
-      set({ loading: false })
+      if (requestId === latestRequest) set({ loading: false, loadingMore: false })
     }
   },
+  loadMore: () => get().fetchResults(get().page + 1),
 }))

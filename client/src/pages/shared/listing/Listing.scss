@@ -1029,6 +1029,9 @@ html[data-theme="light"] .listing-hero-bg {
 }
 
 .similar-card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
   overflow: hidden;
   border: 1px solid var(--listing-line);
   border-radius: 20px;

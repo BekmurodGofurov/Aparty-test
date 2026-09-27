@@ -62,15 +62,22 @@ async def test_get_user_by_id_permissions(client, create_user):
 
 
 async def test_public_profiles_expose_only_contact_safe_fields(client, create_user):
-    await create_user(1, full_name="Aziz Karimov", role=UserRole.owner, university="Secret Uni")
+    await create_user(1, full_name="Aziz Karimov", role=UserRole.owner, university="Secret Uni", telegram_username="aziz")
     await create_user(2, full_name="Malika", is_verified=False)
 
     response = await client.get("/api/v1/users/public", params={"ids": "1,2,999"})
     assert response.status_code == 200
     by_id = {item["id"]: item for item in response.json()}
     assert set(by_id) == {1, 2}
-    assert by_id[1] == {"id": 1, "full_name": "Aziz Karimov", "phone": "+998900000001", "is_verified": True}
+    assert by_id[1] == {
+        "id": 1,
+        "full_name": "Aziz Karimov",
+        "phone": "+998900000001",
+        "telegram_username": "aziz",
+        "is_verified": True,
+    }
     assert by_id[2]["is_verified"] is False
+    assert by_id[2]["telegram_username"] is None
 
 
 async def test_public_profiles_validate_ids(client):

@@ -9,13 +9,15 @@ async def test_fetch_public_profiles_returns_profiles_by_id(monkeypatch):
         assert request.url.path == "/api/v1/users/public"
         assert request.url.params["ids"] == "1,2"
         return httpx.Response(200, json=[
-            {"id": 1, "full_name": "Aziz", "phone": "+998900000001", "is_verified": True},
+            {"id": 1, "full_name": "Aziz", "phone": "+998900000001", "telegram_username": "aziz", "is_verified": True},
             {"id": 2, "full_name": "Malika", "phone": None, "is_verified": False},
         ])
 
     mock_outbound_http(monkeypatch, handler)
     profiles = await fetch_public_profiles([2, 1, 1])
     assert profiles[1].full_name == "Aziz"
+    assert profiles[1].telegram_username == "aziz"
+    assert profiles[2].telegram_username is None
     assert profiles[2].is_verified is False
 
 

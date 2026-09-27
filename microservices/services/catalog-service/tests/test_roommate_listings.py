@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from sqlalchemy import text
 
+from app.clients.iam import PublicProfile
 from app.config import settings
 from tests.conftest import LISTING_PAYLOAD, auth_headers
 
@@ -42,6 +43,15 @@ async def test_tenant_posts_an_ad_without_booking_or_owner_permission(client, ap
     assert ad["available_from"] == "2030-01-15"
     assert ad["price"] == 700000
     assert ad["title"] == f"Roommate wanted: {apartment['title']}"
+
+
+async def test_ad_carries_the_tenants_own_contact(client, apartment, iam_profiles):
+    iam_profiles[STUDENT] = PublicProfile(
+        id=STUDENT, full_name="Tenant", phone="+998901112233", telegram_username="tenant_tg", is_verified=True
+    )
+    ad = (await post_ad(client, apartment["id"])).json()
+    assert ad["owner_full_name"] == "Tenant"
+    assert ad["owner_telegram_url"] == "https://t.me/tenant_tg"
 
 
 async def test_ad_lasts_thirty_days(client, apartment):

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from typing import Any, Optional
+from urllib.parse import quote
 
 from app.clients.iam import PublicProfile
-from app.constants import ROLE_MAKLER
+from app.constants import ROLE_MAKLER, TELEGRAM_LINK_BASE
 from app.models import Listing, ListingSource
 from app.schemas import ListingCard, RentalType
 
@@ -32,6 +33,13 @@ def owner_role(listing: Listing) -> str:
     if listing.source in STUDENT_SOURCES:
         return "student"
     return "owner"
+
+
+def telegram_url(owner: Optional[PublicProfile]) -> Optional[str]:
+    """Link to the owner's Telegram chat, or None when they have no username."""
+    if owner is None or not owner.telegram_username:
+        return None
+    return f"{TELEGRAM_LINK_BASE}{quote(owner.telegram_username, safe='')}"
 
 
 def listing_image_urls(listing: Listing) -> list[str]:
@@ -78,6 +86,7 @@ def listing_to_out(listing: Listing, owner: Optional[PublicProfile] = None) -> d
         "expires_at": listing.expires_at,
         "owner_full_name": owner.full_name if owner else "",
         "owner_phone": owner.phone if owner else None,
+        "owner_telegram_url": telegram_url(owner),
         "owner_role": owner_role(listing),
         "owner_verified": owner.is_verified if owner else False,
         "rating": None,
@@ -87,6 +96,10 @@ def listing_to_out(listing: Listing, owner: Optional[PublicProfile] = None) -> d
     }
 
 
-def listing_to_card(listing: Listing, owner: Optional[PublicProfile] = None) -> dict[str, Any]:
+def listing_to_card(
+    listing: Listing, owner: Optional[PublicProfile] = None, is_favorite: bool = False
+) -> dict[str, Any]:
     full = listing_to_out(listing, owner)
-    return {field: full[field] for field in ListingCard.model_fields}
+    card = {field: full[field] for field in ListingCard.model_fields if field != "is_favorite"}
+    card["is_favorite"] = is_favorite
+    return card

@@ -33,6 +33,17 @@ async def test_search_filters(client, create_listing):
     assert await total(district="Nowhere") == 0
 
 
+async def test_search_filters_on_every_amenity_the_forms_save(client, create_listing):
+    amenities = ("wifi", "gas", "water", "tv", "air_conditioner", "washing_machine", "fridge", "kitchen")
+    for name in amenities:
+        await create_listing(title=f"Flat with {name}", amenities={name: True})
+    await create_listing(title="Bare flat", amenities={})
+
+    for name in amenities:
+        body = (await client.get(SEARCH, params={name: "true"})).json()
+        assert [item["title"] for item in body["listings"]] == [f"Flat with {name}"], name
+
+
 async def test_search_owner_role_filter(client, create_listing):
     await create_listing(role="makler")
     await create_listing(role="owner")
@@ -71,9 +82,24 @@ async def test_owner_details_come_from_iam(client, create_listing, iam_profiles)
         assert item["owner_verified"] is True
 
 
+async def test_telegram_link_is_built_from_the_owner_username(client, create_listing, iam_profiles):
+    iam_profiles[1] = PublicProfile(id=1, full_name="Aziz", phone="+998901234567", telegram_username="aziz_k", is_verified=True)
+    iam_profiles[2] = PublicProfile(id=2, full_name="Malika", phone="+998901234568", is_verified=True)
+    with_username = await create_listing(owner_id=1)
+    without_username = await create_listing(owner_id=2)
+
+    cards = {item["id"]: item for item in (await client.get(SEARCH)).json()["listings"]}
+    assert cards[with_username["id"]]["owner_telegram_url"] == "https://t.me/aziz_k"
+    assert cards[without_username["id"]]["owner_telegram_url"] is None
+    detail = (await client.get(f"/api/v1/listings/{with_username['id']}")).json()
+    assert detail["owner_telegram_url"] == "https://t.me/aziz_k"
+    assert detail["owner_phone"] == "+998901234567"
+
+
 async def test_listing_is_served_when_iam_has_no_profile(client, create_listing):
     listing = await create_listing(owner_id=1)
     detail = (await client.get(f"/api/v1/listings/{listing['id']}")).json()
     assert detail["owner_full_name"] == ""
     assert detail["owner_phone"] is None
+    assert detail["owner_telegram_url"] is None
     assert detail["owner_verified"] is False

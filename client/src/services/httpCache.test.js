@@ -20,22 +20,26 @@ const setup = () => {
   return { cache, clock }
 }
 
-test('public listing reads are cached, everything else is not', () => {
+test('public listing reads are cached, endpoints with no rule are not', () => {
   const { cache } = setup()
   assert.ok(cache.ruleFor('/listings/search', null))
   assert.ok(cache.ruleFor(`/listings/${LISTING_ID}`, null))
-  assert.equal(cache.ruleFor('/listings/me', '1'), null)
-  assert.equal(cache.ruleFor('/bookings', '1'), null)
   assert.equal(cache.ruleFor('/notifications/me', '1'), null)
   assert.equal(cache.ruleFor(`/listings/${LISTING_ID}/booking-info`, '1'), null)
 })
 
 test('private data is cached only for a signed-in user', () => {
   const { cache } = setup()
-  assert.equal(cache.ruleFor('/users/me', null), null)
-  assert.equal(cache.ruleFor('/favorites/me', null), null)
-  assert.ok(cache.ruleFor('/users/me', '20'))
-  assert.ok(cache.ruleFor('/favorites/me', '20'))
+  for (const url of ['/users/me', '/favorites/me', '/listings/me', '/bookings', '/bookings/incoming']) {
+    assert.equal(cache.ruleFor(url, null), null, url)
+    assert.ok(cache.ruleFor(url, '20'), url)
+  }
+})
+
+test('bookings and your own listings keep a short TTL, unlike the other private data', () => {
+  const { cache } = setup()
+  assert.ok(cache.ruleFor('/bookings', '20').ttl < cache.ruleFor('/users/me', '20').ttl)
+  assert.ok(cache.ruleFor('/listings/me', '20').ttl < cache.ruleFor('/favorites/me', '20').ttl)
 })
 
 test('an entry is served until it expires', () => {
@@ -55,6 +59,15 @@ test('users and query parameters never share an entry', () => {
   cache.set(first, ['mine'], 60_000)
   assert.equal(cache.get(cache.keyFor('21', '/favorites/me')), undefined)
   assert.notEqual(cache.keyFor('20', '/listings/search', { page: 1 }), cache.keyFor('20', '/listings/search', { page: 2 }))
+})
+
+test('the same params in a different order still hit the same entry', () => {
+  const { cache } = setup()
+  const key = cache.keyFor('20', '/listings/search', { page: 1, limit: 8, region: 'Andijon' })
+  cache.set(key, { total: 5 }, 60_000)
+  const sameQuery = cache.keyFor('20', '/listings/search', { region: 'Andijon', page: 1, limit: 8 })
+  assert.equal(key, sameQuery)
+  assert.deepEqual(cache.get(sameQuery), { total: 5 })
 })
 
 test('saving a favourite drops saved lists, search cards and listing pages but keeps the profile', () => {
@@ -81,6 +94,18 @@ test('editing a listing drops listing reads and saved lists', () => {
   cache.invalidateForWrite(`/listings/${LISTING_ID}`)
   assert.equal(cache.get(detail), undefined)
   assert.equal(cache.get(favorites), undefined)
+})
+
+test('answering a booking drops cached bookings, incoming requests and listing reads', () => {
+  const { cache } = setup()
+  const mine = cache.keyFor('20', '/bookings')
+  const incoming = cache.keyFor('20', '/bookings/incoming')
+  const myListings = cache.keyFor('20', '/listings/me')
+  const detail = cache.keyFor('20', `/listings/${LISTING_ID}`)
+  for (const key of [mine, incoming, myListings, detail]) cache.set(key, {}, 60_000)
+
+  cache.invalidateForWrite(`/bookings/${LISTING_ID}/status`)
+  for (const key of [mine, incoming, myListings, detail]) assert.equal(cache.get(key), undefined)
 })
 
 test('a profile or role change drops the cached profile', () => {

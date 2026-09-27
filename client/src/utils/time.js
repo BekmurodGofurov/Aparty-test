@@ -11,3 +11,10 @@ export const formatTimeAgo = (value, now = Date.now()) => {
   if (elapsed < 7 * DAY) return `${Math.floor(elapsed / DAY)} kun oldin`
   return new Date(value).toLocaleDateString('uz-UZ')
 }
+
+// Today as YYYY-MM-DD in the user's own time zone (toISOString would give the UTC date).
+export const todayLocalIso = (now = new Date()) => {
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}

@@ -16,7 +16,6 @@ import {
   Send,
   Snowflake,
   Sparkles,
-  Star,
   Tv,
   Users,
   WashingMachine,
@@ -26,21 +25,16 @@ import {
 import { favoritesService } from '../../services/favoritesService'
 import { useAuthStore } from '../../store/authStore'
 import './ListingCard.scss'
+import { PLACEHOLDER_IMAGE } from '../../utils/images'
 
-const FALLBACK_IMG = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=900&q=80'
 
 const spring = { type: 'spring', stiffness: 340, damping: 28, mass: 0.75 }
 
-export default function ListingCard({ listing, onUnfavorite = null }) {
+export default function ListingCard({ listing }) {
   const { t } = useTranslation()
-  const { user, isAuthenticated } = useAuthStore()
   const accessToken = useAuthStore((s) => s.accessToken)
   const [saved, setSaved] = useState(Boolean(listing.is_favorite))
   const [saving, setSaving] = useState(false)
-  const [spotlight, setSpotlight] = useState({ x: 50, y: 20 })
-
-  const isOwnerVerified = listing.owner_verified ?? false
-  const isPremium = listing.is_premium || false
 
   const ownerLabel = listing.owner_role === 'makler'
     ? t('card.makler')
@@ -48,7 +42,6 @@ export default function ListingCard({ listing, onUnfavorite = null }) {
       ? t('card.owner')
       : t('card.student')
 
-  const roomsText = listing.rooms_count > 0 ? `${listing.rooms_count} ${t('card.rooms')}` : t('card.studio')
   const genderLabel = listing.target_gender === 'male'
     ? t('card.male')
     : listing.target_gender === 'female'
@@ -59,10 +52,10 @@ export default function ListingCard({ listing, onUnfavorite = null }) {
     wifi: <Wifi size={15} />,
     gas: <Flame size={15} />,
     water: <Droplets size={15} />,
-    ac: <Snowflake size={15} />,
-    washer: <WashingMachine size={15} />,
+    air_conditioner: <Snowflake size={15} />,
+    washing_machine: <WashingMachine size={15} />,
     fridge: <Refrigerator size={15} />,
-    kitchenware: <ChefHat size={15} />,
+    kitchen: <ChefHat size={15} />,
     tv: <Tv size={15} />,
   }
 
@@ -70,18 +63,15 @@ export default function ListingCard({ listing, onUnfavorite = null }) {
     .filter(([, value]) => value)
     .slice(0, 4)
 
-  const rating = typeof listing.rating === 'number' ? listing.rating.toFixed(1) : t('listing.new')
   const phoneLink = listing.owner_phone ? `tel:${String(listing.owner_phone).replace(/\s/g, '')}` : null
-  const telegramId = Number(listing.owner_telegram_id)
-  const hasLikelyTelegramId = Number.isFinite(telegramId) && telegramId >= 10000 && telegramId < 10000000000
-  const telegramLink = listing.owner_telegram_url || (hasLikelyTelegramId ? `tg://user?id=${telegramId}` : null)
+  const telegramLink = listing.owner_telegram_url || null
 
+  // Written straight to the element: updating React state on every mouse move would re-render the card.
   const handleMouseMove = (event) => {
-    const bounds = event.currentTarget.getBoundingClientRect()
-    setSpotlight({
-      x: ((event.clientX - bounds.left) / bounds.width) * 100,
-      y: ((event.clientY - bounds.top) / bounds.height) * 100,
-    })
+    const card = event.currentTarget
+    const bounds = card.getBoundingClientRect()
+    card.style.setProperty('--spot-x', `${((event.clientX - bounds.left) / bounds.width) * 100}%`)
+    card.style.setProperty('--spot-y', `${((event.clientY - bounds.top) / bounds.height) * 100}%`)
   }
 
   const handleSave = async (event) => {
@@ -107,7 +97,7 @@ export default function ListingCard({ listing, onUnfavorite = null }) {
     <motion.article
       className={`listing-card-liquid ${listing.is_premium ? 'is-premium' : ''}`}
       onMouseMove={handleMouseMove}
-      style={{ '--spot-x': `${spotlight.x}%`, '--spot-y': `${spotlight.y}%` }}
+      style={{ '--spot-x': '50%', '--spot-y': '20%' }}
       whileHover={{ y: -6 }}
       transition={spring}
     >
@@ -116,10 +106,10 @@ export default function ListingCard({ listing, onUnfavorite = null }) {
 
         <div className="card-media">
           <motion.img
-            src={listing.images?.[0] || FALLBACK_IMG}
+            src={listing.images?.[0] || PLACEHOLDER_IMAGE}
             alt={listing.address || "E'lon rasmi"}
             loading="lazy"
-            onError={(event) => { event.currentTarget.src = FALLBACK_IMG }}
+            onError={(event) => { event.currentTarget.src = PLACEHOLDER_IMAGE }}
             whileHover={{ scale: 1.075 }}
             transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
           />
@@ -159,10 +149,6 @@ export default function ListingCard({ listing, onUnfavorite = null }) {
           <div className="location-row">
             <span className="location-icon"><MapPin size={15} /></span>
             <span>{listing.district}, {listing.region}</span>
-            <span className="rating-pill">
-              <Star size={13} fill="currentColor" />
-              {rating}
-            </span>
           </div>
 
           <div className="title-row">
@@ -218,7 +204,7 @@ export default function ListingCard({ listing, onUnfavorite = null }) {
               onClick={(event) => {
                 event.preventDefault()
                 event.stopPropagation()
-                if (telegramLink) window.location.assign(telegramLink)
+                if (telegramLink) window.open(telegramLink, '_blank', 'noopener,noreferrer')
               }}
               aria-label="Telegram orqali yozish"
             >

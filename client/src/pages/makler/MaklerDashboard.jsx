@@ -13,10 +13,8 @@ import {
   MessageCircle,
   Phone,
   Plus,
-  ShieldCheck,
   Trash2,
   UserRound,
-  WalletCards,
   XCircle,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
@@ -34,6 +32,7 @@ import { authService } from '../../services/authService'
 import { userService } from '../../services/userService'
 import { indexById, toRequest } from '../../utils/bookingAdapters'
 import './MaklerDashboard.scss'
+import { getErrorMessage } from '../../utils/auth'
 
 const getListingTitle = (listing = {}) => {
   const location = [
@@ -51,24 +50,15 @@ const getListingPrice = (listing = {}) => listing.price ?? 0
 const isListingActive = (listing = {}) => Boolean(listing.is_active)
 const isListingPremium = (listing = {}) => Boolean(listing.is_premium)
 
-const FREE_PLAN = { is_active: true, limit: 5, plan: 'Bepul' }
-
-const getSubscriptionStatus = (subscription) => {
-  if (!subscription) return true
-  return Boolean(subscription.is_active ?? true)
-}
-
 export function MaklerDashboard() {
   const navigate = useNavigate()
   const accessToken = useAuthStore((s) => s.accessToken)
-  const role = useAuthStore((s) => s.role)
   const clearAuth = useAuthStore((s) => s.clear)
-  const basePath = role === 'broker' ? '/broker' : '/makler'
-  const roleLabel = role === 'broker' ? 'Broker' : 'Makler'
+  const basePath = '/makler'
+  const roleLabel = 'Makler'
   const [broker, setBroker] = useState(null)
   const [listings, setListings] = useState([])
   const [bookings, setBookings] = useState([])
-  const subscription = FREE_PLAN
   const [loading, setLoading] = useState(true)
   const [activatingId, setActivatingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
@@ -112,9 +102,6 @@ export function MaklerDashboard() {
     return { activeAds, inactiveAds, premiumAds, totalValue }
   }, [listings])
 
-  const subscriptionActive = getSubscriptionStatus(subscription)
-  const listingLimit = Math.max(Number(subscription?.limit ?? subscription?.listings_limit ?? 5), 1)
-
   const handleLogout = async () => {
     try {
       await authService.logout()
@@ -130,18 +117,18 @@ export function MaklerDashboard() {
       const updated = await updateBookingStatus(requestId, action === 'accept' ? 'confirmed' : 'rejected')
       setBookings((prev) => prev.map((item) => (item.id === requestId ? { ...item, ...updated } : item)))
     } catch (error) {
-      window.alert(error.response?.data?.detail || "Holatni o'zgartirib bo'lmadi.")
+      window.alert(getErrorMessage(error, "Holatni o'zgartirib bo'lmadi."))
     }
   }
 
   const handleListingOccupancy = async (listing, occupied) => {
-    if (occupied) {
-      await markListingOccupied(listing.id)
-    } else {
-      await markListingAvailable(listing.id)
+    try {
+      await (occupied ? markListingOccupied(listing.id) : markListingAvailable(listing.id))
+      const listingData = await getMyListings()
+      setListings(Array.isArray(listingData) ? listingData : [])
+    } catch (error) {
+      window.alert(getErrorMessage(error, "Holatni o'zgartirib bo'lmadi."))
     }
-    const listingData = await getMyListings()
-    setListings(Array.isArray(listingData) ? listingData : [])
   }
 
   const handleActivateListing = async (listing, premium = false) => {
@@ -159,6 +146,8 @@ export function MaklerDashboard() {
             : item
         )
       )
+    } catch (error) {
+      window.alert(getErrorMessage(error, "E'lonni yangilab bo'lmadi."))
     } finally {
       setActivatingId(null)
     }
@@ -173,7 +162,7 @@ export function MaklerDashboard() {
       await deleteListing(listing.id)
       setListings((prev) => prev.filter((item) => item.id !== listing.id))
     } catch (error) {
-      window.alert(error.response?.data?.detail || "E'lonni o'chirishda xatolik bo'ldi.")
+      window.alert(getErrorMessage(error, "E'lonni o'chirishda xatolik bo'ldi."))
     } finally {
       setDeletingId(null)
     }
@@ -202,7 +191,6 @@ export function MaklerDashboard() {
             <div className="broker-badges">
               <span><BadgeCheck size={15} /> {broker?.is_verified ? 'Tasdiqlangan' : 'Tasdiqlanmagan'}</span>
               <span><Phone size={15} /> {broker?.phone || broker?.telefon || '-'}</span>
-              <span><WalletCards size={15} /> {subscription?.plan || 'Bepul'} plan</span>
             </div>
           </div>
           <div className="broker-hero-actions">
@@ -210,15 +198,11 @@ export function MaklerDashboard() {
               <UserRound size={18} />
               Profil
             </button>
-            <button className="broker-secondary-btn" onClick={() => navigate(`${basePath}/payments`)}>
-              <WalletCards size={18} />
-              Tolovlar
-            </button>
             <button className="broker-secondary-btn" onClick={handleLogout}>
               <LogOut size={18} />
               Chiqish
             </button>
-            <button className="broker-primary-btn" onClick={() => navigate(`${basePath}/create`)} disabled={!subscriptionActive}>
+            <button className="broker-primary-btn" onClick={() => navigate(`${basePath}/create`)}>
               <Plus size={18} />
               E'lon qo'shish
             </button>
@@ -255,7 +239,7 @@ export function MaklerDashboard() {
                 <p className="broker-eyebrow">Kvartiralar</p>
                 <h2>Mening makler e'lonlarim</h2>
               </div>
-              <button className="broker-ghost-btn" onClick={() => navigate(`${basePath}/create`)} disabled={!subscriptionActive}>
+              <button className="broker-ghost-btn" onClick={() => navigate(`${basePath}/create`)}>
                 <Plus size={16} />
                 Yangi
               </button>
@@ -396,25 +380,9 @@ export function MaklerDashboard() {
           <aside className="broker-panel">
             <div className="broker-panel__header">
               <div>
-                <p className="broker-eyebrow">Obuna</p>
-                <h2>Makler limiti</h2>
+                <p className="broker-eyebrow">Hisobot</p>
+                <h2>E'lonlar holati</h2>
               </div>
-              <ShieldCheck size={28} />
-            </div>
-
-            <div className="broker-subscription-card">
-              <span className={`broker-subscription-card__status ${subscriptionActive ? 'active' : 'inactive'}`}>
-                {subscriptionActive ? 'Faol' : 'Nofaol'}
-              </span>
-              <h3>{subscription?.plan || 'Bepul'} plan</h3>
-              <p>{listings.length} / {listingLimit} ta e'lon ishlatilgan</p>
-              <div className="broker-limit-bar" aria-hidden="true">
-                <span style={{ width: `${Math.min((listings.length / listingLimit) * 100, 100)}%` }} />
-              </div>
-              <button className="broker-primary-btn broker-primary-btn--full" onClick={() => navigate(`${basePath}/subscription`)}>
-                <Crown size={18} />
-                Obunani boshqarish
-              </button>
             </div>
 
             <div className="broker-mini-list">

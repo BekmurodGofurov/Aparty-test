@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './PremiumSelect.scss';
 
-export function PremiumSelect({ value, onChange, options, placeholder, disabled, label }) {
+export function PremiumSelect({ value, onChange, options, placeholder, disabled }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 

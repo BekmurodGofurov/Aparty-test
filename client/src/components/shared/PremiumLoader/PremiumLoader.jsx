@@ -1,4 +1,3 @@
-import React from 'react';
 import './PremiumLoader.scss';
 
 const PremiumLoader = ({ text = "Yuklanmoqda...", mini = false, fullscreen = false }) => {

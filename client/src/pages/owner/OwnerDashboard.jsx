@@ -33,6 +33,7 @@ import { authService } from '../../services/authService'
 import { userService } from '../../services/userService'
 import { activeRentals, indexById, toRequest } from '../../utils/bookingAdapters'
 import './OwnerDashboard.scss'
+import { getErrorMessage } from '../../utils/auth'
 
 const formatDate = (value) => {
   if (!value) return '-'
@@ -167,7 +168,7 @@ export function OwnerDashboard() {
       const updated = await updateBookingStatus(requestId, action === 'accept' ? 'confirmed' : 'rejected')
       setBookings((prev) => prev.map((item) => (item.id === requestId ? { ...item, ...updated } : item)))
     } catch (error) {
-      window.alert(error.response?.data?.detail || "Holatni o'zgartirib bo'lmadi.")
+      window.alert(getErrorMessage(error, "Holatni o'zgartirib bo'lmadi."))
     }
   }
 
@@ -190,7 +191,7 @@ export function OwnerDashboard() {
       await deleteListing(listing.id)
       setListings((prev) => prev.filter((item) => item.id !== listing.id))
     } catch (error) {
-      window.alert(error.response?.data?.detail || "E'lonni o'chirishda xatolik bo'ldi.")
+      window.alert(getErrorMessage(error, "E'lonni o'chirishda xatolik bo'ldi."))
     } finally {
       setDeletingId(null)
     }

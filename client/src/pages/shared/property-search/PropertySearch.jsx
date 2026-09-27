@@ -8,6 +8,7 @@ import { FilterPanel } from '../../../components/search/FilterPanel'
 import { EmptyState } from '../../../components/ui/EmptyState'
 import { ListingCardSkeleton } from '../../../components/ui/ListingCardSkeleton.jsx'
 import { useListingStore } from '../../../store/listingStore'
+import { AMENITY_KEYS } from '../../../utils/amenities'
 import './PropertySearch.scss'
 
 export function PropertySearch() {
@@ -18,13 +19,17 @@ export function PropertySearch() {
     filters,
     results,
     total,
+    page,
+    pages,
     loading,
+    loadingMore,
     error,
     setFilter,
     setAmenity,
     clearFilters,
     replaceFilters,
     fetchResults,
+    loadMore,
   } = useListingStore()
 
   const searchString = searchParams.toString()
@@ -32,7 +37,11 @@ export function PropertySearch() {
   useEffect(() => {
     const entries = Object.fromEntries(searchParams.entries())
     const nextFilters = Object.entries(entries).reduce((acc, [key, value]) => {
-      acc[key] = value === 'true' ? true : value
+      if (AMENITY_KEYS.includes(key)) {
+        acc.amenities = { ...acc.amenities, [key]: value === 'true' }
+      } else {
+        acc[key] = value === 'true' ? true : value
+      }
       return acc
     }, {})
     replaceFilters(nextFilters)
@@ -54,7 +63,6 @@ export function PropertySearch() {
       return acc
     }, {})
     setSearchParams(params)
-    void fetchResults(1)
     setFilterOpen(false)
   }
 
@@ -64,7 +72,7 @@ export function PropertySearch() {
     if (filters.district) count++
     if (filters.price_min || filters.price_max) count++
     if (filters.target_gender) count++
-    if (filters.apartmentType) count++
+    if (filters.rental_type) count++
     if (filters.rooms_count) count++
     if (filters.available_spaces) count++
     if (filters.move_in_ready) count++
@@ -96,7 +104,6 @@ export function PropertySearch() {
           clearAll={() => {
             clearFilters()
             setSearchParams({})
-            void fetchResults(1)
           }}
         />
       </aside>
@@ -129,7 +136,6 @@ export function PropertySearch() {
                 clearAll={() => {
                   clearFilters()
                   setSearchParams({})
-                  void fetchResults(1)
                 }}
               />
             </motion.div>
@@ -175,7 +181,6 @@ export function PropertySearch() {
               onClick: () => {
                 clearFilters()
                 setSearchParams({})
-                void fetchResults(1)
               },
             }}
           />
@@ -187,9 +192,11 @@ export function PropertySearch() {
             ))}
           </div>
         )}
-        {!loading && (
+        {!loading && page < pages && (
           <div className="pagination-wrap">
-            <button className="button-secondary" type="button" onClick={() => void fetchResults(1)}>{t('search.show_10')}</button>
+            <button className="button-secondary" type="button" onClick={() => void loadMore()} disabled={loadingMore}>
+              {t('search.show_10')}
+            </button>
           </div>
         )}
 

@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SearchX } from 'lucide-react'
 import { MapView } from '../../../components/map/MapView'
 import { PropertyBottomSheet } from '../../../components/map/PropertyBottomSheet'
 import { LocationPermissionModal } from '../../../components/map/LocationPermissionModal'
 import { DEFAULT_ANDIJAN_LOCATION } from '../../../utils/geo'
-import { mapPropertyApi } from '../../../services/mapPropertyService'
+import { fetchMapListings, toMapProperties } from '../../../services/mapPropertyService'
 import { useThemeStore } from '../../../store/themeStore'
 import './MapPage.scss'
 
@@ -12,7 +12,7 @@ export function MapPage() {
   const { theme, toggleTheme } = useThemeStore()
   const [locationStatus, setLocationStatus] = useState('idle')
   const [userLocation, setUserLocation] = useState(DEFAULT_ANDIJAN_LOCATION)
-  const [properties, setProperties] = useState([])
+  const [listings, setListings] = useState([])
   const [selectedProperty, setSelectedProperty] = useState(null)
   const [loading, setLoading] = useState(true)
   const [immersive, setImmersive] = useState(false)
@@ -39,7 +39,7 @@ export function MapPage() {
         setLocationStatus('granted')
       },
       () => setLocationStatus('denied'),
-      { enableHighAccuracy: true, timeout: 9000, maximumAge: 60000 },
+      { enableHighAccuracy: false, timeout: 9000, maximumAge: 5 * 60000 },
     )
   }, [])
 
@@ -49,24 +49,19 @@ export function MapPage() {
 
   useEffect(() => {
     let active = true
-    setLoading(true)
 
-    mapPropertyApi.fetchNearby({ userLocation })
-      .then(data => {
-        if (!active) return
-        setProperties(data)
-        setSelectedProperty(current => current && !data.some(item => item.id === current.id) ? null : current)
-      })
+    fetchMapListings()
+      .then(data => { if (active) setListings(data) })
       .catch(error => {
         console.error('Map listings load failed:', error)
-        if (!active) return
-        setProperties([])
-        setSelectedProperty(null)
+        if (active) setListings([])
       })
       .finally(() => active && setLoading(false))
 
     return () => { active = false }
-  }, [userLocation])
+  }, [])
+
+  const properties = useMemo(() => toMapProperties(listings, userLocation), [listings, userLocation])
 
   const useDefaultLocation = () => {
     setUserLocation(DEFAULT_ANDIJAN_LOCATION)

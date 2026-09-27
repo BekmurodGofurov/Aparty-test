@@ -1,22 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
-  User, Phone, ShieldCheck,
-  Edit2, LogOut, Camera, Star,
-  Home, Send, Lock, Heart,
-  ChevronRight, Smartphone,
-  Monitor, Cpu, MapPin, Clock, Trash2,
-  Settings, HelpCircle, AlertCircle,
-  MessageSquare, Bell, UserCheck, DollarSign
+  Phone, ShieldCheck, Edit2, LogOut, Camera,
+  Home, Send, Heart, ChevronRight,
+  Monitor, Cpu, Clock,
+  MessageSquare, UserCheck
 } from 'lucide-react'
 import { useAuthStore } from '../../../store/authStore'
 import { Button, ScrollReveal, StaggerContainer, StaggerItem, GlassCard, Badge } from '../../../components/ui/PremiumComponents'
 import PremiumLoader from '../../../components/shared/PremiumLoader/PremiumLoader'
+import { authService } from '../../../services/authService'
 import { userService } from '../../../services/userService'
 import { favoritesService } from '../../../services/favoritesService'
-import { getMyRentalRequests, getMyRooms, getRentalRequestMessages } from '../../../services/listingService'
+import { getMyBookings } from '../../../services/listingService'
+import { activeRentals, toRequest } from '../../../utils/bookingAdapters'
+import { profileStats } from '../../../utils/profileStats'
 import { ProfileEditModal } from './ProfileEditModal'
 import './UserProfile.scss'
 
@@ -50,7 +48,6 @@ const getCurrentSession = () => {
 }
 
 export function UserProfile() {
-  const { t } = useTranslation()
   const navigate = useNavigate()
   const accessToken = useAuthStore((s) => s.accessToken)
   const role = useAuthStore((s) => s.role)
@@ -69,52 +66,33 @@ export function UserProfile() {
   const [userData, setUserData] = useState(initialData)
   const [sessions] = useState([getCurrentSession()])
   const [savedHomes, setSavedHomes] = useState([])
-  const [sentRequests, setSentRequests] = useState([])
-  const [requestMessages, setRequestMessages] = useState([])
-  const [rooms, setRooms] = useState([])
+  const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [editMode, setEditMode] = useState('all')
 
   const fetchProfile = async () => {
     try {
       setLoading(true)
-      const [data, favorites, requests, roomData] = await Promise.all([
+      const [data, favorites, myBookings] = await Promise.all([
         userService.getCurrentUser().catch(() => null),
         favoritesService.getMyFavorites().catch(() => []),
-        getMyRentalRequests().catch(() => []),
-        getMyRooms().catch(() => []),
+        getMyBookings().catch(() => []),
       ])
+      const savedList = Array.isArray(favorites) ? favorites : []
+      const bookingList = Array.isArray(myBookings) ? myBookings : []
       if (data) {
         setUserData(prev => ({
           ...prev,
           ...data,
           join_date: formatDate(data.created_at),
-          stats: {
-            saved: Array.isArray(favorites) ? favorites.length : 0,
-            requests: Array.isArray(requests) ? requests.length : 0,
-            rooms: Array.isArray(roomData) ? roomData.length : 0,
-          },
+          stats: profileStats({ favorites: savedList, bookings: bookingList }),
         }))
         // Cache basic info for next instant load
         if (data.ism) localStorage.setItem('userName', data.ism)
         if (data.telefon) localStorage.setItem('userPhone', data.telefon)
       }
-      setSavedHomes(Array.isArray(favorites) ? favorites : [])
-      setSentRequests(Array.isArray(requests) ? requests : [])
-      setRooms(Array.isArray(roomData) ? roomData : [])
-      const messageGroups = await Promise.all(
-        (Array.isArray(requests) ? requests : [])
-          .slice(0, 6)
-          .map((request) => getRentalRequestMessages(request.id).catch(() => []))
-      )
-      setRequestMessages(
-        messageGroups
-          .flat()
-          .filter((message) => Number(message.sender_id) !== Number(data?.id ?? localStorage.getItem('userId')))
-          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-          .slice(0, 6)
-      )
+      setSavedHomes(savedList)
+      setBookings(bookingList)
     } catch (err) {
       console.error('Fetch error:', err)
     } finally {
@@ -125,11 +103,6 @@ export function UserProfile() {
   useEffect(() => {
     if (!accessToken) {
       navigate('/login')
-      return
-    }
-
-    if (role === 'admin') {
-      navigate('/admin/profile', { replace: true })
       return
     }
 
@@ -149,20 +122,22 @@ export function UserProfile() {
     return () => window.removeEventListener('user-updated', handleUpdate)
   }, [])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authService.logout()
+    } catch {
+      // Signing out locally must always work, even when the API is unavailable.
+    }
     clearAuth()
     navigate('/')
   }
 
-  const openEdit = (mode = 'all') => {
-    setEditMode(mode)
-    setShowEditModal(true)
-  }
-
-  const activeRoom = useMemo(() => rooms.find((room) => room.is_active) || rooms[0], [rooms])
+  const activeRoom = useMemo(() => activeRentals(bookings)[0], [bookings])
   const hasRoom = Boolean(activeRoom)
-  const sentRequestsPreview = sentRequests.slice(0, 4)
+  const sentRequestsPreview = bookings.slice(0, 4)
   const savedHomesPreview = savedHomes.slice(0, 4)
+
+  if (loading && !userData.ism) return <PremiumLoader />
 
   return (
     <main className="user-profile-premium">
@@ -174,7 +149,7 @@ export function UserProfile() {
             <div className="unified-profile-card">
               <div className="card-inner">
                 <div className="user-identity">
-                  <div className="avatar-container" onClick={() => openEdit('all')}>
+                  <div className="avatar-container" onClick={() => setShowEditModal(true)}>
                     <div className="avatar-ring">
                       {userData?.rasm_url ? (
                         <img src={userData.rasm_url} alt={userData.ism} />
@@ -212,7 +187,7 @@ export function UserProfile() {
                 </div>
 
                 <div className="card-actions">
-                  <Button variant="primary" className="btn-edit" onClick={() => openEdit('all')}>
+                  <Button variant="primary" className="btn-edit" onClick={() => setShowEditModal(true)}>
                     <Edit2 size={16}/> <span>Tahrirlash</span>
                   </Button>
                 </div>
@@ -245,7 +220,7 @@ export function UserProfile() {
               </div>
             </StaggerItem>
             <StaggerItem>
-              <div className={`premium-stat-card neon-cyan ${hasRoom ? '' : 'is-disabled'}`} onClick={() => hasRoom && navigate('/my-room')}>
+              <div className={`premium-stat-card neon-cyan ${hasRoom ? '' : 'is-disabled'}`} onClick={() => hasRoom && navigate(`/listing/${activeRoom.listing_id}`)}>
                 <div className="icon-box"><Home size={24}/></div>
                 <div className="stat-info">
                   <span className="number">{userData?.stats.rooms}</span>
@@ -324,30 +299,6 @@ export function UserProfile() {
               </div>
             </section>
 
-            <section className="content-block reviews-section">
-              <div className="block-header">
-                <h2><MessageSquare size={20}/> Xabarlar</h2>
-              </div>
-              <div className="reviews-stack">
-                {requestMessages.length === 0 ? (
-                  <GlassCard className="profile-empty-card">
-                    Hali owner yoki brokerdan xabar kelmagan.
-                  </GlassCard>
-                ) : requestMessages.map(message => (
-                  <GlassCard className="mini-review-card request-preview-card" key={message.id}>
-                    <div className="rev-top">
-                      <div className="apt-info">
-                        <MessageSquare size={14} className="apt-icon"/>
-                        <strong className="apt-name">{message.sender_name}</strong>
-                      </div>
-                      <span>{formatDate(message.created_at)}</span>
-                    </div>
-                    <p className="rev-comment">"{message.text}"</p>
-                  </GlassCard>
-                ))}
-              </div>
-            </section>
-
             {/* REQUESTS SECTION */}
             <section className="content-block reviews-section">
               <div className="block-header">
@@ -358,22 +309,24 @@ export function UserProfile() {
                   <GlassCard className="profile-empty-card">
                     Hali hech qaysi reklamaga so'rov yuborilmagan.
                   </GlassCard>
-                ) : sentRequestsPreview.map(request => (
-                  <GlassCard className="mini-review-card request-preview-card" key={request.id} onClick={() => navigate(`/listing/${request.listing_id}`)}>
-                    <div className="rev-top">
-                      <div className="apt-info">
-                        <Home size={14} className="apt-icon"/>
-                        <strong className="apt-name">{getListingTitle(request.listing)}</strong>
+                ) : sentRequestsPreview.map(booking => {
+                  const { status, statusLabel } = toRequest(booking)
+                  return (
+                    <GlassCard className="mini-review-card request-preview-card" key={booking.id} onClick={() => navigate('/my-bookings')}>
+                      <div className="rev-top">
+                        <div className="apt-info">
+                          <Home size={14} className="apt-icon"/>
+                          <strong className="apt-name">{booking.listing_title || "E'lon"}</strong>
+                        </div>
+                        <span className={`request-status request-status--${status}`}>{statusLabel}</span>
                       </div>
-                      <span className={`request-status request-status--${request.status}`}>{request.status}</span>
-                    </div>
-                    <p className="rev-comment">"{request.message || 'So‘rov yuborilgan'}"</p>
-                    <div className="rev-footer">
-                      <span>{formatDate(request.created_at)}</span>
-                      <span>${request.listing?.price}/oy</span>
-                    </div>
-                  </GlassCard>
-                ))}
+                      <p className="rev-comment">"{booking.message || 'So‘rov yuborilgan'}"</p>
+                      <div className="rev-footer">
+                        <span>{formatDate(booking.start_date)} — {formatDate(booking.end_date)}</span>
+                      </div>
+                    </GlassCard>
+                  )
+                })}
               </div>
             </section>
 
@@ -387,14 +340,12 @@ export function UserProfile() {
                     <div className="rev-top">
                       <div className="apt-info">
                         <Home size={14} className="apt-icon"/>
-                        <strong className="apt-name">{getListingTitle(activeRoom.listing)}</strong>
+                        <strong className="apt-name">{activeRoom.listing.address || "E'lon"}</strong>
                       </div>
-                      <button className="btn-terminate" type="button" onClick={() => navigate('/my-room')}>Ochish</button>
+                      <button className="btn-terminate" type="button" onClick={() => navigate(`/listing/${activeRoom.listing_id}`)}>Ochish</button>
                     </div>
                     <div className="room-profile-meta">
-                      <span><DollarSign size={14}/> ${activeRoom.price}/oy</span>
-                      <span><Clock size={14}/> To'lovga {activeRoom.payment_days_left} kun qoldi</span>
-                      <span><UserCheck size={14}/> {activeRoom.owner.full_name}</span>
+                      <span><Clock size={14}/> {formatDate(activeRoom.start_date)} — {formatDate(activeRoom.end_date)}</span>
                     </div>
                   </>
                 ) : (
@@ -412,61 +363,30 @@ export function UserProfile() {
 
           <aside className="sticky-sidebar-col">
             <section className="sidebar-group">
-              <h3 className="sidebar-title">Sozlamalar</h3>
+              <h3 className="sidebar-title">Aloqa</h3>
               <div className="settings-stack">
-                <div className="setting-action-card" onClick={() => openEdit('password')}>
-                  <div className="icon-wrap"><Lock size={18}/></div>
-                  <div className="text-wrap">
-                    <span>Parolni o'zgartirish</span>
-                    <p>Hisobingizni himoyalang</p>
-                  </div>
-                  <ChevronRight size={16} className="chevron"/>
-                </div>
-                <div className="setting-action-card" onClick={() => openEdit('phone')}>
-                  <div className="icon-wrap"><Smartphone size={18}/></div>
-                  <div className="text-wrap">
-                    <span>Telefonni yangilash</span>
-                    <p>Yangi raqamga o'tish</p>
-                  </div>
-                  <ChevronRight size={16} className="chevron"/>
-                </div>
                 <div className="setting-action-card">
                   <div className="icon-wrap"><Send size={18}/></div>
                   <div className="text-wrap">
-                    <span>Telegram Status</span>
-                    <p>Bot bilan bog'lanish: {userData?.tg_connected ? 'Faol' : 'O\'chirilgan'}</p>
+                    <span>Telegram</span>
+                    <p>
+                      {userData?.telegram_username
+                        ? `@${userData.telegram_username}`
+                        : "Username yo'q: e'lonlarda faqat telefon ko'rinadi"}
+                    </p>
                   </div>
-                  <Badge variant={userData?.tg_connected ? "success" : "outline"} size="sm">
-                    {userData?.tg_connected ? "Uzluksiz" : "Bog'lanmagan"}
+                  <Badge variant={userData?.telegram_username ? 'success' : 'outline'} size="sm">
+                    {userData?.telegram_username ? 'Ulangan' : "Yo'q"}
                   </Badge>
                 </div>
               </div>
             </section>
 
-            <section className="sidebar-group help-section">
-              <h3 className="sidebar-title">Yordam</h3>
-              <div className="support-card-premium">
-                <div className="support-bg"></div>
-                <h4>Yordam kerakmi?</h4>
-                <p>AI yordamchimiz sizning barcha savollaringizga javob beradi.</p>
-                <button className="btn-chat-ai" onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat'))}>
-                  <MessageSquare size={18}/> <span>AI Chat Bot</span>
-                </button>
-              </div>
-            </section>
-
             <section className="sidebar-group danger-zone-group">
-              <h3 className="sidebar-title">Havfli hudud</h3>
+              <h3 className="sidebar-title">Hisob</h3>
               <div className="danger-zone-card">
                 <div className="danger-item" onClick={handleLogout}>
                   <LogOut size={18}/> <span>Tizimdan chiqish</span>
-                </div>
-                <div className="danger-item delete">
-                  <Trash2 size={18}/> <span>Hisobni o'chirish</span>
-                </div>
-                <div className="warning-note">
-                  <AlertCircle size={12}/>
-                  <span>Diqqat! Hisobni o'chirishni ortga qaytarib bo'lmaydi.</span>
                 </div>
               </div>
             </section>
@@ -480,7 +400,6 @@ export function UserProfile() {
         onClose={() => setShowEditModal(false)}
         userData={userData}
         onUpdate={(u) => setUserData(prev => ({...prev, ...u}))}
-        mode={editMode}
       />
     </main>
   )

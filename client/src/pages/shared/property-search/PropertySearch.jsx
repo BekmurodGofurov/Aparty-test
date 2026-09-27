@@ -144,14 +144,16 @@ export function PropertySearch() {
       </AnimatePresence>
 
       <section className="results-area">
-        {loading && (
+        {/* A revisit to the same search (e.g. the browser back button) keeps showing the results
+            already in the store while they refresh, instead of blanking to a skeleton again. */}
+        {loading && results.length === 0 && (
           <div className="listings-grid">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <ListingCardSkeleton key={i} />
             ))}
           </div>
         )}
-        {!loading && (
+        {(!loading || results.length > 0) && (
           <div className="results-top">
             <p>
               <span className="results-count-num">{total || results.length}</span>
@@ -185,14 +187,14 @@ export function PropertySearch() {
             }}
           />
         )}
-        {!loading && (
+        {(!loading || results.length > 0) && (
           <div className="listings-grid">
             {results.map((listing) => (
               <ListingCard key={listing.id} listing={listing} />
             ))}
           </div>
         )}
-        {!loading && page < pages && (
+        {(!loading || results.length > 0) && page < pages && (
           <div className="pagination-wrap">
             <button className="button-secondary" type="button" onClick={() => void loadMore()} disabled={loadingMore}>
               {t('search.show_10')}
@@ -201,7 +203,7 @@ export function PropertySearch() {
         )}
 
         {/* Bottom count summary */}
-        {!loading && results.length > 0 && (
+        {results.length > 0 && (
           <div className="results-footer-count">
             <span className="results-footer-icon">🏠</span>
             <span>

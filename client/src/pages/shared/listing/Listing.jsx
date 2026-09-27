@@ -29,6 +29,7 @@ import {
   X,
 } from 'lucide-react'
 import { createBooking, getListingById } from '../../../services/listingService'
+import { peekCache } from '../../../services/browserCache'
 import { favoritesService } from '../../../services/favoritesService'
 import { useAuthStore } from '../../../store/authStore'
 import { ListingMap } from '../../../components/listing/ListingMap'
@@ -62,9 +63,13 @@ export function Listing() {
   useEffect(() => {
     if (!id) return
     let cancelled = false
-    setLoading(true)
+    // A previously viewed listing (still in the localStorage cache) paints instantly on revisit;
+    // it then refreshes in the background instead of blanking to a loading state first.
+    const cached = peekCache(`/listings/${id}`)
+    setListing(cached ?? null)
+    setSaved(Boolean(cached?.is_favorite))
+    setLoading(cached === undefined)
     setError(null)
-    setListing(null)
     setActiveImage(0)
     void getListingById(id)
       .then((data) => { if (cancelled) return; setListing(data); setSaved(Boolean(data.is_favorite)) })

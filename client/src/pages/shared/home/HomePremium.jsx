@@ -15,6 +15,7 @@ import { PremiumListingCard } from '../../../components/listing/PremiumListingCa
 import { HomeSearchBar } from '../../../components/search/HomeSearchBar'
 import { ListingCardSkeleton } from '../../../components/ui/ListingCardSkeleton.jsx'
 import { searchListings } from '../../../services/listingService'
+import { peekCache } from '../../../services/browserCache'
 import { PLACEHOLDER_IMAGE } from '../../../utils/images'
 import { useAuthStore } from '../../../store/authStore'
 import { useThemeStore } from '../../../store/themeStore'
@@ -48,6 +49,10 @@ const ADVANTAGES = [
   { icon: Shield, title: 'Telegram orqali kirish', desc: 'Parol kerak emas: hisobingiz Telegram raqamingiz bilan tasdiqlanadi.' },
 ]
 
+// The params searchListings(filters, 1, HOME_LISTING_LIMIT) sends, so a cache lookup matches exactly.
+const searchParamsFor = (tab) => ({ ...tab.filters, page: 1, limit: HOME_LISTING_LIMIT })
+const cachedTab = (key) => peekCache('/listings/search', searchParamsFor(LISTING_TABS.find((item) => item.key === key)))
+
 // ── COMPONENT ────────────────────────────────────────────────────────────────
 export function HomePremium() {
   const navigate  = useNavigate()
@@ -70,13 +75,17 @@ export function HomePremium() {
     : { color: '#94A3B8' }
 
   const [activeFilter, setActiveFilter] = useState(LISTING_TABS[0].key)
-  const [listings, setListings] = useState([])
-  const [totalListings, setTotalListings] = useState(null)
-  const [status, setStatus] = useState('loading')
+  // Revisiting the home page (e.g. via the browser back button) paints the last-known listings for
+  // the active tab straight away instead of a loading flash, then quietly refreshes them below.
+  const [listings, setListings] = useState(() => cachedTab(LISTING_TABS[0].key)?.listings || [])
+  const [totalListings, setTotalListings] = useState(() => cachedTab(LISTING_TABS[0].key)?.total ?? null)
+  const [status, setStatus] = useState(() => (cachedTab(LISTING_TABS[0].key) ? 'ready' : 'loading'))
 
   const selectTab = (key) => {
     if (key === activeFilter) return
-    setStatus('loading')
+    const cached = cachedTab(key)
+    setListings(cached?.listings || [])
+    setStatus(cached ? 'ready' : 'loading')
     setActiveFilter(key)
   }
 
@@ -90,7 +99,7 @@ export function HomePremium() {
         if (activeFilter === LISTING_TABS[0].key) setTotalListings(data.total ?? null)
         setStatus('ready')
       })
-      .catch(() => { if (!cancelled) setStatus('error') })
+      .catch(() => { if (!cancelled && cachedTab(activeFilter) === undefined) setStatus('error') })
     return () => { cancelled = true }
   }, [activeFilter])
 

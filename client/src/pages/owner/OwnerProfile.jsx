@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, BadgeCheck, Camera, Home, LogOut, Phone, Save, UserRound } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
-import { userService } from '../../services/userService'
+import { normalizeUser, userService } from '../../services/userService'
+import { peekCache } from '../../services/browserCache'
 import { uploadService } from '../../services/uploadService'
 import './OwnerProfile.scss'
 import { getErrorMessage } from '../../utils/auth'
@@ -11,9 +12,12 @@ export function OwnerProfile() {
   const navigate = useNavigate()
   const accessToken = useAuthStore((s) => s.accessToken)
   const clearAuth = useAuthStore((s) => s.clear)
-  const [owner, setOwner] = useState(null)
-  const [form, setForm] = useState({ ism: '', rasm_url: '' })
-  const [loading, setLoading] = useState(true)
+  // A profile visited before this session paints instantly instead of a blank "yuklanmoqda" state.
+  const cachedProfileRaw = peekCache('/users/me')
+  const cachedProfile = cachedProfileRaw && normalizeUser(cachedProfileRaw)
+  const [owner, setOwner] = useState(cachedProfile)
+  const [form, setForm] = useState({ ism: cachedProfile?.ism || '', rasm_url: cachedProfile?.rasm_url || '' })
+  const [loading, setLoading] = useState(!cachedProfile)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')

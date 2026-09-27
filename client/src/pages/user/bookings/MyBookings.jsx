@@ -10,6 +10,7 @@ import {
 } from '../../../services/listingService'
 import { useAuthStore } from '../../../store/authStore'
 import { getErrorMessage } from '../../../utils/auth'
+import { peekCache } from '../../../services/browserCache'
 
 const STATUS_LABELS = {
   pending: 'Kutilmoqda',
@@ -43,11 +44,14 @@ function BookingSummary({ booking }) {
 export function MyBookings() {
   const navigate = useNavigate()
   const accessToken = useAuthStore((s) => s.accessToken)
-  const [bookings, setBookings] = useState([])
-  const [incoming, setIncoming] = useState([])
-  const [loading, setLoading] = useState(true)
+  // Revisiting this page (e.g. after opening a listing and coming back) paints the last known
+  // bookings and requests straight away instead of a blank "yuklanmoqda" screen.
+  const cachedBookings = peekCache('/bookings')
+  const [bookings, setBookings] = useState(() => cachedBookings || [])
+  const [incoming, setIncoming] = useState(() => peekCache('/bookings/incoming') || [])
+  const [loading, setLoading] = useState(!cachedBookings)
   const [message, setMessage] = useState({ type: '', text: '' })
-  const [myAds, setMyAds] = useState([])
+  const [myAds, setMyAds] = useState(() => (peekCache('/listings/me') || []).filter((item) => item.parent_listing_id))
 
   useEffect(() => {
     const loadBookings = async () => {

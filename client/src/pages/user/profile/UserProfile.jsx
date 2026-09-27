@@ -10,8 +10,9 @@ import { useAuthStore } from '../../../store/authStore'
 import { Button, ScrollReveal, StaggerContainer, StaggerItem, GlassCard, Badge } from '../../../components/ui/PremiumComponents'
 import PremiumLoader from '../../../components/shared/PremiumLoader/PremiumLoader'
 import { authService } from '../../../services/authService'
-import { userService } from '../../../services/userService'
+import { normalizeUser, userService } from '../../../services/userService'
 import { favoritesService } from '../../../services/favoritesService'
+import { peekCache } from '../../../services/browserCache'
 import { getMyBookings } from '../../../services/listingService'
 import { activeRentals, toRequest } from '../../../utils/bookingAdapters'
 import { profileStats } from '../../../utils/profileStats'
@@ -53,6 +54,13 @@ export function UserProfile() {
   const role = useAuthStore((s) => s.role)
   const clearAuth = useAuthStore((s) => s.clear)
 
+  // A previous visit this session leaves a full profile in the cache; a much older visit still
+  // left the name/phone in plain localStorage. Either seeds an instant paint instead of a blank one.
+  // /users/me is cached as the raw API response (full_name, phone, ...); normalize it the same
+  // way the live fetch below does, so the seeded fields match what the rest of this page reads.
+  const cachedProfileRaw = peekCache('/users/me')
+  const cachedProfile = cachedProfileRaw && normalizeUser(cachedProfileRaw)
+  const cachedFavorites = peekCache('/favorites/me')
   const initialData = {
     id: localStorage.getItem('userId') || '',
     ism: localStorage.getItem('userName') || '',
@@ -60,14 +68,15 @@ export function UserProfile() {
     tg_connected: false,
     verified: false,
     created_at: null,
-    stats: { saved: 0, requests: 0, rooms: 0 },
+    stats: { saved: cachedFavorites?.length || 0, requests: 0, rooms: 0 },
+    ...cachedProfile,
   }
 
   const [userData, setUserData] = useState(initialData)
   const [sessions] = useState([getCurrentSession()])
-  const [savedHomes, setSavedHomes] = useState([])
+  const [savedHomes, setSavedHomes] = useState(cachedFavorites || [])
   const [bookings, setBookings] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!cachedProfile)
   const [showEditModal, setShowEditModal] = useState(false)
 
   const fetchProfile = async () => {

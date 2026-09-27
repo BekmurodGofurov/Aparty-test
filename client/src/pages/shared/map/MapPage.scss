@@ -286,10 +286,12 @@
   object-fit: cover;
 }
 
+// A fade for the title/price text sitting over the photo below it — flattened to an opaque
+// var(--color-surface) by an earlier pass, which hid the photo underneath entirely.
 .sheet-image-gradient {
   position: absolute;
   inset: 0;
-  background: var(--color-surface);
+  background: linear-gradient(180deg, rgba(2,6,23,0.06), transparent 42%, rgba(2,6,23,0.72));
 }
 
 .sheet-badges {
@@ -660,9 +662,9 @@ html[data-theme='dark'] .map-shell {
 
     h2, strong { color: #0f172a !important; }
     p, .sheet-description { color: #475569 !important; }
-    
+
     .sheet-image-gradient {
-  background: var(--color-surface);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 42%, rgba(255,255,255,0.1));
     }
 
     .sheet-signal-row span,

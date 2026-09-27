@@ -183,28 +183,37 @@
     transform:  none;
   }
 
+  // A previous pass flattened every gradient here to an opaque var(--color-surface), which fully
+  // hid the hero photo (solid white in light mode) instead of tinting it — breaking contrast for
+  // every hardcoded-white element sitting on top (the "always on hero" navbar text/buttons, most
+  // visibly the login button). Restored to the original tint, recovered from git history.
   .hero-bg-overlay {
     position:   absolute;
     inset:      0;
-    
+
     // Default / Dark Mode — Cinematic Blue Tint
-  background: var(--color-surface);
+    background: linear-gradient(160deg, rgba(2,6,23,0.3) 0%, rgba(30, 64, 175, 0.2) 50%, rgba(2, 6, 23, 0.4) 100%);
 
     [data-theme="dark"] & {
-  background: var(--color-surface);
+      background: linear-gradient(160deg, rgba(2,6,23,0.4) 0%, rgba(30, 58, 138, 0.3) 50%, rgba(2, 6, 23, 0.5) 100%);
     }
 
     // Light Mode — Warm Amber/Yellow Tint
     [data-theme="light"] & {
-  background: var(--color-surface);
-  background: var(--color-surface);
+      background: linear-gradient(
+        160deg,
+        rgba(251, 191, 36, 0.1) 0%,
+        rgba(245, 158, 11, 0.15) 50%,
+        rgba(251, 191, 36, 0.05) 100%
+      );
     }
 
     &::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: transparent;
+      background: radial-gradient(circle at 10% 20%, rgba(245, 158, 11, 0.15), transparent 40%),
+                  radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.15), transparent 40%);
       pointer-events: none;
       opacity: 0.8;
     }

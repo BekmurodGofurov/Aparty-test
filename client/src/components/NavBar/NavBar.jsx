@@ -6,15 +6,15 @@ import { userService } from '../../services/userService'
 import { notificationService } from '../../services/notificationService'
 import { formatTimeAgo } from '../../utils/time'
 import { api } from '../../services/api'
-import { useCacheStore } from '../../store/cacheStore'
-import { Bell, Home, LogOut, MessageCircle, Sun, Moon, User, Search, Menu, X, ChevronDown, MapPinned, Plus, Crown, LayoutDashboard } from 'lucide-react'
+import { Bell, Home, LogOut, Sun, Moon, User, Search, Menu, X, ChevronDown, MapPinned, Plus, LayoutDashboard } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import './NavBar.scss'
 
+const NOTIFICATION_POLL_MS = 60000
+
 export function NavBar() {
   const { role, clear, accessToken } = useAuthStore()
-  const clearCache = useCacheStore((s) => s.clearCache)
   const { t, i18n } = useTranslation()
   const { theme, toggleTheme } = useThemeStore()
   const location = useLocation()
@@ -77,6 +77,7 @@ export function NavBar() {
 
     let active = true
     const loadNotifications = () => {
+      if (document.hidden) return
       notificationService.getMyNotifications()
         .then((data) => {
           if (!active) return
@@ -86,12 +87,14 @@ export function NavBar() {
         .catch(() => {})
     }
     loadNotifications()
-    const timer = window.setInterval(loadNotifications, 30000)
+    const timer = window.setInterval(loadNotifications, NOTIFICATION_POLL_MS)
+    document.addEventListener('visibilitychange', loadNotifications)
     return () => {
       active = false
       window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', loadNotifications)
     }
-  }, [accessToken, location.pathname])
+  }, [accessToken])
 
   // Listen for user updates
   useEffect(() => {
@@ -127,14 +130,12 @@ export function NavBar() {
   const navClass = ({ isActive }) => isActive ? 'nav-link active' : 'nav-link'
 
   const currentRole = (userData?.rol || role || '').toLowerCase()
-  const isBrokerRole = currentRole === 'makler' || currentRole === 'broker'
-  const brokerBasePath = currentRole === 'broker' ? '/broker' : '/makler'
+  const isBrokerRole = currentRole === 'makler'
   const roleLink = currentRole === 'owner'  ? { to: '/owner',  label: t('nav.owner',  'Dashboard') }
-                 : isBrokerRole ? { to: brokerBasePath, label: currentRole === 'broker' ? t('nav.broker', 'Broker') : t('nav.makler', 'Makler') }
-                 : currentRole === 'admin'  ? { to: '/admin',  label: t('nav.admin',  'Admin') }
+                 : isBrokerRole ? { to: '/makler', label: t('nav.makler', 'Makler') }
                  : currentRole === 'student' ? { to: '/my-bookings', label: t('nav.bookings', 'Bronlarim') }
                  : null
-  const profilePath = currentRole === 'admin' ? '/admin/profile' : currentRole === 'owner' ? '/owner/profile' : isBrokerRole ? `${brokerBasePath}/profile` : '/profile'
+  const profilePath = currentRole === 'owner' ? '/owner/profile' : isBrokerRole ? '/makler/profile' : '/profile'
   const dashboardPath = roleLink?.to || '/'
 
   const handleLogout = async () => {
@@ -148,7 +149,6 @@ export function NavBar() {
     setNotifications([])
     setUnreadCount(0)
     setUserData(null)
-    clearCache()
     clear()
     navigate('/login', { replace: true })
   }
@@ -163,7 +163,7 @@ export function NavBar() {
     }
     setNotifOpen(false)
     setUnreadCount((count) => Math.max(0, count - (notification.is_read ? 0 : 1)))
-    navigate(notification.target_url || '/messages')
+    navigate(notification.target_url || '/my-bookings')
   }
 
   return (
@@ -190,15 +190,6 @@ export function NavBar() {
               >
                 <span className="role-dot" aria-hidden="true" />
                 {roleLink.label}
-              </NavLink>
-            )}
-            {isBrokerRole && (
-              <NavLink
-                to={`${brokerBasePath}/subscription`}
-                className={({ isActive }) => `role-badge subscription ${isActive ? 'active' : ''}`}
-              >
-                <Crown size={14} />
-                {t('nav.subscription', 'Obuna')}
               </NavLink>
             )}
           </nav>
@@ -280,9 +271,6 @@ export function NavBar() {
 
             {currentRole && (
               <>
-                <NavLink to="/messages" className="ctrl-icon-btn messages-nav-btn" aria-label="Messages">
-                  <MessageCircle size={18} />
-                </NavLink>
                 <div className="notification-dropdown" ref={notifRef}>
                   <button className="ctrl-icon-btn notification-btn" type="button" onClick={() => setNotifOpen((v) => !v)} aria-label="Notifications">
                     <Bell size={18} />
@@ -361,7 +349,7 @@ export function NavBar() {
                 <NavLink to="/login" className="btn-nav-ghost">
                   {t('nav.login', 'Kirish')}
                 </NavLink>
-                <NavLink to="/register" className="btn-nav-primary">
+                <NavLink to="/login" className="btn-nav-primary">
                   {t('nav.register', "Ro'yxatdan o'tish")}
                 </NavLink>
               </div>
@@ -381,10 +369,7 @@ export function NavBar() {
                     }
                   </div>
                   <span className="user-name">
-                    {currentRole === 'admin' 
-                      ? 'Administrator' 
-                      : (userData?.ism || t('nav.profile', 'Profil'))
-                    }
+                    {userData?.ism || t('nav.profile', 'Profil')}
                   </span>
                   <ChevronDown size={14} className={accountOpen ? 'rotated' : ''} />
                 </button>
@@ -452,20 +437,10 @@ export function NavBar() {
                     {roleLink.label}
                   </NavLink>
                 )}
-                {isBrokerRole && (
-                  <NavLink to={`${brokerBasePath}/subscription`} className={navClass} onClick={() => setMobileOpen(false)}>
-                    <Crown size={16} /> {t('nav.subscription', 'Obuna')}
-                  </NavLink>
-                )}
-                {currentRole && (
-                  <NavLink to="/messages" className={navClass} onClick={() => setMobileOpen(false)}>
-                    <MessageCircle size={16} /> Messages
-                  </NavLink>
-                )}
                 {!currentRole ? (
                   <>
                     <NavLink to="/login"    className="nav-link" onClick={() => setMobileOpen(false)}>{t('nav.login',    'Kirish')}</NavLink>
-                    <NavLink to="/register" className="nav-link mobile-cta" onClick={() => setMobileOpen(false)}>{t('nav.register', "Ro'yxatdan o'tish")}</NavLink>
+                    <NavLink to="/login" className="nav-link mobile-cta" onClick={() => setMobileOpen(false)}>{t('nav.register', "Ro'yxatdan o'tish")}</NavLink>
                   </>
                 ) : (
                   <>
@@ -513,16 +488,10 @@ export function NavBar() {
         {(currentRole === 'owner' || isBrokerRole) && (
           <NavLink
             className={({ isActive }) => `bottom-item ${isActive ? 'active' : ''}`}
-            to={isBrokerRole ? `${brokerBasePath}/create` : '/owner/create'}
+            to={isBrokerRole ? '/makler/create' : '/owner/create'}
           >
             <Plus className="bottom-icon add-icon" size={23} />
             <span>{t('nav.listing', "E'lon")}</span>
-          </NavLink>
-        )}
-        {currentRole && (
-          <NavLink className={({ isActive }) => `bottom-item ${isActive ? 'active' : ''}`} to="/messages">
-            <MessageCircle className="bottom-icon" size={21} />
-            <span>Messages</span>
           </NavLink>
         )}
         <NavLink

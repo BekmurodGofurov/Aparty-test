@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { NavBar } from './components/NavBar/NavBar'
 import { RoleRoute } from './components/RoleRoute/RoleRoute'
@@ -6,105 +6,78 @@ import { ProtectedAuthRoute } from './components/ProtectedAuthRoute/ProtectedAut
 import { useThemeStore } from './store/themeStore'
 import { useAuthStore } from './store/authStore'
 import { Footer } from './components/Footer/Footer'
-import { AdminComplaints } from './pages/admin/AdminComplaints'
-import { AdminDashboard } from './pages/admin/AdminDashboard'
-import { AdminListingDetail } from './pages/admin/AdminListingDetail'
-import { AdminListings } from './pages/admin/AdminListings'
-import { AdminProfile } from './pages/admin/AdminProfile'
-import { AdminRevenue } from './pages/admin/AdminRevenue'
-import { AdminUserDetail } from './pages/admin/AdminUserDetail'
-import { AdminUsers } from './pages/admin/AdminUsers'
-import { HomePremium } from './pages/shared/home/HomePremium'
-import { Listing } from './pages/shared/listing/Listing'
-import { LoginPage } from './pages/shared/auth/LoginPage'
-import { Messages } from './pages/shared/messages/Messages'
-import { MaklerCreate } from './pages/makler/MaklerCreate'
-import { MaklerDashboard } from './pages/makler/MaklerDashboard'
-import { MaklerPayments } from './pages/makler/MaklerPayments'
-import { MaklerProfile } from './pages/makler/MaklerProfile'
-import { MaklerSubscription } from './pages/makler/MaklerSubscription'
-import { MyRoom } from './pages/user/my-room/MyRoom'
-import { MyBookings } from './pages/user/bookings/MyBookings'
-import { OwnerCreate } from './pages/owner/OwnerCreate'
-import { OwnerDashboard } from './pages/owner/OwnerDashboard'
-import { OwnerEdit } from './pages/owner/OwnerEdit'
-import { OwnerProfile } from './pages/owner/OwnerProfile'
-import { UserProfile } from './pages/user/profile/UserProfile'
-import { TelegramCallbackPage } from './pages/shared/auth/TelegramCallbackPage'
-import { ChooseRolePage } from './pages/shared/auth/ChooseRolePage'
-import { PropertySearch } from './pages/shared/property-search/PropertySearch'
-import { MapPage } from './pages/shared/map/MapPage'
 import { GlobalLayout } from './components/layout/GlobalLayout'
+import PremiumLoader from './components/shared/PremiumLoader/PremiumLoader'
+
+// Pages load on demand so the first visit downloads only the page it opens.
+const page = (load, name) => lazy(() => load().then((module) => ({ default: module[name] })))
+
+const HomePremium = page(() => import('./pages/shared/home/HomePremium'), 'HomePremium')
+const PropertySearch = page(() => import('./pages/shared/property-search/PropertySearch'), 'PropertySearch')
+const MapPage = page(() => import('./pages/shared/map/MapPage'), 'MapPage')
+const Listing = page(() => import('./pages/shared/listing/Listing'), 'Listing')
+const LoginPage = page(() => import('./pages/shared/auth/LoginPage'), 'LoginPage')
+const TelegramCallbackPage = page(() => import('./pages/shared/auth/TelegramCallbackPage'), 'TelegramCallbackPage')
+const ChooseRolePage = page(() => import('./pages/shared/auth/ChooseRolePage'), 'ChooseRolePage')
+const UserProfile = page(() => import('./pages/user/profile/UserProfile'), 'UserProfile')
+const MyBookings = page(() => import('./pages/user/bookings/MyBookings'), 'MyBookings')
+const OwnerDashboard = page(() => import('./pages/owner/OwnerDashboard'), 'OwnerDashboard')
+const OwnerProfile = page(() => import('./pages/owner/OwnerProfile'), 'OwnerProfile')
+const OwnerCreate = page(() => import('./pages/owner/OwnerCreate'), 'OwnerCreate')
+const OwnerEdit = page(() => import('./pages/owner/OwnerEdit'), 'OwnerEdit')
+const MaklerDashboard = page(() => import('./pages/makler/MaklerDashboard'), 'MaklerDashboard')
+const MaklerProfile = page(() => import('./pages/makler/MaklerProfile'), 'MaklerProfile')
+const MaklerCreate = page(() => import('./pages/makler/MaklerCreate'), 'MaklerCreate')
+
 function AppContent() {
-  const location = useLocation();
+  const location = useLocation()
 
   return (
-    <>
-      <GlobalLayout>
-        <NavBar />
+    <GlobalLayout>
+      <NavBar />
 
-        <main
-          key={location.pathname}
-          className="route-transition-wrapper"
-          style={{ position: 'relative', zIndex: 1, minHeight: '80vh', overflow: 'visible' }}
-        >
-            <Routes location={location}>
-          {/* Public Routes */}
-          <Route path="/" element={<HomePremium />} />
-          <Route path="/search" element={<PropertySearch />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/listing/:id" element={<Listing />} />
-          <Route path="/messages" element={<Messages />} />
-          
-          {/* Protected Auth Routes */}
-          <Route path="/login" element={<ProtectedAuthRoute><LoginPage /></ProtectedAuthRoute>} />
-          <Route path="/register" element={<Navigate to="/login" replace />} />
-          <Route path="/auth/telegram/callback" element={<TelegramCallbackPage />} />
-          <Route path="/choose-role" element={<ChooseRolePage />} />
+      <main
+        key={location.pathname}
+        className="route-transition-wrapper"
+        style={{ position: 'relative', zIndex: 1, minHeight: '80vh', overflow: 'visible' }}
+      >
+        <Suspense fallback={<PremiumLoader mini />}>
+          <Routes location={location}>
+            {/* Public Routes */}
+            <Route path="/" element={<HomePremium />} />
+            <Route path="/search" element={<PropertySearch />} />
+            <Route path="/map" element={<MapPage />} />
+            <Route path="/listing/:id" element={<Listing />} />
 
-          {/* Student Routes */}
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/my-bookings" element={<MyBookings />} />
-          <Route path="/my-room" element={<RoleRoute role="student"><MyRoom /></RoleRoute>} />
+            {/* Auth Routes */}
+            <Route path="/login" element={<ProtectedAuthRoute><LoginPage /></ProtectedAuthRoute>} />
+            <Route path="/auth/telegram/callback" element={<TelegramCallbackPage />} />
+            <Route path="/choose-role" element={<ChooseRolePage />} />
 
-          {/* Owner Routes */}
-          <Route path="/owner" element={<RoleRoute role="owner"><OwnerDashboard /></RoleRoute>} />
-          <Route path="/owner/profile" element={<RoleRoute role="owner"><OwnerProfile /></RoleRoute>} />
-          <Route path="/owner/create" element={<RoleRoute role="owner"><OwnerCreate /></RoleRoute>} />
-          <Route path="/owner/listing/:id/edit" element={<RoleRoute role="owner"><OwnerEdit /></RoleRoute>} />
+            {/* Student Routes */}
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/my-bookings" element={<MyBookings />} />
 
-          {/* Makler Routes */}
-          <Route path="/makler" element={<RoleRoute role="makler"><MaklerDashboard /></RoleRoute>} />
-          <Route path="/makler/profile" element={<RoleRoute role="makler"><MaklerProfile /></RoleRoute>} />
-          <Route path="/makler/create" element={<RoleRoute role="makler"><MaklerCreate /></RoleRoute>} />
-          <Route path="/makler/listing/:id/edit" element={<RoleRoute role="makler"><OwnerEdit /></RoleRoute>} />
-          <Route path="/makler/subscription" element={<RoleRoute role="makler"><MaklerSubscription /></RoleRoute>} />
-          <Route path="/makler/payments" element={<RoleRoute role="makler"><MaklerPayments /></RoleRoute>} />
-          <Route path="/broker" element={<RoleRoute role="broker"><MaklerDashboard /></RoleRoute>} />
-          <Route path="/broker/profile" element={<RoleRoute role="broker"><MaklerProfile /></RoleRoute>} />
-          <Route path="/broker/create" element={<RoleRoute role="broker"><MaklerCreate /></RoleRoute>} />
-          <Route path="/broker/listing/:id/edit" element={<RoleRoute role="broker"><OwnerEdit /></RoleRoute>} />
-          <Route path="/broker/subscription" element={<RoleRoute role="broker"><MaklerSubscription /></RoleRoute>} />
-          <Route path="/broker/payments" element={<RoleRoute role="broker"><MaklerPayments /></RoleRoute>} />
+            {/* Owner Routes */}
+            <Route path="/owner" element={<RoleRoute role="owner"><OwnerDashboard /></RoleRoute>} />
+            <Route path="/owner/profile" element={<RoleRoute role="owner"><OwnerProfile /></RoleRoute>} />
+            <Route path="/owner/create" element={<RoleRoute role="owner"><OwnerCreate /></RoleRoute>} />
+            <Route path="/owner/listing/:id/edit" element={<RoleRoute role="owner"><OwnerEdit /></RoleRoute>} />
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<RoleRoute role="admin"><AdminDashboard /></RoleRoute>} />
-          <Route path="/admin/profile" element={<RoleRoute role="admin"><AdminProfile /></RoleRoute>} />
-          <Route path="/admin/listings" element={<RoleRoute role="admin"><AdminListings /></RoleRoute>} />
-          <Route path="/admin/listings/:listingId" element={<RoleRoute role="admin"><AdminListingDetail /></RoleRoute>} />
-          <Route path="/admin/users" element={<RoleRoute role="admin"><AdminUsers /></RoleRoute>} />
-          <Route path="/admin/users/:userId" element={<RoleRoute role="admin"><AdminUserDetail /></RoleRoute>} />
-          <Route path="/admin/complaints" element={<RoleRoute role="admin"><AdminComplaints /></RoleRoute>} />
-          <Route path="/admin/revenue" element={<RoleRoute role="admin"><AdminRevenue /></RoleRoute>} />
+            {/* Makler Routes */}
+            <Route path="/makler" element={<RoleRoute role="makler"><MaklerDashboard /></RoleRoute>} />
+            <Route path="/makler/profile" element={<RoleRoute role="makler"><MaklerProfile /></RoleRoute>} />
+            <Route path="/makler/create" element={<RoleRoute role="makler"><MaklerCreate /></RoleRoute>} />
+            <Route path="/makler/listing/:id/edit" element={<RoleRoute role="makler"><OwnerEdit /></RoleRoute>} />
 
-          {/* Catch all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-        </main>
+            {/* Catch all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </main>
 
-        <Footer />
-      </GlobalLayout>
-    </>
+      <Footer />
+    </GlobalLayout>
   )
 }
 

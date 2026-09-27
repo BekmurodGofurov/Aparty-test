@@ -8,13 +8,15 @@
   gap: clamp(1.25rem, 3vw, 2.6rem);
   width: min(100%, 1480px);
   margin: 0 auto;
-  padding: clamp(2rem, 4vw, 3.75rem) clamp(1rem, 2.4vw, 2rem) clamp(1rem, 2.4vw, 2rem);
+  // The navbar is fixed (68px tall), so the top padding must clear it with room to spare — matching
+  // the ~96px every other page uses — or the filter panel and results header sit flush against it.
+  padding: 96px clamp(1rem, 2.4vw, 2rem) clamp(1rem, 2.4vw, 2rem);
   position: relative;
   background: transparent;
 
   @include tablet {
     grid-template-columns: 1fr;
-    padding: 1.25rem 1rem 1rem;
+    padding: 88px 1rem 1rem;
   }
 }
 

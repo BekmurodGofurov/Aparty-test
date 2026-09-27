@@ -7,6 +7,7 @@ import { useThemeStore } from './store/themeStore'
 import { useAuthStore } from './store/authStore'
 import { Footer } from './components/Footer/Footer'
 import { GlobalLayout } from './components/layout/GlobalLayout'
+import { RouteErrorBoundary } from './components/RouteErrorBoundary'
 import PremiumLoader from './components/shared/PremiumLoader/PremiumLoader'
 
 // Pages load on demand so the first visit downloads only the page it opens. Each loader is also
@@ -38,10 +39,23 @@ const MaklerCreate = page(() => import('./pages/makler/MaklerCreate'), 'MaklerCr
 // Fetches every other page's JS while the browser is idle, so switching pages later needs no
 // network round trip (the module is already cached) — the visible "loading" on navigation was
 // this chunk download, not data. Runs once, after the current page has had time to settle.
-const prefetchRemainingPages = () => {
-  const idle = window.requestIdleCallback || ((run) => window.setTimeout(run, 1500))
-  idle(() => pageLoaders.forEach((load) => void load().catch(() => {})))
+//
+// One at a time, with a gap between each: firing every chunk at once competed for bandwidth on a
+// slow connection, and a chunk that failed under that pressure stays broken for the rest of the
+// session (a dynamic import that once rejected does not retry itself) — doing this gently avoids
+// turning "switching pages is slow" into "this page never loads again".
+const onIdle = (run) => (window.requestIdleCallback || ((cb) => window.setTimeout(cb, 300)))(run)
+
+const prefetchOneByOne = (loaders) => {
+  const [next, ...rest] = loaders
+  if (!next) return
+  onIdle(() => {
+    void next().catch(() => {})
+    if (rest.length) window.setTimeout(() => prefetchOneByOne(rest), 400)
+  })
 }
+
+const prefetchRemainingPages = () => prefetchOneByOne(pageLoaders)
 
 function AppContent() {
   const location = useLocation()
@@ -54,39 +68,41 @@ function AppContent() {
         className="route-transition-wrapper"
         style={{ position: 'relative', zIndex: 1, minHeight: '80vh', overflow: 'visible' }}
       >
-        <Suspense fallback={<PremiumLoader mini />}>
-          <Routes location={location}>
-            {/* Public Routes */}
-            <Route path="/" element={<HomePremium />} />
-            <Route path="/search" element={<PropertySearch />} />
-            <Route path="/map" element={<MapPage />} />
-            <Route path="/listing/:id" element={<Listing />} />
+        <RouteErrorBoundary resetKey={location.pathname}>
+          <Suspense fallback={<PremiumLoader mini />}>
+            <Routes location={location}>
+              {/* Public Routes */}
+              <Route path="/" element={<HomePremium />} />
+              <Route path="/search" element={<PropertySearch />} />
+              <Route path="/map" element={<MapPage />} />
+              <Route path="/listing/:id" element={<Listing />} />
 
-            {/* Auth Routes */}
-            <Route path="/login" element={<ProtectedAuthRoute><LoginPage /></ProtectedAuthRoute>} />
-            <Route path="/auth/telegram/callback" element={<TelegramCallbackPage />} />
-            <Route path="/choose-role" element={<ChooseRolePage />} />
+              {/* Auth Routes */}
+              <Route path="/login" element={<ProtectedAuthRoute><LoginPage /></ProtectedAuthRoute>} />
+              <Route path="/auth/telegram/callback" element={<TelegramCallbackPage />} />
+              <Route path="/choose-role" element={<ChooseRolePage />} />
 
-            {/* Student Routes */}
-            <Route path="/profile" element={<UserProfile />} />
-            <Route path="/my-bookings" element={<MyBookings />} />
+              {/* Student Routes */}
+              <Route path="/profile" element={<UserProfile />} />
+              <Route path="/my-bookings" element={<MyBookings />} />
 
-            {/* Owner Routes */}
-            <Route path="/owner" element={<RoleRoute role="owner"><OwnerDashboard /></RoleRoute>} />
-            <Route path="/owner/profile" element={<RoleRoute role="owner"><OwnerProfile /></RoleRoute>} />
-            <Route path="/owner/create" element={<RoleRoute role="owner"><OwnerCreate /></RoleRoute>} />
-            <Route path="/owner/listing/:id/edit" element={<RoleRoute role="owner"><OwnerEdit /></RoleRoute>} />
+              {/* Owner Routes */}
+              <Route path="/owner" element={<RoleRoute role="owner"><OwnerDashboard /></RoleRoute>} />
+              <Route path="/owner/profile" element={<RoleRoute role="owner"><OwnerProfile /></RoleRoute>} />
+              <Route path="/owner/create" element={<RoleRoute role="owner"><OwnerCreate /></RoleRoute>} />
+              <Route path="/owner/listing/:id/edit" element={<RoleRoute role="owner"><OwnerEdit /></RoleRoute>} />
 
-            {/* Makler Routes */}
-            <Route path="/makler" element={<RoleRoute role="makler"><MaklerDashboard /></RoleRoute>} />
-            <Route path="/makler/profile" element={<RoleRoute role="makler"><MaklerProfile /></RoleRoute>} />
-            <Route path="/makler/create" element={<RoleRoute role="makler"><MaklerCreate /></RoleRoute>} />
-            <Route path="/makler/listing/:id/edit" element={<RoleRoute role="makler"><OwnerEdit /></RoleRoute>} />
+              {/* Makler Routes */}
+              <Route path="/makler" element={<RoleRoute role="makler"><MaklerDashboard /></RoleRoute>} />
+              <Route path="/makler/profile" element={<RoleRoute role="makler"><MaklerProfile /></RoleRoute>} />
+              <Route path="/makler/create" element={<RoleRoute role="makler"><MaklerCreate /></RoleRoute>} />
+              <Route path="/makler/listing/:id/edit" element={<RoleRoute role="makler"><OwnerEdit /></RoleRoute>} />
 
-            {/* Catch all */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+              {/* Catch all */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </RouteErrorBoundary>
       </main>
 
       <Footer />

@@ -43,3 +43,14 @@ test('peekCache returns undefined for a miss, an uncacheable endpoint, or anothe
   assert.equal(peekCache('/listings/search', { page: 1 }), undefined)
   localStorage.removeItem('accessToken')
 })
+
+test('blocked storage access degrades to "no scope", it never throws', () => {
+  const original = fakeLocalStorage.getItem
+  fakeLocalStorage.getItem = () => { throw new Error('SecurityError: storage is disabled') }
+  try {
+    assert.equal(currentCacheScope(), null)
+    assert.equal(peekCache('/listings/search', { page: 1 }), undefined)
+  } finally {
+    fakeLocalStorage.getItem = original
+  }
+})

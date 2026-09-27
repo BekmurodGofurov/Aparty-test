@@ -29,7 +29,8 @@ import {
   upgradeListingToPremium,
 } from '../../services/listingService'
 import { authService } from '../../services/authService'
-import { userService } from '../../services/userService'
+import { normalizeUser, userService } from '../../services/userService'
+import { peekCache } from '../../services/browserCache'
 import { indexById, toRequest } from '../../utils/bookingAdapters'
 import './MaklerDashboard.scss'
 import { getErrorMessage } from '../../utils/auth'
@@ -56,10 +57,13 @@ export function MaklerDashboard() {
   const clearAuth = useAuthStore((s) => s.clear)
   const basePath = '/makler'
   const roleLabel = 'Makler'
-  const [broker, setBroker] = useState(null)
-  const [listings, setListings] = useState([])
-  const [bookings, setBookings] = useState([])
-  const [loading, setLoading] = useState(true)
+  // Revisiting the dashboard paints the last known profile, listings and requests straight away
+  // instead of a blank "yuklanmoqda" screen.
+  const cachedProfile = peekCache('/users/me')
+  const [broker, setBroker] = useState(() => (cachedProfile ? normalizeUser(cachedProfile) : null))
+  const [listings, setListings] = useState(() => peekCache('/listings/me') || [])
+  const [bookings, setBookings] = useState(() => peekCache('/bookings/incoming') || [])
+  const [loading, setLoading] = useState(!cachedProfile)
   const [activatingId, setActivatingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
 

@@ -2,7 +2,7 @@ import { DEFAULT_ANDIJAN_LOCATION, getDistanceKm } from '../utils/geo'
 import { api } from './api'
 import { PLACEHOLDER_IMAGE } from '../utils/images'
 
-const MAP_LISTING_LIMIT = 100
+export const MAP_LISTING_LIMIT = 100
 
 const toBadgeList = (listing) => {
   const badges = []

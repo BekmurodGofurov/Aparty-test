@@ -4,7 +4,8 @@ import { MapView } from '../../../components/map/MapView'
 import { PropertyBottomSheet } from '../../../components/map/PropertyBottomSheet'
 import { LocationPermissionModal } from '../../../components/map/LocationPermissionModal'
 import { DEFAULT_ANDIJAN_LOCATION } from '../../../utils/geo'
-import { fetchMapListings, toMapProperties } from '../../../services/mapPropertyService'
+import { MAP_LISTING_LIMIT, fetchMapListings, toMapProperties } from '../../../services/mapPropertyService'
+import { peekCache } from '../../../services/browserCache'
 import { useThemeStore } from '../../../store/themeStore'
 import './MapPage.scss'
 
@@ -12,9 +13,12 @@ export function MapPage() {
   const { theme, toggleTheme } = useThemeStore()
   const [locationStatus, setLocationStatus] = useState('idle')
   const [userLocation, setUserLocation] = useState(DEFAULT_ANDIJAN_LOCATION)
-  const [listings, setListings] = useState([])
+  // The same public search results the search page and home page use, so a session that already
+  // browsed listings opens the map with pins straight away instead of a blank loading state.
+  const cachedListings = peekCache('/listings/search', { page: 1, limit: MAP_LISTING_LIMIT })
+  const [listings, setListings] = useState(() => cachedListings?.listings || [])
   const [selectedProperty, setSelectedProperty] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!cachedListings)
   const [immersive, setImmersive] = useState(false)
   const mapOptions = {
     premiumPins: true,

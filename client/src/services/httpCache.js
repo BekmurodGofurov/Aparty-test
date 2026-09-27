@@ -10,22 +10,37 @@ const SECOND = 1000
 const MINUTE = 60 * SECOND
 
 // What may be cached and for how long. `private` data is only cached for a signed-in user.
+// Bookings and your own listings change status often (accept/reject, occupancy), so their TTL is
+// short and, unlike the other private entries, a write to /bookings also clears them directly
+// (see INVALIDATIONS) rather than relying on the TTL alone.
 const RULES = [
   { pattern: /^\/listings\/search$/, ttl: MINUTE, private: false },
   { pattern: /^\/listings\/[0-9a-f-]{36}$/i, ttl: 2 * MINUTE, private: false },
+  { pattern: /^\/listings\/me$/, ttl: 20 * SECOND, private: true },
   { pattern: /^\/favorites\/me$/, ttl: 2 * MINUTE, private: true },
   { pattern: /^\/users\/me$/, ttl: 5 * MINUTE, private: true },
+  { pattern: /^\/bookings$/, ttl: 20 * SECOND, private: true },
+  { pattern: /^\/bookings\/incoming$/, ttl: 20 * SECOND, private: true },
 ]
 
 // A write to a path prefix makes these cached paths stale.
 const INVALIDATIONS = [
   { prefix: '/listings', stale: ['/listings', '/favorites'] },
   { prefix: '/favorites', stale: ['/favorites', '/listings'] },
-  { prefix: '/bookings', stale: ['/listings'] },
+  { prefix: '/bookings', stale: ['/listings', '/bookings'] },
   { prefix: '/users', stale: ['/users'] },
 ]
 
-const keyFor = (scope, url, params) => `${PREFIX}${scope}|${url}|${params ? JSON.stringify(params) : ''}`
+// Two callers can build the same query params object with keys in a different order (e.g. spread
+// order); sorting them first means the cache key only depends on which params were sent, not how.
+const stableParams = (params) =>
+  JSON.stringify(
+    Object.keys(params)
+      .sort()
+      .reduce((sorted, key) => ({ ...sorted, [key]: params[key] }), {}),
+  )
+
+const keyFor = (scope, url, params) => `${PREFIX}${scope}|${url}|${params ? stableParams(params) : ''}`
 
 export const createHttpCache = ({ storage, now = Date.now }) => {
   const read = (key) => {

@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/authStore'
-import { browserCache } from './browserCache'
+import { browserCache, currentCacheScope } from './browserCache'
 import { decodeJwtPayload } from '../utils/jwt'
 
 // All requests go through the API gateway (see docker-compose.yml, port 8080).
@@ -50,8 +50,6 @@ const networkAdapter = axios.getAdapter(api.defaults.adapter)
 // Identical GETs that are already on their way share one request.
 const inFlight = new Map()
 
-const signedInUserId = (token) => (token ? decodeJwtPayload(token)?.sub ?? null : null)
-
 const cloneResponse = (response) => ({ ...response, data: structuredClone(response.data) })
 
 api.interceptors.request.use((config) => {
@@ -62,7 +60,7 @@ api.interceptors.request.use((config) => {
 
   if ((config.method || 'get').toLowerCase() !== 'get') return config
 
-  const userId = signedInUserId(token)
+  const userId = currentCacheScope()
   const rule = browserCache.ruleFor(config.url, userId)
   if (!rule) return config
 

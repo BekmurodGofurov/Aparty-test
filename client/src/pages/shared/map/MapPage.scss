@@ -12,16 +12,6 @@
   overflow: hidden;
   isolation: isolate;
 
-  &::after {
-    content: "";
-    position: absolute;
-    inset: auto 0 0;
-    z-index: 520;
-    height: 32%;
-    pointer-events: none;
-  background: var(--color-surface);
-  }
-
   &.immersive {
     height: 100dvh;
     margin-top: -68px;

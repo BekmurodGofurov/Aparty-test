@@ -9,8 +9,14 @@ import { Footer } from './components/Footer/Footer'
 import { GlobalLayout } from './components/layout/GlobalLayout'
 import PremiumLoader from './components/shared/PremiumLoader/PremiumLoader'
 
-// Pages load on demand so the first visit downloads only the page it opens.
-const page = (load, name) => lazy(() => load().then((module) => ({ default: module[name] })))
+// Pages load on demand so the first visit downloads only the page it opens. Each loader is also
+// kept so the rest can be fetched in the background afterwards (see prefetchRemainingPages below):
+// once the browser has already fetched a chunk, opening that page is instant either way.
+const pageLoaders = []
+const page = (load, name) => {
+  pageLoaders.push(load)
+  return lazy(() => load().then((module) => ({ default: module[name] })))
+}
 
 const HomePremium = page(() => import('./pages/shared/home/HomePremium'), 'HomePremium')
 const PropertySearch = page(() => import('./pages/shared/property-search/PropertySearch'), 'PropertySearch')
@@ -29,6 +35,14 @@ const MaklerDashboard = page(() => import('./pages/makler/MaklerDashboard'), 'Ma
 const MaklerProfile = page(() => import('./pages/makler/MaklerProfile'), 'MaklerProfile')
 const MaklerCreate = page(() => import('./pages/makler/MaklerCreate'), 'MaklerCreate')
 
+// Fetches every other page's JS while the browser is idle, so switching pages later needs no
+// network round trip (the module is already cached) — the visible "loading" on navigation was
+// this chunk download, not data. Runs once, after the current page has had time to settle.
+const prefetchRemainingPages = () => {
+  const idle = window.requestIdleCallback || ((run) => window.setTimeout(run, 1500))
+  idle(() => pageLoaders.forEach((load) => void load().catch(() => {})))
+}
+
 function AppContent() {
   const location = useLocation()
 
@@ -37,7 +51,6 @@ function AppContent() {
       <NavBar />
 
       <main
-        key={location.pathname}
         className="route-transition-wrapper"
         style={{ position: 'relative', zIndex: 1, minHeight: '80vh', overflow: 'visible' }}
       >
@@ -87,6 +100,7 @@ function App() {
 
   useEffect(() => {
     initializeAuth()
+    prefetchRemainingPages()
   }, [initializeAuth])
 
   useEffect(() => {

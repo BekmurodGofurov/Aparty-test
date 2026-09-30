@@ -84,7 +84,7 @@ ROOMMATE_LOCKED_FIELDS = frozenset(
      "longitude", "rooms_count", "area_m2", "max_guests", "rental_type"}
 )
 
-AMENITY_FILTERS = ("wifi", "gas", "water", "tv", "air_conditioner", "washing_machine", "fridge", "kitchen", "move_in_ready")
+AMENITY_FILTERS = ("wifi", "gas", "water", "tv", "air_conditioner", "washing_machine", "fridge", "kitchen", "move_in_ready", "has_contract", "near_metro", "near_university")
 
 
 def _image_record_data(item: Any, index: int) -> dict[str, Any]:
@@ -297,6 +297,9 @@ async def search_listings(
     fridge: Optional[bool] = None,
     kitchen: Optional[bool] = None,
     move_in_ready: Optional[bool] = None,
+    has_contract: Optional[bool] = None,
+    near_metro: Optional[bool] = None,
+    near_university: Optional[bool] = None,
     page: int = Query(1, ge=1),
     limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
     user_id: Optional[int] = Depends(get_optional_user_id),
@@ -341,6 +344,9 @@ async def search_listings(
         "fridge": fridge,
         "kitchen": kitchen,
         "move_in_ready": move_in_ready,
+        "has_contract": has_contract,
+        "near_metro": near_metro,
+        "near_university": near_university,
     }
     for key in AMENITY_FILTERS:
         if amenity_values[key] is not None:

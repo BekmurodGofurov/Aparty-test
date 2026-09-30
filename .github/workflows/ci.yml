@@ -32,7 +32,7 @@ jobs:
 
       - name: Run ESLint
         working-directory: ./client
-        run: npm run lint || true
+        run: npm run lint
 
       - name: Run unit tests
         working-directory: ./client

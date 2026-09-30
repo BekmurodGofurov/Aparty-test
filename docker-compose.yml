@@ -1,5 +1,3 @@
-version: '3.8'
-
 # All configuration comes from the root .env file (see .env.example).
 # Required variables have no defaults: compose fails fast when one is missing.
 

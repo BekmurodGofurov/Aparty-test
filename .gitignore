@@ -11,6 +11,8 @@ client/.env.production.local
 bot/.venv/
 bot/.env
 
+.venv/
+**/.venv/
 *.venv
 *.env
 

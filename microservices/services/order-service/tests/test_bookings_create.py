@@ -21,7 +21,7 @@ async def test_create_booking_calculates_price_and_publishes_event(client, catal
     assert body["status"] == "pending"
     assert body["user_id"] == GUEST_ID
     assert body["listing_owner_id"] == OWNER_ID
-    assert body["total_price"] == 3 * PRICE_PER_NIGHT
+    assert body["total_price"] == round(3 * (PRICE_PER_NIGHT / 30.0), 2)
     assert body["message"] == "Hello"
     assert published_events[0][0] == "booking.created"
     assert published_events[0][1]["booking_id"] == body["id"]

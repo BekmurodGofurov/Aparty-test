@@ -39,7 +39,8 @@ from app.schemas import ListingBookingInfo, PublicProfile  # noqa: E402
 
 OWNER_ID = 10
 GUEST_ID = 20
-PRICE_PER_NIGHT = 100000
+PRICE_PER_MONTH = 3000000
+PRICE_PER_NIGHT = PRICE_PER_MONTH
 
 
 def make_token(user_id: int | str, token_type: str = "access", secret: str = TEST_JWT_SECRET,

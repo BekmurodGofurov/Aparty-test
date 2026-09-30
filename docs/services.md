@@ -85,7 +85,7 @@ A user who has not chosen a role gets 403 on these actions.
 | Method | Path | Notes |
 |---|---|---|
 | POST | `/api/v1/listings` | Create (owner or makler) |
-| GET | `/api/v1/listings/search` | Filters: region, district, target_gender, rental_type, owner_role, price_min/max, rooms_count, available_spaces, wifi, gas, water, tv, air_conditioner, washing_machine, fridge, kitchen, move_in_ready (the amenity names the create form saves); `page`, `limit` (max 100). Public; with a valid token each card also says `is_favorite` |
+| GET | `/api/v1/listings/search` | Filters: region, district, target_gender, rental_type, owner_role, price_min/max, rooms_count, available_spaces, wifi, gas, water, tv, air_conditioner, washing_machine, fridge, kitchen, move_in_ready, has_contract, near_metro, near_university (amenities and student filters); `page`, `limit` (max 100). Public; with a valid token each card also says `is_favorite` |
 | GET | `/api/v1/listings/me` | Own listings |
 | GET | `/api/v1/listings/{id}` | Detail, counts a view. With a valid token it also says `is_favorite` |
 | GET | `/api/v1/listings/{id}/booking-info` | Internal, used by order-service. Does not count a view |
@@ -107,7 +107,7 @@ Events consumed: `booking.updated` (queue `catalog-service.booking-events`). It 
 
 | Method | Path | Notes |
 |---|---|---|
-| POST | `/api/v1/bookings` | Body: `listing_id`, `start_date`, `end_date`, `message`. Price is nights × listing price |
+| POST | `/api/v1/bookings` | Body: `listing_id`, `start_date`, `end_date`, `message`. Price is nights × (listing price / 30.0) (prorated monthly rent) |
 | GET | `/api/v1/bookings` | Bookings requested by the current user |
 | GET | `/api/v1/bookings/incoming` | Requests the user can answer: for their own listings, and roommate requests for apartments they live in. Includes `requester` (name, phone from IAM) and `listing_title`. Optional `listing_id` |
 | GET | `/api/v1/bookings/{id}` | Requester or listing owner only |

@@ -1,4 +1,4 @@
-import { DEFAULT_ANDIJAN_LOCATION, getDistanceKm } from '../utils/geo'
+import { DEFAULT_LISTING_LOCATION, getDistanceKm } from '../utils/geo'
 import { api } from './api'
 import { PLACEHOLDER_IMAGE } from '../utils/images'
 
@@ -55,7 +55,7 @@ export async function fetchMapListings(filters) {
   return Array.isArray(data?.listings) ? data.listings : []
 }
 
-export function toMapProperties(listings, userLocation = DEFAULT_ANDIJAN_LOCATION) {
+export function toMapProperties(listings, userLocation = DEFAULT_LISTING_LOCATION) {
   return listings
     .map(listing => normalizeListing(listing, userLocation))
     .filter(Boolean)

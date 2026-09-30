@@ -7,6 +7,14 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   globalIgnores(['dist']),
   {
+    files: ['vite.config.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+  {
     files: ['**/*.{js,jsx}'],
     extends: [
       js.configs.recommended,
@@ -20,6 +28,9 @@ export default defineConfig([
         sourceType: 'module',
         ecmaFeatures: { jsx: true },
       },
+    },
+    rules: {
+      'react-hooks/set-state-in-effect': 'warn',
     },
   },
 ])

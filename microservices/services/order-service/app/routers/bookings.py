@@ -176,6 +176,8 @@ async def create_booking(
         raise _error(status.HTTP_409_CONFLICT, "The listing is fully booked for the selected dates.")
 
     nights = (payload.end_date - payload.start_date).days
+    # Student housing rental prices are monthly. Prorate by 30-day calendar:
+    total_price = round(nights * (listing.price / 30.0), 2)
     booking = Booking(
         listing_id=payload.listing_id,
         apartment_listing_id=apartment_id,
@@ -185,7 +187,7 @@ async def create_booking(
         user_id=user_id,
         start_date=payload.start_date,
         end_date=payload.end_date,
-        total_price=nights * listing.price,
+        total_price=total_price,
         status=BookingStatus.pending,
         message=payload.message,
     )

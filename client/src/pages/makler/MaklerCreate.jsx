@@ -35,6 +35,7 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { DEFAULT_LISTING_LOCATION } from '../../utils/geo'
 import { getErrorMessage } from '../../utils/auth'
+import { FallbackImage } from '../../components/ui/FallbackImage'
 
 const defaultMarkerIcon = L.icon({
   iconUrl: markerIcon,
@@ -312,7 +313,7 @@ export function MaklerCreate() {
                 <div className="owner-image-grid">
                   {form.images.map((url) => (
                     <div className="owner-image-tile" key={url}>
-                      <img src={url} alt="" />
+                      <FallbackImage src={url} alt="" />
                       <button type="button" onClick={() => removeImage(url)} aria-label="Rasmni o'chirish">
                         <Trash2 size={15} />
                       </button>
@@ -610,7 +611,7 @@ export function MaklerCreate() {
           <aside className="owner-create__summary">
             <div className="owner-summary-card">
               <div className="owner-summary-card__image">
-                {form.images[0] ? <img src={form.images[0]} alt="" /> : <Home size={34} />}
+                <FallbackImage src={form.images[0]} alt="" fallback={<Home size={34} />} />
               </div>
               <div className="owner-summary-card__body">
                 <p className="owner-create__eyebrow">Ko'rinish</p>

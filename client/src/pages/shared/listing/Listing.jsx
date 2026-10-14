@@ -37,6 +37,7 @@ import { RoommateAdForm, RoommateAdInfo } from '../../../components/listing/Room
 import { SimilarListings } from '../../../components/listing/SimilarListings'
 import { todayLocalIso } from '../../../utils/time'
 import { ListingDetailSkeleton } from '../../../components/ui/ListingDetailSkeleton.jsx'
+import { FallbackImage } from '../../../components/ui/FallbackImage'
 import './Listing.scss'
 import { getErrorMessage } from '../../../utils/auth'
 import { PLACEHOLDER_IMAGE } from '../../../utils/images'
@@ -196,7 +197,8 @@ export function Listing() {
                 >
                   <span className="gallery-image-backdrop" style={{ backgroundImage: `url(${activeSrc})` }} />
                   <AnimatePresence mode="wait">
-                    <motion.img
+                    <FallbackImage
+                      as={motion.img}
                       key={activeSrc}
                       src={activeSrc}
                       alt={listing.address || 'Listing'}
@@ -204,7 +206,6 @@ export function Listing() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.98 }}
                       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                      onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE }}
                     />
                   </AnimatePresence>
                   <span className="image-open-hint">
@@ -265,7 +266,7 @@ export function Listing() {
                     whileTap={{ scale: 0.96 }}
                     transition={spring}
                   >
-                    <img src={src} alt={`${index + 1}`} onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE }} />
+                    <FallbackImage src={src} alt={`${index + 1}`} />
                   </motion.button>
                 ))}
               </div>
@@ -446,7 +447,8 @@ export function Listing() {
                 <ChevronLeft size={28} />
               </button>
             )}
-            <motion.img
+            <FallbackImage
+              as={motion.img}
               key={`preview-${activeSrc}`}
               src={activeSrc}
               alt={t('listing.preview_alt')}

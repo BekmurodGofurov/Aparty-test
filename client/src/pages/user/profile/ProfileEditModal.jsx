@@ -6,6 +6,7 @@ import { PremiumInput, Button } from '../../../components/ui/PremiumComponents'
 import { userService } from '../../../services/userService'
 import { uploadService } from '../../../services/uploadService'
 import { getErrorMessage } from '../../../utils/auth'
+import { FallbackImage } from '../../../components/ui/FallbackImage'
 import './ProfileEditModal.scss'
 
 // The phone number comes from Telegram and cannot be changed here, so it is shown read-only.
@@ -92,7 +93,11 @@ export function ProfileEditModal({ isOpen, onClose, userData, onUpdate }) {
             <div className="modal-body">
               <div className="avatar-edit-minimal">
                 <div className="img-box">
-                  {userData?.rasm_url ? <img src={userData.rasm_url} alt="Profile" /> : <div className="placeholder">{userData?.ism?.charAt(0)}</div>}
+                  <FallbackImage
+                    src={userData?.rasm_url}
+                    alt="Profile"
+                    fallback={<div className="placeholder">{userData?.ism?.charAt(0)}</div>}
+                  />
                   <input type="file" id="modal-upload" hidden accept="image/*" onChange={handleImageUpload} />
                   <label htmlFor="modal-upload" className="cam-btn"><Camera size={14}/></label>
                 </div>

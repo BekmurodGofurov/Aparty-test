@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Heart, MapPin, Zap } from 'lucide-react'
 import { Badge } from '../ui/PremiumComponents'
+import { FallbackImage } from '../ui/FallbackImage'
 import { favoritesService } from '../../services/favoritesService'
 import { useAuthStore } from '../../store/authStore'
 import './PremiumListingCard.scss'
@@ -45,7 +46,7 @@ export function PremiumListingCard({
       onClick={onClick}
     >
       <div className="card-image-wrapper">
-        <img
+        <FallbackImage
           src={image}
           alt={title}
           className="card-image"

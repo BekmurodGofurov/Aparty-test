@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { searchListings } from '../../services/listingService'
+import { FallbackImage } from '../ui/FallbackImage'
 
 const SIMILAR_COUNT = 4
 const SPRING = { type: 'spring', stiffness: 340, damping: 28, mass: 0.75 }
@@ -41,7 +42,7 @@ export function SimilarListings({ listing }) {
       <div className="similar-grid">
         {items.map((item) => (
           <Link className="similar-card" to={`/listing/${item.id}`} key={item.id}>
-            {item.images?.[0] && <img src={item.images[0]} alt="" loading="lazy" decoding="async" />}
+            <FallbackImage src={item.images?.[0]} fallback={null} alt="" loading="lazy" decoding="async" />
             <div>
               <strong>{item.address || item.title}</strong>
               <small>{[item.district, item.region].filter(Boolean).join(', ')}</small>

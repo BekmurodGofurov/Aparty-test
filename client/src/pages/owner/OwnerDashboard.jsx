@@ -35,6 +35,7 @@ import { peekCache } from '../../services/browserCache'
 import { activeRentals, indexById, toRequest } from '../../utils/bookingAdapters'
 import './OwnerDashboard.scss'
 import { getErrorMessage } from '../../utils/auth'
+import { FallbackImage } from '../../components/ui/FallbackImage'
 
 const formatDate = (value) => {
   if (!value) return '-'
@@ -226,7 +227,7 @@ export function OwnerDashboard() {
       <div className="owner-dashboard__shell">
         <section className="owner-profile-hero">
           <div className="owner-avatar" aria-hidden="true">
-            {owner?.rasm_url ? <img src={owner.rasm_url} alt="" /> : <UserRound size={38} />}
+            <FallbackImage src={owner?.rasm_url} alt="" fallback={<UserRound size={38} />} />
           </div>
           <div className="owner-identity">
             <p className="owner-eyebrow">Uy egasi hisobi</p>
@@ -304,7 +305,7 @@ export function OwnerDashboard() {
                     <article className="owner-listing-card" key={listing.id}>
                       <div className="owner-listing-card__main">
                         <div className="owner-listing-image">
-                          {listingImages[0] ? <img src={listingImages[0]} alt="" /> : <Home size={24} />}
+                          <FallbackImage src={listingImages[0]} alt="" fallback={<Home size={24} />} />
                         </div>
                         <div className="owner-listing-info">
                           <div className="owner-listing-title-row">

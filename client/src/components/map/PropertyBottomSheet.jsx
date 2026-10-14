@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react'
 import { formatDistance } from '../../utils/geo'
+import { FallbackImage } from '../ui/FallbackImage'
 
 export function PropertyBottomSheet({ property, onClose }) {
   const [activeImage, setActiveImage] = useState(0)
@@ -61,7 +62,7 @@ export function PropertyBottomSheet({ property, onClose }) {
             </button>
 
             <div className="sheet-gallery">
-              <img className="sheet-image" src={images[activeImage]} alt={property.title} loading="lazy" />
+              <FallbackImage className="sheet-image" src={images[activeImage]} alt={property.title} loading="lazy" />
               <div className="sheet-image-gradient" />
               <div className="sheet-badges">
                 {property.badges?.map(badge => <span key={badge}>{badge}</span>)}

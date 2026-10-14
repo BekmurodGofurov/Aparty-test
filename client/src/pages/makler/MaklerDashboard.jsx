@@ -34,6 +34,7 @@ import { peekCache } from '../../services/browserCache'
 import { indexById, toRequest } from '../../utils/bookingAdapters'
 import './MaklerDashboard.scss'
 import { getErrorMessage } from '../../utils/auth'
+import { FallbackImage } from '../../components/ui/FallbackImage'
 
 const getListingTitle = (listing = {}) => {
   const location = [
@@ -187,7 +188,7 @@ export function MaklerDashboard() {
       <div className="broker-dashboard__shell">
         <section className="broker-profile-hero">
           <div className="broker-avatar" aria-hidden="true">
-            {broker?.rasm_url ? <img src={broker.rasm_url} alt="" /> : <UserRound size={38} />}
+            <FallbackImage src={broker?.rasm_url} alt="" fallback={<UserRound size={38} />} />
           </div>
           <div className="broker-identity">
             <p className="broker-eyebrow">{roleLabel} account</p>
@@ -264,7 +265,7 @@ export function MaklerDashboard() {
                   <article className="broker-listing-card" key={listing.id}>
                     <div className="broker-listing-card__main">
                       <div className="broker-listing-image">
-                        {listingImages[0] ? <img src={listingImages[0]} alt="" /> : <Building2 size={24} />}
+                        <FallbackImage src={listingImages[0]} alt="" fallback={<Building2 size={24} />} />
                       </div>
                       <div className="broker-listing-info">
                         <div className="broker-listing-title-row">
@@ -351,7 +352,7 @@ export function MaklerDashboard() {
                   <article className="broker-listing-card" key={request.id}>
                     <div className="broker-listing-card__main">
                       <div className="broker-listing-image">
-                        {request.listing.images?.[0] ? <img src={request.listing.images[0]} alt="" /> : <MessageCircle size={22} />}
+                        <FallbackImage src={request.listing.images?.[0]} alt="" fallback={<MessageCircle size={22} />} />
                       </div>
                       <div>
                         <div className="broker-listing-title-row">

@@ -83,9 +83,9 @@ services:
       <<: *shared_env
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
       REFRESH_TOKEN_EXPIRE_MINUTES: ${REFRESH_TOKEN_EXPIRE_MINUTES:-10080}
-      TELEGRAM_CLIENT_ID: ${TELEGRAM_CLIENT_ID:-}
-      TELEGRAM_CLIENT_SECRET: ${TELEGRAM_CLIENT_SECRET:-}
-      TELEGRAM_REDIRECT_URI: ${TELEGRAM_REDIRECT_URI:-}
+      TELEGRAM_CLIENT_ID: ${TELEGRAM_CLIENT_ID:?set TELEGRAM_CLIENT_ID in .env}
+      TELEGRAM_CLIENT_SECRET: ${TELEGRAM_CLIENT_SECRET:?set TELEGRAM_CLIENT_SECRET in .env}
+      TELEGRAM_REDIRECT_URI: ${TELEGRAM_REDIRECT_URI:?set TELEGRAM_REDIRECT_URI in .env}
       ADMIN_USERNAME: ${ADMIN_USERNAME:?set ADMIN_USERNAME in .env}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
@@ -114,7 +114,7 @@ services:
       RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
       <<: *shared_env
       IAM_SERVICE_URL: http://iam-service:8000
-      IMGBB_API_KEY: ${IMGBB_API_KEY:-}
+      IMGBB_API_KEY: ${IMGBB_API_KEY:?set IMGBB_API_KEY in .env}
     networks:
       - aparty-network
     depends_on:
@@ -184,7 +184,7 @@ services:
       dockerfile: Dockerfile
     container_name: aparty-api-gateway
     ports:
-      - "8080:80"            # all external traffic enters here
+      - "127.0.0.1:8080:80"   # local only: visitors arrive through the frontend dev server (see nginx.conf)
     networks:
       - aparty-network
     depends_on:

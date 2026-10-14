@@ -25,7 +25,7 @@ import {
 import { favoritesService } from '../../services/favoritesService'
 import { useAuthStore } from '../../store/authStore'
 import './ListingCard.scss'
-import { PLACEHOLDER_IMAGE } from '../../utils/images'
+import { FallbackImage } from '../ui/FallbackImage'
 
 
 const spring = { type: 'spring', stiffness: 340, damping: 28, mass: 0.75 }
@@ -105,11 +105,11 @@ export default function ListingCard({ listing }) {
         <div className="card-ambient" aria-hidden="true" />
 
         <div className="card-media">
-          <motion.img
-            src={listing.images?.[0] || PLACEHOLDER_IMAGE}
+          <FallbackImage
+            as={motion.img}
+            src={listing.images?.[0]}
             alt={listing.address || "E'lon rasmi"}
             loading="lazy"
-            onError={(event) => { event.currentTarget.src = PLACEHOLDER_IMAGE }}
             whileHover={{ scale: 1.075 }}
             transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
           />

@@ -4,7 +4,7 @@ All client traffic enters through the Nginx API gateway (`http://localhost:8080`
 
 | Service | Port | Database | Purpose |
 |---|---|---|---|
-| api-gateway | 8080 (public) | none | Routes `/api/v1/*` to the services below |
+| api-gateway | 8080 (`127.0.0.1`) | none | Routes `/api/v1/*` to the services below |
 | iam-service | 8000 | `iam_db` | Telegram login, JWT, user profiles |
 | catalog-service | 8001 | `catalog_db` | Listings, saved listings and image uploads |
 | order-service | 8002 | `orders_db` | Booking requests (no payments) |
@@ -25,6 +25,8 @@ Infrastructure: PostgreSQL, Redis (login state, refresh sessions, rate limits; p
 
 The gateway limits every client IP to 20 requests per second (burst 40) and `/api/v1/auth/` to 10 per minute (burst 10), answering 429. It also adds `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` and `Permissions-Policy` headers.
 
+The gateway port is bound to `127.0.0.1`: visitors reach it through the frontend server, often behind a tunnel such as ngrok. Docker shows all of them under one address, so the gateway takes the client IP from the last `X-Forwarded-For` entry (the one the tunnel appends; earlier entries are client-supplied) and passes it to the services as `X-Real-IP`. Rate limits are therefore per visitor, not shared by everyone using the tunnel.
+
 ## Authentication
 
 ### Login flow
@@ -35,10 +37,10 @@ Users sign in with the official "Log in with Telegram" (OpenID Connect, authoriz
 2. The browser opens that URL. The user enters their phone number in Telegram's page and approves in the Telegram app.
 3. Telegram redirects to the frontend page `/auth/telegram/callback?code=...&state=...`, which calls `POST /api/v1/auth/telegram/callback` with `code` and `state`.
 4. IAM checks that `state` matches the cookie (same browser) and is unused, exchanges the code with the client secret, verifies the `id_token` signature against Telegram's public keys (`iss`, `aud`, `exp`, RS256/ES256 only) and requires a verified phone number.
-5. First login creates the user with the Telegram id as primary key, the name, phone and picture from Telegram, and no role. Later logins keep the profile the user edited and refresh the phone number.
+5. First login creates the user with the Telegram id as primary key, the name, phone and picture from Telegram, and no role. Later logins keep the profile the user edited and refresh the phone number. They also replace a Telegram picture with the current one, because the old URL stops working once the user changes the photo in Telegram; a picture the user uploaded is kept.
 6. IAM returns an access token and sets the refresh cookie. `needs_role: true` tells the frontend to show the role picker, which calls `PUT /api/v1/users/me/role` once and receives a new access token that carries the role.
 
-Telegram login is unavailable (503) until `TELEGRAM_CLIENT_ID`, `TELEGRAM_CLIENT_SECRET` and `TELEGRAM_REDIRECT_URI` are set. Register the bot's Web Login and the redirect URL in @BotFather to get them.
+`docker compose` does not start without `TELEGRAM_CLIENT_ID`, `TELEGRAM_CLIENT_SECRET` and `TELEGRAM_REDIRECT_URI`; a service started another way answers 503 until they are set. Register the bot's Web Login and the redirect URL in @BotFather to get them.
 
 ### Tokens
 
@@ -95,7 +97,7 @@ A user who has not chosen a role gets 403 on these actions.
 | POST | `/api/v1/listings/{id}/mark-occupied`, `mark-available`, `activate-basic` | Owner only |
 | GET | `/api/v1/favorites/me` | Saved listings of the current user as cards, most recently saved first. Deleted listings are left out |
 | POST | `/api/v1/favorites/{listing_id}` | Saves the listing, or removes it when it is already saved. Returns `status`: `added` or `removed`. Any chosen role. 404 for an unknown or deleted listing |
-| POST | `/api/v1/media/upload`, `/api/v1/media/image` | Image upload to ImgBB (any chosen role). jpg, jpeg, png, webp, up to `MAX_UPLOAD_SIZE_BYTES` |
+| POST | `/api/v1/media/upload`, `/api/v1/media/image` | Image upload to ImgBB (any chosen role). jpg, jpeg, png, webp, up to `MAX_UPLOAD_SIZE_BYTES`. Needs `IMGBB_API_KEY` (`docker compose` does not start without it; otherwise 503) |
 
 Owner name, phone, Telegram link and verified flag are fetched from IAM (`/users/public`). `owner_telegram_url` is `https://t.me/<username>`, or `null` when the owner has no Telegram username; the site then shows the phone number only. A roommate ad shows the tenant who posted it, so its link opens a chat with that tenant. If IAM is unavailable the listing is still served with empty owner details.
 

@@ -6,6 +6,7 @@ import { userService } from '../../services/userService'
 import { notificationService } from '../../services/notificationService'
 import { formatTimeAgo } from '../../utils/time'
 import { api } from '../../services/api'
+import { FallbackImage } from '../ui/FallbackImage'
 import { Bell, Home, LogOut, Sun, Moon, User, Search, Menu, X, ChevronDown, MapPinned, Plus, LayoutDashboard } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -363,10 +364,11 @@ export function NavBar() {
                   onClick={() => setAccountOpen((value) => !value)}
                 >
                   <div className="user-avatar">
-                    {userData?.rasm_url
-                      ? <img src={userData.rasm_url} alt={userData.ism} />
-                      : <span>{userData?.ism?.charAt(0)?.toUpperCase() || <User size={16} />}</span>
-                    }
+                    <FallbackImage
+                      src={userData?.rasm_url}
+                      alt={userData?.ism}
+                      fallback={<span>{userData?.ism?.charAt(0)?.toUpperCase() || <User size={16} />}</span>}
+                    />
                   </div>
                   <span className="user-name">
                     {userData?.ism || t('nav.profile', 'Profil')}
@@ -499,10 +501,11 @@ export function NavBar() {
           to={currentRole ? profilePath : '/login'}
         >
           <div className="bottom-avatar">
-            {currentRole && userData?.rasm_url
-              ? <img src={userData.rasm_url} alt="" />
-              : <User className="bottom-icon" size={20} />
-            }
+            <FallbackImage
+              src={currentRole ? userData?.rasm_url : null}
+              alt=""
+              fallback={<User className="bottom-icon" size={20} />}
+            />
           </div>
           <span>{currentRole ? t('nav.profile', 'Profil') : t('nav.login', 'Kirish')}</span>
         </NavLink>

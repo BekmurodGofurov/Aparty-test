@@ -5,7 +5,7 @@ Aparty is a student housing platform: listings, bookings and roommate ads. It is
 | Path | What it is |
 |---|---|
 | `client/` | React + Vite frontend |
-| `microservices/api-gateway/` | Nginx gateway, the single public entry point (port 8080) |
+| `microservices/api-gateway/` | Nginx gateway, the single entry point for the API (`localhost:8080`) |
 | `microservices/services/iam-service/` | Telegram login, roles, JWT, profiles |
 | `microservices/services/catalog-service/` | Listings, roommate ads, image upload |
 | `microservices/services/order-service/` | Booking requests |
@@ -28,7 +28,7 @@ curl localhost:8080/health
 
 `docker compose` refuses to start when a required variable is missing. Databases are created from `postgres-init/`; on an existing Postgres volume, create a missing database by hand, for example `docker compose exec postgres psql -U <user> -c "CREATE DATABASE orders_db"`.
 
-Telegram login needs a bot with Web Login enabled in @BotFather. Put its client id, secret and the frontend callback URL in `.env` (`TELEGRAM_CLIENT_ID`, `TELEGRAM_CLIENT_SECRET`, `TELEGRAM_REDIRECT_URI`). Until then the login button reports that Telegram login is not configured.
+Telegram login needs a bot with Web Login enabled in @BotFather. Put its client id, secret and the frontend callback URL in `.env` (`TELEGRAM_CLIENT_ID`, `TELEGRAM_CLIENT_SECRET`, `TELEGRAM_REDIRECT_URI`); image upload needs `IMGBB_API_KEY`. These are required, so a missing or misspelled name stops `docker compose` with a message instead of failing later in the browser.
 
 ## Frontend
 
@@ -38,6 +38,8 @@ cp .env.example .env     # VITE_BACKEND_API points at the gateway
 npm install
 npm run dev
 ```
+
+To let other people open your local copy (and to test Telegram login, which needs HTTPS), share it through a tunnel such as ngrok; see [docs/frontend.md](docs/frontend.md#sharing-through-a-tunnel-ngrok).
 
 ## Tests
 

@@ -22,7 +22,20 @@ People contact each other through Telegram (`owner_telegram_url`) or by phone. T
 |---|---|
 | `VITE_BACKEND_API` | Gateway URL. Empty means same origin (the dev server proxies `/api`) |
 | `VITE_CONTACT_PHONE`, `VITE_CONTACT_EMAIL`, `VITE_CONTACT_ADDRESS` | Optional. Shown in the footer only when set |
-| `DEV_API_PROXY_TARGET`, `DEV_ALLOWED_HOSTS` | Dev server proxy target and allowed hosts (for tunnels) |
+| `DEV_API_PROXY_TARGET`, `DEV_ALLOWED_HOSTS` | Where `/api` is proxied and which extra hosts may open the site (for tunnels). Used by `npm run dev` and `npm run share` |
+
+## Sharing through a tunnel (ngrok)
+
+Telegram login needs a public HTTPS address, and other people can open your local copy only through one. With ngrok and its free static domain:
+
+1. Root `.env`: `TELEGRAM_REDIRECT_URI=https://<domain>/auth/telegram/callback` and `SITE_URL=https://<domain>`; register the same redirect URL in @BotFather. `client/.env`: `DEV_ALLOWED_HOSTS=<domain>`.
+2. `docker compose up -d` in the repository root.
+3. In `client/`, start one of:
+   - `npm run share`: builds the app and serves the production bundle on port 5173. Use it when other people open the site. A page then loads in a few files instead of dozens of modules, which is faster through the tunnel and spends far less of ngrok's free monthly request and traffic quota. Run it again after changing the code.
+   - `npm run dev`: live reload while you work. It is slower through the tunnel.
+4. `ngrok http 5173 --url=<domain>`. Run a single agent, because a second one on the same domain splits the traffic between them.
+
+Both commands proxy `/api` to the gateway, so the site and the API share one origin and the login cookies stay first-party. On the free plan, ngrok shows each new visitor a "You are about to visit" page first; the app opens after "Visit Site".
 
 ## Speed and traffic
 
@@ -33,6 +46,7 @@ People contact each other through Telegram (`owner_telegram_url`) or by phone. T
 - A write (create, edit, delete, save, book, answer a booking) drops the cache entries it could change. Signing out clears the cache.
 - Notifications refresh every 60 seconds, and not while the tab is hidden.
 - Photos are shrunk in the browser (longest side 1600 px, JPEG) before upload.
+- A photo or avatar that fails to load (an avatar changed in Telegram, a deleted upload) is replaced by initials, an icon or the placeholder photo (`components/ui/FallbackImage.jsx`) instead of a broken image.
 - The refresh token lives in an httpOnly cookie. The access token and role are kept in `localStorage`.
 
 ## Tests

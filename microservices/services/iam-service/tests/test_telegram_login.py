@@ -60,6 +60,32 @@ async def test_returning_login_keeps_edited_profile_and_role(client, telegram, c
     assert body["user"]["phone"] == "+998901234567"
 
 
+async def test_returning_login_refreshes_an_outdated_telegram_picture(client, telegram, create_user):
+    await create_user(555001, profile_picture_url="https://t.me/i/userpic/old-photo.jpg")
+    body = (await login_with_telegram(client, telegram)).json()
+    assert body["user"]["profile_picture_url"] == "https://t.me/i/userpic/aziz.jpg"
+
+
+async def test_returning_login_fills_a_missing_picture(client, telegram, create_user):
+    await create_user(555001)
+    body = (await login_with_telegram(client, telegram)).json()
+    assert body["user"]["profile_picture_url"] == "https://t.me/i/userpic/aziz.jpg"
+
+
+async def test_returning_login_keeps_an_uploaded_picture(client, telegram, create_user):
+    uploaded = "https://i.ibb.co/abc123/me.jpg"
+    await create_user(555001, profile_picture_url=uploaded)
+    body = (await login_with_telegram(client, telegram)).json()
+    assert body["user"]["profile_picture_url"] == uploaded
+
+
+async def test_returning_login_keeps_picture_when_telegram_sends_none(client, telegram, create_user):
+    telegram.overrides = {"picture": None}
+    await create_user(555001, profile_picture_url="https://t.me/i/userpic/old-photo.jpg")
+    body = (await login_with_telegram(client, telegram)).json()
+    assert body["user"]["profile_picture_url"] == "https://t.me/i/userpic/old-photo.jpg"
+
+
 async def test_callback_rejects_state_from_another_browser(client, telegram):
     state = await start_login(client, telegram)
     client.cookies.clear()

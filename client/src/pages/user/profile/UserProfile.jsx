@@ -17,6 +17,7 @@ import { getMyBookings } from '../../../services/listingService'
 import { activeRentals, toRequest } from '../../../utils/bookingAdapters'
 import { profileStats } from '../../../utils/profileStats'
 import { ProfileEditModal } from './ProfileEditModal'
+import { FallbackImage } from '../../../components/ui/FallbackImage'
 import './UserProfile.scss'
 
 const formatDate = (value) => {
@@ -160,11 +161,11 @@ export function UserProfile() {
                 <div className="user-identity">
                   <div className="avatar-container" onClick={() => setShowEditModal(true)}>
                     <div className="avatar-ring">
-                      {userData?.rasm_url ? (
-                        <img src={userData.rasm_url} alt={userData.ism} />
-                      ) : (
-                        <div className="avatar-placeholder">{userData?.ism?.charAt(0)}</div>
-                      )}
+                      <FallbackImage
+                        src={userData?.rasm_url}
+                        alt={userData?.ism}
+                        fallback={<div className="avatar-placeholder">{userData?.ism?.charAt(0)}</div>}
+                      />
                       <div className="avatar-overlay">
                         <Camera size={24} />
                       </div>
@@ -287,7 +288,7 @@ export function UserProfile() {
                 ) : savedHomesPreview.map((listing) => (
                   <GlassCard className="session-card profile-listing-card" key={listing.id} onClick={() => navigate(`/listing/${listing.id}`)}>
                     <div className="session-icon listing-thumb">
-                      {listing.images?.[0] ? <img src={listing.images[0]} alt="" /> : <Home size={20}/>}
+                      <FallbackImage src={listing.images?.[0]} alt="" fallback={<Home size={20}/>} />
                     </div>
                     <div className="session-body">
                       <div className="top">

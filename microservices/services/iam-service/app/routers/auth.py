@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import secrets
 from typing import Optional
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select
@@ -60,6 +61,14 @@ async def _issue_tokens(response: Response, user: User) -> str:
     return create_access_token(user.id, role)
 
 
+def _refresh_telegram_picture(user: User, picture: Optional[str]) -> None:
+    """Replace a stored Telegram picture with the current one: the old URL stops working once the user
+    changes the photo in Telegram. A picture on another host is the user's own upload and is kept."""
+    current = user.profile_picture_url
+    if picture and (not current or urlsplit(current).netloc == urlsplit(picture).netloc):
+        user.profile_picture_url = picture
+
+
 async def _upsert_user(db: AsyncSession, profile: telegram_oidc.TelegramProfile) -> User:
     """Create the user on first login. Later logins keep the profile the user edited."""
     user = await db.get(User, profile.telegram_id)
@@ -80,6 +89,7 @@ async def _upsert_user(db: AsyncSession, profile: telegram_oidc.TelegramProfile)
     else:
         user.phone = profile.phone
         user.telegram_username = profile.username
+        _refresh_telegram_picture(user, profile.picture)
     await db.commit()
     await db.refresh(user)
     return user

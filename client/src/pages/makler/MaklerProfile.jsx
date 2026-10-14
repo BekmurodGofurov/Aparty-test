@@ -7,6 +7,7 @@ import { peekCache } from '../../services/browserCache'
 import { uploadService } from '../../services/uploadService'
 import './MaklerProfile.scss'
 import { getErrorMessage } from '../../utils/auth'
+import { FallbackImage } from '../../components/ui/FallbackImage'
 
 export function MaklerProfile() {
   const navigate = useNavigate()
@@ -131,7 +132,7 @@ export function MaklerProfile() {
             Dashboard
           </button>
           <div className="broker-profile-page__avatar">
-            {form.rasm_url ? <img src={form.rasm_url} alt="" /> : <UserRound size={38} />}
+            <FallbackImage src={form.rasm_url} alt="" fallback={<UserRound size={38} />} />
             <label>
               <Camera size={15} />
               <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} />

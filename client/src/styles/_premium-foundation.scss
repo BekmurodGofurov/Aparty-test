@@ -14,11 +14,11 @@
 }
 
 [data-theme="light"] {
-  --ui-page-bg: #FAFAF8;
+  --ui-page-bg: #fffcf9;
   --ui-surface: #FFFFFF;
-  --ui-surface-2: #F8FAFC;
-  --ui-surface-3: #F1F5F9;
-  --ui-border: rgba(15, 23, 42, 0.10);
+  --ui-surface-2: #fff8f2;
+  --ui-surface-3: #fff1e6;
+  --ui-border: rgba(137, 87, 51, 0.12);
   --ui-border-strong: rgba(180, 83, 9, 0.28);
   --ui-shadow: 0 22px 70px rgba(15, 23, 42, 0.10);
   --ui-shadow-soft: 0 10px 28px rgba(15, 23, 42, 0.08);
@@ -190,16 +190,6 @@ thead {
   overflow-wrap: anywhere;
 }
 
-button,
-.btn,
-.premium-btn,
-.broker-primary-btn,
-.owner-primary-btn,
-.btn-liquid-primary,
-.plan-card .btn-primary {
-  will-change: transform;
-}
-
 button:active,
 .btn:active,
 .premium-btn:active {
@@ -211,7 +201,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(56, 189, 248, 0.32);
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 32%, transparent);
   outline-offset: 3px;
 }
 

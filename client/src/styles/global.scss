@@ -390,11 +390,11 @@ html[data-theme="light"],
 
   // ── SECTION EYEBROW ─────────────────────────────────────────────────
   .section-eyebrow {
-    color: #0ea5e9 !important;
+    color: var(--color-primary) !important;
     opacity: 1 !important;
     visibility: visible !important;
-    &::before { background: #0ea5e9 !important; }
-    svg { color: #0ea5e9 !important; }
+    &::before { background: var(--color-primary) !important; }
+    svg { color: var(--color-primary) !important; }
   }
 
   // ── SECTION TITLE ─────────────────────────────────────────────────
@@ -416,7 +416,7 @@ html[data-theme="light"],
     position: relative;
     z-index: 10;
     .section-eyebrow {
-      color: #0ea5e9 !important;
+      color: var(--color-primary) !important;
     }
     .section-title {
       color: #111827 !important;
@@ -467,7 +467,7 @@ html[data-theme="light"],
 
     .adv-icon-wrapper {
       background: #f3f4f6 !important;
-      color: #0ea5e9 !important;
+      color: var(--color-primary) !important;
     }
 
     &:hover {
@@ -500,6 +500,7 @@ html[data-theme="light"],
     .card-title    { color: #111827 !important; }
     .card-location { color: #4b5563 !important; }
     .price-value   { color: #111827 !important; }
+    .price-glass .price-value { color: #fff !important; }
     .price-label   { color: #6b7280 !important; }
     .price-period  { color: #6b7280 !important; }
     .info-item     { color: #4b5563 !important; background: #f9fafb !important; border: 1px solid #e5e7eb !important; }
@@ -519,7 +520,7 @@ html[data-theme="light"],
   .ai-content {
     h2 { color: #111827 !important; }
     p  { color: #4b5563 !important; }
-    .ai-badge { background: #e0f2fe !important; color: #0284c7 !important; }
+    .ai-badge { background: var(--color-primary-soft) !important; color: var(--color-primary-dark) !important; }
   }
 
   // ── VIEW ALL BUTTON (outline) ─────────────────────────────────────────
@@ -546,7 +547,7 @@ html[data-theme="light"],
     background:   #f9fafb !important;
     border: 1px solid #e5e7eb !important;
     color:        #111827 !important;
-    svg { color: #0ea5e9 !important; }
+    svg { color: var(--color-primary) !important; }
   }
 
   // ── FILTER PILLS ──────────────────────────────────────────────────────
@@ -556,8 +557,8 @@ html[data-theme="light"],
     color:        #111827 !important;
 
     &.active {
-      background:   #0ea5e9 !important;
-      border: 1px solid #0ea5e9 !important;
+      background:   var(--color-primary) !important;
+      border: 1px solid var(--color-primary) !important;
       color:        #ffffff !important;
     }
   }
@@ -613,4 +614,16 @@ html[data-theme="light"],
 .decorative-shape, .circle, 
 .overlay, .noise-overlay, .premium-saas-bg {
   display: none !important;
+}
+
+// Keep focused controls clear of the fixed mobile navigation.
+@media (max-width: 1023px) {
+  html {
+    scroll-padding-top: 102px;
+    scroll-padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  }
+  .route-transition-wrapper {
+    :is(input, select, textarea, button, a) { scroll-margin-block: 102px calc(100px + env(safe-area-inset-bottom)); }
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]), select, textarea { min-width: 0; font-size: 16px; }
+  }
 }

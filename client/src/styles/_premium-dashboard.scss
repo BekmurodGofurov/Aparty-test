@@ -436,6 +436,8 @@ html[data-theme="light"] {
   .broker-profile-page,
   .makler-subscription,
   .user-profile-premium {
+    --dash-accent: var(--color-primary);
+    --dash-accent-2: #f97316;
     --dash-panel: linear-gradient(145deg, rgba(255,255,255,0.94), rgba(248,250,252,0.78));
     --dash-panel-strong: linear-gradient(145deg, #fff, rgba(248,250,252,0.92));
     --dash-border: rgba(15, 23, 42, 0.08);

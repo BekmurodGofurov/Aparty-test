@@ -8,7 +8,7 @@
   min-height: 100vh;
   background: transparent;
   color: var(--color-text);
-  padding: 30px 18px 58px;
+  padding: 112px 18px 58px;
 }
 
 .owner-create__shell {
@@ -638,9 +638,16 @@
   }
 }
 
+@media (max-width: 1023px) {
+  .owner-create__actions { bottom: calc(88px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 1023px) and (max-height: 600px) {
+  .owner-create__actions { position: static; }
+}
+
 @media (max-width: 700px) {
   .owner-create {
-    padding: 18px 12px 38px;
+    padding: 100px 12px calc(110px + env(safe-area-inset-bottom));
   }
 
   .owner-form-grid--two,
@@ -657,6 +664,7 @@
   .owner-create__actions {
     grid-template-columns: 1fr;
     display: grid;
+    bottom: calc(88px + env(safe-area-inset-bottom));
   }
 
   .owner-create__primary,

@@ -7,19 +7,22 @@ import { notificationService } from '../../services/notificationService'
 import { formatTimeAgo } from '../../utils/time'
 import { api } from '../../services/api'
 import { FallbackImage } from '../ui/FallbackImage'
-import { Bell, Home, LogOut, Sun, Moon, User, Search, Menu, X, ChevronDown, MapPinned, Plus, LayoutDashboard } from 'lucide-react'
+import { ArrowUpRight, Bell, Globe2, Home, LogOut, Sun, Moon, User, Search, Menu, X, ChevronDown, MapPinned, Plus, LayoutDashboard } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import './NavBar.scss'
 
 const NOTIFICATION_POLL_MS = 60000
 
 export function NavBar() {
-  const { role, clear, accessToken } = useAuthStore()
+  const role = useAuthStore((state) => state.role)
+  const clear = useAuthStore((state) => state.clear)
+  const accessToken = useAuthStore((state) => state.accessToken)
   const { t, i18n } = useTranslation()
   const { theme, toggleTheme } = useThemeStore()
   const location = useLocation()
   const navigate = useNavigate()
+  const reduceMotion = useReducedMotion()
 
   const [userData,   setUserData]   = useState(null)
   const [notifications, setNotifications] = useState([])
@@ -27,19 +30,51 @@ export function NavBar() {
   const [notifOpen, setNotifOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [scrolled,   setScrolled]   = useState(false)
+  const [heroInView, setHeroInView] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [langOpen,   setLangOpen]   = useState(false)
   const isHomePage = location.pathname === '/'
-  const isOnHero   = isHomePage && !scrolled
+  const isOnHero   = isHomePage && heroInView
 
   const navRef      = useRef(null)
   const langRef     = useRef(null)
   const notifRef    = useRef(null)
   const accountRef  = useRef(null)
   const scrolledRef = useRef(false)
+  const menuButtonRef = useRef(null)
 
   // Close mobile menu on route change
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
+
+  useEffect(() => {
+    const mobileViewport = window.matchMedia('(max-width: 1100px)')
+    const closeOnDesktop = (event) => { if (!event.matches) setMobileOpen(false) }
+    mobileViewport.addEventListener('change', closeOnDesktop)
+    return () => mobileViewport.removeEventListener('change', closeOnDesktop)
+  }, [])
+
+  useEffect(() => {
+    if (!mobileOpen) return undefined
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previousOverflow }
+  }, [mobileOpen])
+
+  useEffect(() => {
+    const closeOnEscape = (event) => {
+      if (event.key !== 'Escape') return
+      setMobileOpen(false)
+      setLangOpen(false)
+      setNotifOpen(false)
+      setAccountOpen(false)
+      if (mobileOpen) menuButtonRef.current?.focus()
+      else if (langOpen) langRef.current?.querySelector('button')?.focus()
+      else if (accountOpen) accountRef.current?.querySelector('button')?.focus()
+      else if (notifOpen) notifRef.current?.querySelector('button')?.focus()
+    }
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [mobileOpen, langOpen, accountOpen, notifOpen])
 
   // Scroll detection
   useEffect(() => {
@@ -54,6 +89,37 @@ export function NavBar() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // Follow the actual photo boundary, including when the home route loads lazily.
+  useEffect(() => {
+    if (!isHomePage) return undefined
+    let heroObserver
+    let hero
+    const updateObserver = () => {
+      if (!hero) return
+      heroObserver?.disconnect()
+      const navBottom = Math.ceil(navRef.current?.getBoundingClientRect().bottom || 80)
+      heroObserver = new IntersectionObserver(([entry]) => setHeroInView(entry.isIntersecting), {
+        rootMargin: '-' + navBottom + 'px 0px 0px 0px',
+      })
+      heroObserver.observe(hero)
+    }
+    const findHero = () => {
+      hero = document.querySelector('.home-premium .hero')
+      if (!hero) return
+      mountingObserver.disconnect()
+      updateObserver()
+    }
+    const mountingObserver = new MutationObserver(findHero)
+    findHero()
+    if (!hero) mountingObserver.observe(document.querySelector('.route-transition-wrapper') || document.getElementById('root'), { childList: true, subtree: true })
+    window.addEventListener('resize', updateObserver)
+    return () => {
+      mountingObserver.disconnect()
+      heroObserver?.disconnect()
+      window.removeEventListener('resize', updateObserver)
+    }
+  }, [isHomePage])
 
   // Fetch user
   useEffect(() => {
@@ -107,6 +173,7 @@ export function NavBar() {
   // Close language dropdown on outside click
   useEffect(() => {
     const handler = e => {
+      if (navRef.current && !navRef.current.contains(e.target)) setMobileOpen(false)
       if (langRef.current && !langRef.current.contains(e.target)) {
         setLangOpen(false)
       }
@@ -117,8 +184,8 @@ export function NavBar() {
         setAccountOpen(false)
       }
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    document.addEventListener('pointerdown', handler)
+    return () => document.removeEventListener('pointerdown', handler)
   }, [])
 
   const changeLanguage = (lang) => {
@@ -172,18 +239,21 @@ export function NavBar() {
       {/* ── DESKTOP / TABLET NAVBAR ────────────────────────────────────── */}
       <header
         ref={navRef}
-        className={`navbar ${scrolled ? 'scrolled' : ''} ${mobileOpen ? 'menu-open' : ''} ${isOnHero ? 'on-hero' : ''}`}
+        className={`navbar ${isHomePage ? 'home-nav' : ''} ${scrolled ? 'scrolled' : ''} ${mobileOpen ? 'menu-open' : ''} ${isOnHero ? 'on-hero' : ''}`}
       >
+        <div className="navbar-progress" aria-hidden="true" />
         <div className="navbar-inner">
           {/* Brand */}
           <NavLink to="/" className="navbar-brand" aria-label="Aparty.uz — Home">
-            <span className="brand-text">Aparty</span>
-            <span className="brand-dot" aria-hidden />
-            <span className="brand-suffix">.uz</span>
+            <span className="brand-emblem" aria-hidden="true"><Home size={21} strokeWidth={1.8} /></span>
+            <span className="brand-wordmark"><span className="brand-text">Aparty</span><span className="brand-suffix">.uz</span></span>
           </NavLink>
 
           {/* Desktop Links */}
           <nav className="navbar-links" aria-label="Main navigation">
+            <NavLink to="/" end className={navClass}><Home size={15} />{t('nav.home', 'Bosh sahifa')}</NavLink>
+            <NavLink to="/search" className={navClass}><Search size={15} />{t('nav.search', 'Qidiruv')}</NavLink>
+            <NavLink to="/map" className={navClass}><MapPinned size={15} />{t('nav.map', 'Xarita')}</NavLink>
             {currentRole && roleLink && (
               <NavLink 
                 to={roleLink.to} 
@@ -197,21 +267,6 @@ export function NavBar() {
 
           {/* Desktop Controls */}
           <div className="navbar-controls">
-            {/* Search shortcut */}
-            <NavLink to="/search" className="ctrl-icon-btn search-btn-liquid" aria-label="Search">
-              <Search size={18} />
-            </NavLink>
-
-            {/* Map shortcut */}
-            <NavLink
-              to="/map"
-              className={({ isActive }) => `ctrl-icon-btn search-btn-liquid ${isActive ? 'active' : ''}`}
-              aria-label="Map"
-              title={t('nav.map', 'Xarita')}
-            >
-              <MapPinned size={18} />
-            </NavLink>
-
             {/* Language switcher */}
             <div className="lang-dropdown" ref={langRef}>
               <button
@@ -219,7 +274,10 @@ export function NavBar() {
                 onClick={() => setLangOpen(v => !v)}
                 aria-label="Change language"
                 aria-expanded={langOpen}
+                aria-controls="navbar-language-menu"
+                type="button"
               >
+                <Globe2 size={15} aria-hidden="true" />
                 <span>{currentLang}</span>
                 <ChevronDown size={14} className={langOpen ? 'rotated' : ''} />
               </button>
@@ -227,10 +285,11 @@ export function NavBar() {
                 {langOpen && (
                   <motion.div
                     className="lang-menu"
+                    id="navbar-language-menu"
                     initial={{ opacity: 0, y: -8, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0,  scale: 1 }}
                     exit={{    opacity: 0, y: -8, scale: 0.96 }}
-                    transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+                    transition={{ duration: reduceMotion ? 0 : 0.18 }}
                   >
                     {['uz', 'ru', 'en'].map(lang => (
                       <button
@@ -254,16 +313,16 @@ export function NavBar() {
               className="ctrl-icon-btn theme-btn"
               onClick={toggleTheme}
               aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.92 }}
+              whileHover={reduceMotion ? undefined : { scale: 1.06 }}
+              whileTap={reduceMotion ? undefined : { scale: 0.94 }}
             >
               <AnimatePresence mode="wait">
                 {theme === 'dark' ? (
-                  <motion.span key="sun" initial={{ rotate: -30, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 30, opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <motion.span key="sun" initial={{ rotate: -30, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 30, opacity: 0 }} transition={{ duration: reduceMotion ? 0 : 0.2 }}>
                     <Sun size={18} />
                   </motion.span>
                 ) : (
-                  <motion.span key="moon" initial={{ rotate: 30, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -30, opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <motion.span key="moon" initial={{ rotate: 30, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -30, opacity: 0 }} transition={{ duration: reduceMotion ? 0 : 0.2 }}>
                     <Moon size={18} />
                   </motion.span>
                 )}
@@ -273,7 +332,7 @@ export function NavBar() {
             {currentRole && (
               <>
                 <div className="notification-dropdown" ref={notifRef}>
-                  <button className="ctrl-icon-btn notification-btn" type="button" onClick={() => setNotifOpen((v) => !v)} aria-label="Notifications">
+                  <button className="ctrl-icon-btn notification-btn" type="button" onClick={() => setNotifOpen((v) => !v)} aria-label="Notifications" aria-expanded={notifOpen} aria-controls="navbar-notification-menu">
                     <Bell size={18} />
                     {unreadCount > 0 && <span className="notification-count">{unreadCount > 9 ? '9+' : unreadCount}</span>}
                   </button>
@@ -281,10 +340,11 @@ export function NavBar() {
                     {notifOpen && (
                       <motion.div
                         className="notification-menu"
-                        initial={{ opacity: 0, y: 15, scale: 0.95, filter: 'blur(10px)' }}
-                        animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, y: 15, scale: 0.95, filter: 'blur(10px)' }}
-                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                        id="navbar-notification-menu"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: reduceMotion ? 0 : 0.18 }}
                       >
                         <div className="notification-menu__head">
                           <div className="head-left">
@@ -335,7 +395,7 @@ export function NavBar() {
                         </div>
 
                         <div className="notification-footer">
-                          <button className="view-all-notif">Barchasini ko'rish</button>
+                          <button className="view-all-notif" onClick={() => { setNotifOpen(false); navigate(dashboardPath) }}>{t('nav.view_dashboard', 'Kabinetga o‘tish')}<ArrowUpRight size={15} /></button>
                         </div>
                       </motion.div>
                     )}
@@ -352,6 +412,7 @@ export function NavBar() {
                 </NavLink>
                 <NavLink to="/login" className="btn-nav-primary">
                   {t('nav.register', "Ro'yxatdan o'tish")}
+                  <ArrowUpRight size={16} aria-hidden="true" />
                 </NavLink>
               </div>
             ) : (
@@ -382,7 +443,7 @@ export function NavBar() {
                       initial={{ opacity: 0, y: -8, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                      transition={{ duration: 0.18 }}
+                      transition={{ duration: reduceMotion ? 0 : 0.18 }}
                     >
                       <NavLink to={dashboardPath} onClick={() => setAccountOpen(false)}>
                         <LayoutDashboard size={16} />
@@ -399,8 +460,8 @@ export function NavBar() {
                   className="ctrl-icon-btn logout-btn"
                   onClick={handleLogout}
                   aria-label="Logout"
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.92 }}
+                  whileHover={reduceMotion ? undefined : { scale: 1.06 }}
+                  whileTap={reduceMotion ? undefined : { scale: 0.94 }}
                 >
                   <LogOut size={18} />
                 </motion.button>
@@ -409,11 +470,13 @@ export function NavBar() {
 
             {/* Hamburger */}
             <motion.button
+              ref={menuButtonRef}
               className="ctrl-icon-btn hamburger"
               onClick={() => setMobileOpen(v => !v)}
               aria-label="Toggle menu"
               aria-expanded={mobileOpen}
-              whileTap={{ scale: 0.9 }}
+              aria-controls="navbar-mobile-menu"
+              whileTap={reduceMotion ? undefined : { scale: 0.94 }}
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </motion.button>
@@ -425,15 +488,18 @@ export function NavBar() {
           {mobileOpen && (
             <motion.div
               className="mobile-menu"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{    opacity: 0, height: 0 }}
-              transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
+              id="navbar-mobile-menu"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: reduceMotion ? 0 : 0.18 }}
             >
-              <div className="mobile-menu-inner">
+              <nav className="mobile-menu-inner" aria-label="Expanded navigation">
+                <NavLink to="/" end className={navClass} onClick={() => setMobileOpen(false)}><Home size={16} />{t('nav.home', 'Bosh sahifa')}</NavLink>
                 <NavLink to="/search" className={navClass} onClick={() => setMobileOpen(false)}>
                   <Search size={16} /> {t('nav.search', 'Qidiruv')}
                 </NavLink>
+                <NavLink to="/map" className={navClass} onClick={() => setMobileOpen(false)}><MapPinned size={16} />{t('nav.map', 'Xarita')}</NavLink>
                 {currentRole && roleLink && (
                   <NavLink to={roleLink.to} className={navClass} onClick={() => setMobileOpen(false)}>
                     {roleLink.label}
@@ -467,7 +533,7 @@ export function NavBar() {
                     </button>
                   ))}
                 </div>
-              </div>
+              </nav>
             </motion.div>
           )}
         </AnimatePresence>

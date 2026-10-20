@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { SearchX } from 'lucide-react'
 import { MapView } from '../../../components/map/MapView'
 import { PropertyBottomSheet } from '../../../components/map/PropertyBottomSheet'
 import { LocationPermissionModal } from '../../../components/map/LocationPermissionModal'
 import { DEFAULT_ANDIJAN_LOCATION } from '../../../utils/geo'
+import { locateBrowser } from '../../../utils/geolocation'
 import { MAP_LISTING_LIMIT, fetchMapListings, toMapProperties } from '../../../services/mapPropertyService'
 import { peekCache } from '../../../services/browserCache'
 import { useThemeStore } from '../../../store/themeStore'
@@ -20,6 +21,8 @@ export function MapPage() {
   const [selectedProperty, setSelectedProperty] = useState(null)
   const [loading, setLoading] = useState(!cachedListings)
   const [immersive, setImmersive] = useState(false)
+  const locationRequest = useRef(null)
+  const requestingLocation = useRef(false)
   const mapOptions = {
     premiumPins: true,
     radar: true,
@@ -28,28 +31,24 @@ export function MapPage() {
   }
 
   const requestLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      setLocationStatus('unsupported')
-      return
-    }
-
+    if (requestingLocation.current) return
+    requestingLocation.current = true
     setLocationStatus('requesting')
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        setUserLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        })
+    locationRequest.current = locateBrowser({
+      geolocation: navigator.geolocation,
+      onSuccess: position => {
+        requestingLocation.current = false
+        setUserLocation(position)
         setLocationStatus('granted')
       },
-      () => setLocationStatus('denied'),
-      { enableHighAccuracy: false, timeout: 9000, maximumAge: 5 * 60000 },
-    )
+      onError: status => {
+        requestingLocation.current = false
+        setLocationStatus(status)
+      },
+    })
   }, [])
 
-  useEffect(() => {
-    requestLocation()
-  }, [requestLocation])
+  useEffect(() => () => locationRequest.current?.(), [])
 
   useEffect(() => {
     let active = true
@@ -68,6 +67,8 @@ export function MapPage() {
   const properties = useMemo(() => toMapProperties(listings, userLocation), [listings, userLocation])
 
   const useDefaultLocation = () => {
+    locationRequest.current?.()
+    requestingLocation.current = false
     setUserLocation(DEFAULT_ANDIJAN_LOCATION)
     setLocationStatus('granted')
   }

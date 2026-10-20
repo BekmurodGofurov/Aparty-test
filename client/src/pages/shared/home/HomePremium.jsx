@@ -1,13 +1,10 @@
-/**
- * APARTY.UZ — PREMIUM HOME PAGE v4.0
- * Aurora Glass Design — Immersive, conversion-focused, elegant
- */
+/** Photo-led home page with live catalog data and one-time section reveals. */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  MapPin, Home, Users, Star, Shield,
+  ArrowDown, ArrowUpRight, KeyRound, MessageCircle, Search, MapPin, Home, Users, Star, Shield,
   CheckCircle, Sparkles, ChevronRight, Zap,
   TrendingUp, Clock, ArrowRight,
 } from 'lucide-react'
@@ -24,9 +21,9 @@ import './HomePremium.scss'
 const HOME_LISTING_LIMIT = 8
 
 const TRUST_BADGES = [
-  { icon: CheckCircle, label: 'Ishonchli va tekshirilgan',  key: 'verified' },
-  { icon: Shield,      label: 'Hech qanday komissiyasiz',   key: 'free' },
-  { icon: Sparkles,    label: 'Talabalar uchun qulay',   key: 'student' },
+  { icon: CheckCircle, key: 'verified' },
+  { icon: Shield, key: 'free' },
+  { icon: Users, key: 'student' },
 ]
 
 // Tabs over the real catalog: each one is a search filter the backend understands.
@@ -37,16 +34,16 @@ const LISTING_TABS = [
 ]
 
 const HOW_STEPS = [
-  { num: '01', emoji: '🔍', title: 'Qidiring va toping', desc: 'O\'zingizga mos kvartirani lokatsiya, narx va xonalar soni bo\'yicha filterlang.' },
-  { num: '02', emoji: '💬', title: 'Telegram orqali bog\'laning', desc: 'Band qilish so\'rovini yuboring yoki uy egasiga to\'g\'ridan-to\'g\'ri Telegramda yozing.' },
-  { num: '03', emoji: '🏠', title: 'Ko\'chib o\'ting',  desc: 'So\'rov qabul qilingach, uy egasi bilan kelishing va yangi uyingizga ko\'chib o\'ting.' },
+  { num: '01', icon: Search, title: 'home.how_search_title', desc: 'home.how_search_desc' },
+  { num: '02', icon: MessageCircle, title: 'home.how_connect_title', desc: 'home.how_connect_desc' },
+  { num: '03', icon: KeyRound, title: 'home.how_movein_title', desc: 'home.how_movein_desc' },
 ]
 
 const ADVANTAGES = [
-  { icon: Home, title: 'Komissiyasiz', desc: 'Ijarachilar uchun mutlaqo bepul. Maklerlarga ortiqcha pul to\'lamaysiz.' },
-  { icon: Clock, title: 'Tezkor aloqa', desc: 'Uy egasi bilan Telegram yoki telefon orqali darhol bog\'laning.' },
-  { icon: Users, title: 'Sherik topish', desc: 'Kvartirada yashovchilar bo\'sh joy uchun sherik izlab e\'lon berishi mumkin.' },
-  { icon: Shield, title: 'Telegram orqali kirish', desc: 'Parol kerak emas: hisobingiz Telegram raqamingiz bilan tasdiqlanadi.' },
+  { icon: Home, key: 'no_fee' },
+  { icon: Clock, key: 'direct' },
+  { icon: Users, key: 'roommate' },
+  { icon: Shield, key: 'telegram' },
 ]
 
 // The params searchListings(filters, 1, HOME_LISTING_LIMIT) sends, so a cache lookup matches exactly.
@@ -58,8 +55,29 @@ export function HomePremium() {
   const navigate  = useNavigate()
   const { t }     = useTranslation()
   const role = useAuthStore((state) => state.role)
-  const { theme } = useThemeStore()
+  const theme = useThemeStore((state) => state.theme)
   const isLight   = theme === 'light'
+  const rootRef = useRef(null)
+
+  // Observe each section once. No per-frame scroll state or offscreen animation loops.
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root || !('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
+    const elements = root.querySelectorAll('[data-reveal]')
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue
+        entry.target.classList.add('is-revealed')
+        observer.unobserve(entry.target)
+      }
+    }, { threshold: 0.12 })
+    root.classList.add('motion-ready')
+    elements.forEach(element => observer.observe(element))
+    return () => {
+      observer.disconnect()
+      root.classList.remove('motion-ready')
+    }
+  }, [])
 
   // Theme-aware inline styles for section text (bypasses CSS nesting issues)
   const eyebrowStyle = isLight
@@ -104,12 +122,12 @@ export function HomePremium() {
   }, [activeFilter])
 
   return (
-    <main className="home-premium">
+    <div className="home-premium" ref={rootRef}>
 
       {/* ══════════════════════════════════════════════════════════════════
           HERO SECTION — Immersive full-viewport introduction
       ══════════════════════════════════════════════════════════════════ */}
-      <section className="hero relative overflow-hidden">
+      <section className="hero" aria-labelledby="home-hero-title">
         {/* Background image layer - static for performance */}
         <div className="hero-bg absolute inset-0 z-0" aria-hidden>
           <img
@@ -119,24 +137,18 @@ export function HomePremium() {
             alt=""
             className="hero-bg-img"
           />
+          <div className="hero-bg-overlay" />
+          <div className="hero-frame" />
         </div>
 
         {/* Hero content */}
         <div className="hero-content">
           <div className="hero-inner">
-            {/* Trust badges row */}
-            <div className="trust-row">
-              {TRUST_BADGES.map(({ icon: Icon, label, key }) => (
-                <span key={key} className="trust-badge">
-                  <Icon size={13} />
-                  {t(label)}
-                </span>
-              ))}
-            </div>
+            <p className="hero-eyebrow"><span className="hero-status-dot" /><span>{t('home.experience.eyebrow')}</span><Sparkles size={14} aria-hidden="true" /></p>
 
             {/* Main heading */}
-            <h1 className="hero-title">
-              {t('home.hero_title_prefix', 'Andijonda')}{' '}
+            <h1 className="hero-title" id="home-hero-title">
+              <span className="hero-title-line">{t('home.hero_title_prefix', 'Andijonda')}</span>{' '}
               <span className="gradient-text">
                 {t('home.hero_title_accent', 'kvartira toping')}
               </span>
@@ -154,14 +166,20 @@ export function HomePremium() {
 
 
 
-            {/* ── QUICK STATS ──────────────────────────────────────────── */}
+            <div className="trust-row">
+              {TRUST_BADGES.map(({ icon: Icon, key }) => (
+                <span key={key} className="trust-badge"><Icon size={14} aria-hidden="true" />{t(`home.experience.${key}`)}</span>
+              ))}
+            </div>
+
+            {/* Real catalog count; no simulated users, ratings or availability. */}
             {totalListings !== null && (
               <div className="hero-stats">
                 <div className="hero-stat">
                   <div className="stat-icon"><MapPin size={18} /></div>
                   <div className="stat-body">
                     <strong>{totalListings}</strong>
-                    <span>{t("Faol e'lonlar")}</span>
+                    <span>{t('home.experience.live_listings')}</span>
                   </div>
                 </div>
               </div>
@@ -170,36 +188,36 @@ export function HomePremium() {
         </div>
 
         {/* Scroll indicator */}
-        <div className="scroll-hint" aria-hidden>
-          <div className="scroll-dot" />
-        </div>
+        <div className="hero-footer"><span className="hero-location"><MapPin size={14} />Andijon, Uzbekistan</span><button type="button" className="hero-explore" onClick={() => document.getElementById('home-featured')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })}>{t('home.experience.explore')}<ArrowDown size={15} /></button><span className="hero-signature">APARTY<span> / </span>YOUR NEXT CHAPTER</span></div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
           FEATURED LISTINGS
       ══════════════════════════════════════════════════════════════════ */}
-      <section className="home-section featured-section">
+      <section className="home-section featured-section" id="home-featured" aria-labelledby="featured-heading">
         <div className="section-container">
           {/* Header */}
-          <div className="section-head">
+          <div className="section-head" data-reveal>
             <div>
               <p className="section-eyebrow" style={eyebrowStyle}>
                 <Star size={14} />
                 {t('home.featured_label', "So'nggi e'lonlar")}
               </p>
-              <h2 className="section-title" style={titleStyle}>{t('home.featured_title', "Tanlangan e'lonlar")}</h2>
+              <h2 className="section-title" id="featured-heading" style={titleStyle}>{t('home.featured_title', "Tanlangan e'lonlar")}</h2>
               <p className="section-sub" style={subStyle}>{t('home.featured_subtitle', 'Andijondagi eng sifatli kvartiralar')}</p>
             </div>
 
             {/* Filter pills */}
-            <div className="filter-pills">
+            <div className="filter-pills" role="group" aria-label={t('home.experience.listing_filters')}>
               {LISTING_TABS.map(({ key, label }) => (
                 <button
                   key={key}
                   className={`pill ${activeFilter === key ? 'active' : ''}`}
+                  type="button"
+                  aria-pressed={activeFilter === key}
                   onClick={() => selectTab(key)}
                 >
-                  {label}
+                  {t(`home.experience.tab_${key}`, label)}
                 </button>
               ))}
             </div>
@@ -209,13 +227,13 @@ export function HomePremium() {
           <div className="listings-grid">
             {status === 'loading' && Array.from({ length: 4 }, (_, index) => <ListingCardSkeleton key={index} />)}
             {status === 'error' && (
-              <div className="empty-filter-state" style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-                E'lonlarni yuklab bo'lmadi. Keyinroq qayta urinib ko'ring.
+              <div className="empty-filter-state" role="status">
+                <Search size={28} aria-hidden="true" /><h3>{t('home.experience.load_error')}</h3><p>{t('home.experience.load_error_hint')}</p>
               </div>
             )}
             {status === 'ready' && listings.length === 0 && (
-              <div className="empty-filter-state" style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-                Bu bo'limda hozircha e'lonlar yo'q
+              <div className="empty-filter-state" role="status">
+                <span className="empty-icon"><Home size={28} strokeWidth={1.5} aria-hidden="true" /></span><h3>{t('home.experience.empty_title')}</h3><p>{t('home.experience.empty_desc')}</p><button type="button" onClick={() => navigate('/search')}>{t('home.experience.empty_action')}<ArrowUpRight size={16} /></button>
               </div>
             )}
             {status === 'ready' && listings.map((listing) => (
@@ -250,19 +268,19 @@ export function HomePremium() {
       ══════════════════════════════════════════════════════════════════ */}
       <section className="home-section how-section">
         <div className="section-container">
-          <div className="section-head centered">
+          <div className="section-head centered" data-reveal>
             <p className="section-eyebrow" style={eyebrowStyle}><Clock size={14} /> {t('home.how_label', 'Qanday ishlaydi')}</p>
             <h2 className="section-title" style={titleStyle}>{t('home.how_title', '3 oddiy qadam')}</h2>
             <p className="section-sub" style={subStyle}>{t('home.how_subtitle', "Kvartira topish hech qachon bu qadar oson bo'lmagan")}</p>
           </div>
 
           <div className="how-grid">
-            {HOW_STEPS.map(step => (
-              <div key={step.num} className="how-card">
-                <div className="how-num">{step.num}</div>
-                <div className="how-emoji">{step.emoji}</div>
-                <h3>{t(step.title)}</h3>
-                <p>{t(step.desc)}</p>
+            {HOW_STEPS.map(({ num, icon: Icon, title, desc }, index) => (
+              <div key={num} className="how-card" data-reveal style={{ '--reveal-delay': `${index * 70}ms` }}>
+                <div className="how-top"><div className="how-icon"><Icon size={25} strokeWidth={1.6} /></div><span className="how-num">{num}</span></div>
+                <h3>{t(title)}</h3>
+                <p>{t(desc)}</p>
+                <ArrowUpRight size={19} className="how-arrow" aria-hidden="true" />
               </div>
             ))}
           </div>
@@ -274,22 +292,22 @@ export function HomePremium() {
       ══════════════════════════════════════════════════════════════════ */}
       <section className="home-section advantages-section">
         <div className="section-container">
-          <div className="section-head centered">
-            <p className="section-eyebrow" style={eyebrowStyle}><Shield size={14} /> Nega aynan Aparty?</p>
-            <h2 className="section-title" style={titleStyle}>Bizning afzalliklarimiz</h2>
-            <p className="section-sub" style={subStyle}>Biz ijarachilar va uy egalari o'rtasida ishonchli va zamonaviy ko'prik vazifasini bajaramiz.</p>
+          <div className="section-head centered" data-reveal>
+            <p className="section-eyebrow" style={eyebrowStyle}><Shield size={14} />{t('home.experience.advantages_label')}</p>
+            <h2 className="section-title" style={titleStyle}>{t('home.experience.advantages_title')}</h2>
+            <p className="section-sub" style={subStyle}>{t('home.experience.advantages_desc')}</p>
           </div>
 
           <div className="advantages-grid">
-            {ADVANTAGES.map((adv) => {
+            {ADVANTAGES.map((adv, index) => {
               const Icon = adv.icon
               return (
-                <div key={adv.title} className="advantage-card">
+                <div key={adv.key} className="advantage-card" data-reveal style={{ '--reveal-delay': `${index * 60}ms` }}>
                   <div className="adv-icon-wrapper">
                     <Icon size={24} />
                   </div>
-                  <h3>{adv.title}</h3>
-                  <p>{adv.desc}</p>
+                  <h3>{t(`home.experience.${adv.key}_title`)}</h3>
+                  <p>{t(`home.experience.${adv.key}_desc`)}</p>
                 </div>
               )
             })}
@@ -302,7 +320,7 @@ export function HomePremium() {
       ══════════════════════════════════════════════════════════════════ */}
       <section className="home-section owner-cta-section">
         <div className="section-container">
-          <div className="owner-cta-card">
+          <div className="owner-cta-card" data-reveal>
             <div className="owner-cta-glow" aria-hidden />
             <div className="owner-cta-content">
               <p className="section-eyebrow" style={eyebrowStyle}><Zap size={14} /> {t('home.owner_label', 'Uy egalari uchun')}</p>
@@ -329,10 +347,11 @@ export function HomePremium() {
                 <ArrowRight size={18} />
               </button>
             </div>
+            <div className="owner-cta-art" aria-hidden="true"><span className="owner-orbit" /><span className="owner-orbit inner" /><Home size={172} strokeWidth={0.65} /><span className="owner-art-label">APARTY.UZ</span></div>
           </div>
         </div>
       </section>
 
-    </main>
+    </div>
   )
 }

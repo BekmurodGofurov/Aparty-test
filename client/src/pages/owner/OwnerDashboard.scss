@@ -477,9 +477,13 @@
 }
 
 .owner-promo-modal {
+  --owner-panel-bg: var(--bg-card);
+  --owner-panel-border: var(--glass-border-hover);
+  --owner-soft-bg: var(--glass-bg);
+  --owner-primary: var(--color-primary-light);
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 2200;
   display: grid;
   place-items: center;
   padding: 18px;
@@ -488,7 +492,7 @@
 .owner-promo-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: transparent;
+  background: rgba(3, 9, 18, .65);
 }
 
 .owner-promo-modal__card {
@@ -498,6 +502,9 @@
   border-radius: 8px;
   background: var(--owner-panel-bg);
   padding: 22px;
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--color-border);
 
   h2 {
@@ -663,4 +670,19 @@
   .owner-content-grid > .owner-panel:nth-child(3) .owner-rental-stack {
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 700px) {
+  .owner-dashboard {
+    padding: 100px 12px calc(100px + env(safe-area-inset-bottom));
+    .owner-dashboard__shell { margin-top: 0; width: 100%; }
+    .owner-profile-hero { gap: 16px; }
+    .owner-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .owner-hero-actions, .owner-listing-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .owner-hero-actions .owner-primary-btn { grid-column: 1 / -1; }
+    .owner-primary-btn, .owner-secondary-btn, .owner-ghost-btn, .owner-icon-btn { min-height: 44px; width: 100%; font-size: 12px; padding-inline: 10px; }
+    .owner-request-reply { grid-template-columns: minmax(0, 1fr); }
+    .owner-panel { min-width: 0; }
+  }
+  .owner-promo-modal__card { padding: 18px; border-radius: 20px; }
 }

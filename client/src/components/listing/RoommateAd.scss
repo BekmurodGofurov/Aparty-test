@@ -48,3 +48,11 @@
     align-self: flex-start;
   }
 }
+
+@media (max-width: 700px) {
+  .roommate-ad {
+    padding: 18px 14px; min-width: 0;
+    fieldset { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+    &__button, &__actions button { min-height: 44px; width: 100%; font-size: 13px; }
+  }
+}

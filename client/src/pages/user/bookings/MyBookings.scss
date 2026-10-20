@@ -72,3 +72,15 @@
   border-radius: 999px;
   border: 1px solid currentColor;
 }
+
+@media (max-width: 700px) {
+  .my-bookings {
+    padding: 102px 12px calc(110px + env(safe-area-inset-bottom));
+    h1 { font-size: 29px; }
+    .booking-card { padding: 16px; min-width: 0; }
+    .booking-card__head { align-items: flex-start; flex-wrap: wrap; gap: 9px; > a { min-width: 0; overflow-wrap: anywhere; } }
+    .booking-card p { font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+    .booking-status { flex-shrink: 0; font-size: 11px; }
+    .booking-card__actions button { min-height: 44px; flex: 1 1 110px; font-size: 12px; }
+  }
+}

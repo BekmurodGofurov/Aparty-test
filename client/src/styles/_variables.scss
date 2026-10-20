@@ -50,8 +50,8 @@
   --shadow-btn-primary: none;
   --shadow-btn-hover: none;
 
-  // ── GRADIENTS (Replaced with Solid) ───────────────────────────────────
-  --gradient-primary:       #0ea5e9;
+  // ── GRADIENTS ────────────────────────────────────────────────────────
+  --gradient-primary:       linear-gradient(120deg, #0284c7, #0ea5e9);
   --gradient-primary-hover: #38bdf8;
   --gradient-surface:       #0b0f19;
   --gradient-hero:          #0b0f19;
@@ -109,21 +109,21 @@
 [data-theme="light"] {
   // ── BACKGROUNDS ──────────────────────────────────────────────
   --bg-base:             #ffffff;
-  --bg-elevated:         #f9fafb;
+  --bg-elevated:         #fffaf6;
   --bg-card:             #ffffff;
   --bg-surface-elevated: #ffffff;
   --bg-surface-tint:     #ffffff;
-  --bg-input:            #f9fafb;
+  --bg-input:            #fffaf6;
   --bg-auth-card:        #ffffff;
 
   // ── GLASS SYSTEM (Light Mode Flat) ───────────────────────────────────
   --glass-bg:           #ffffff;
-  --glass-bg-mid:       #f9fafb;
+  --glass-bg-mid:       #fffaf6;
   --glass-bg-high:      #ffffff;
-  --glass-border:       #e5e7eb;
-  --glass-border-outer: #e5e7eb;
-  --glass-border-hover: #d1d5db;
-  --glass-hover:        #f3f4f6;
+  --glass-border:       #eee5de;
+  --glass-border-outer: #eee5de;
+  --glass-border-hover: #ddc9ba;
+  --glass-hover:        #fff3e9;
   --glass-blur:         none;
   --glass-blur-heavy:   none;
   --glass-highlight:    none;
@@ -131,7 +131,7 @@
   // ── NAVIGATION ─────────────────────────────────────────────────────────
   --bg-nav:           #ffffff;
   --bg-nav-scrolled:  #ffffff;
-  --bg-nav-hover:     #f3f4f6;
+  --bg-nav-hover:     #fff3e9;
   --bg-bottom-nav:    #ffffff;
   --shadow-nav:       none;
 
@@ -156,26 +156,30 @@
   --shadow-btn-hover: none;
 
   // ── GRADIENTS ─────────────────────────────────────────────────────────
-  --gradient-primary:       #0ea5e9;
-  --gradient-primary-hover: #38bdf8;
+  --gradient-primary:       linear-gradient(120deg, #c2410c, #d2470a);
+  --gradient-primary-hover: linear-gradient(120deg, #9a3412, #c2410c);
   --gradient-surface:       #ffffff;
   --gradient-hero:          #ffffff;
   --gradient-card-shine:    #ffffff;
   --gradient-text:          #111827;
 
   // ── PRIMARY ACCENT ──────────────────────────────────────────────
-  --color-primary:         #0ea5e9;
-  --color-primary-light:   #38bdf8;
-  --color-primary-dark:    #0284c7;
-  --color-primary-glow:    transparent;
-  --color-primary-soft:    #e0f2fe;
+  --color-primary:         #ea580c;
+  --color-primary-light:   #c2410c;
+  --color-primary-dark:    #c2410c;
+  --color-primary-glow:    rgba(234, 88, 12, 0.16);
+  --color-secondary:       #d97706;
+  --color-secondary-light: #f59e0b;
+  --color-tertiary:        #f97316;
+  --color-cyan:            #c2410c;
+  --color-primary-soft:    #fff0e5;
 
   // ── TEXT ──────────────────────────────────────────────────────────────
   --color-text:            #111827;
   --color-text-secondary:  #4b5563;
   --color-muted:           #6b7280;
   --color-subtle:          #9ca3af;
-  --color-faint:           #d1d5db;
+  --color-faint:           #ddc9ba;
 
   // ── BADGES ────────────────────────────────────────────────────────────
   --color-premium-bg:  #fef3c7;
@@ -186,7 +190,7 @@
   // ── ALIASES ───────────────────────────────────────────────────────────
   --color-bg:      var(--bg-base);
   --color-surface: #ffffff;
-  --color-border:  #e5e7eb;
+  --color-border:  #eee5de;
   --color-dark:    #111827;
 }
 

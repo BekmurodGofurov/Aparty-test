@@ -589,3 +589,18 @@
     width: 100%;
   }
 }
+
+@media (max-width: 700px) {
+  .broker-dashboard {
+    padding: 100px 12px calc(100px + env(safe-area-inset-bottom));
+    .broker-dashboard__shell { margin-top: 0; width: 100%; }
+    .broker-profile-hero { gap: 16px; }
+    .broker-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .broker-hero-actions, .broker-listing-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .broker-hero-actions .broker-primary-btn { grid-column: 1 / -1; }
+    .broker-primary-btn, .broker-secondary-btn, .broker-ghost-btn, .broker-icon-btn { min-height: 44px; width: 100%; font-size: 12px; padding-inline: 10px; }
+    .broker-request-reply { grid-template-columns: minmax(0, 1fr); }
+    .broker-panel { min-width: 0; }
+    .broker-mini-list div { flex-wrap: wrap; }
+  }
+}

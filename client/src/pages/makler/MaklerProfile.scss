@@ -260,3 +260,13 @@
     padding: 16px;
   }
 }
+
+@media (max-width: 700px) {
+  .broker-profile-page {
+    padding: 100px 12px calc(110px + env(safe-area-inset-bottom));
+    .broker-profile-page__shell { width: 100%; margin-top: 0; }
+    .broker-profile-info { flex-wrap: wrap; overflow-wrap: anywhere; }
+    .broker-profile-field { min-width: 0; }
+    .broker-profile-page__back, .broker-profile-page__primary, .broker-profile-page__danger { min-height: 44px; }
+  }
+}

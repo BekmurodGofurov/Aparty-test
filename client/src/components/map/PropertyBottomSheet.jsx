@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useModalDialog } from '../../hooks/useModalDialog'
 import { Link } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   BedDouble,
   ChevronLeft,
@@ -19,6 +21,9 @@ import { FallbackImage } from '../ui/FallbackImage'
 export function PropertyBottomSheet({ property, onClose }) {
   const [activeImage, setActiveImage] = useState(0)
   const [favorite, setFavorite] = useState(false)
+  const dialogRef = useRef(null)
+  const reduceMotion = useReducedMotion()
+  useModalDialog({ open: Boolean(property), onClose, dialogRef, initialFocus: '.sheet-close' })
 
   const images = useMemo(() => property?.images?.length ? property.images : property ? [property.image] : [], [property])
 
@@ -30,23 +35,28 @@ export function PropertyBottomSheet({ property, onClose }) {
   const nextImage = () => setActiveImage(index => (index + 1) % images.length)
   const prevImage = () => setActiveImage(index => (index - 1 + images.length) % images.length)
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {property && (
         <motion.div
           className="property-modal-backdrop"
-          initial={{ opacity: 0 }}
+          initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: reduceMotion ? 0 : 0.18 }}
           onClick={onClose}
         >
           <motion.aside
             className="property-premium-modal"
-            initial={{ y: 36, scale: 0.92, opacity: 0, filter: 'blur(12px)' }}
-            animate={{ y: 0, scale: 1, opacity: 1, filter: 'blur(0px)' }}
-            exit={{ y: 32, scale: 0.94, opacity: 0, filter: 'blur(10px)' }}
-            transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+            initial={reduceMotion ? false : { y: 24, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: reduceMotion ? 0 : 24, opacity: 0 }}
+            transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 28 }}
             onClick={event => event.stopPropagation()}
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            tabIndex={-1}
             aria-label="Tanlangan uy ma'lumotlari"
           >
             <button className="sheet-close" type="button" onClick={onClose} aria-label="Yopish">
@@ -128,6 +138,7 @@ export function PropertyBottomSheet({ property, onClose }) {
           </motion.aside>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   )
 }

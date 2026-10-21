@@ -48,7 +48,7 @@ export function LoginPage() {
             {error && <div className="error-alert-liquid">{error}</div>}
 
             <button type="button" className="btn-liquid-primary" onClick={handleTelegramLogin} disabled={loading}>
-              <span className="shimmer-effect"></span>
+              <span className="shimmer-effect" aria-hidden="true"></span>
               <span className="btn-content">
                 {loading ? <PremiumLoader mini /> : (
                   <>

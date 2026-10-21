@@ -2,20 +2,20 @@
 @use "../../styles/mixins" as *;
 
 .footer {
-  margin-top: 8rem;
+  margin-top: 4rem;
   
   // SOLID BACKGROUND
   [data-theme="dark"] & {
     background: #0B1020 !important; // Deep navy solid
   }
   [data-theme="light"] & {
-    background: #FAFAF8 !important; // Match light-mode base bg
+    background: #fffaf6 !important;
   }
   
   border-top: 1px solid var(--glass-border);
   position: relative;
   overflow: hidden;
-  padding-top: 5rem;
+  padding-top: 4rem;
   padding-bottom: 3rem;
 
   @media (max-width: 768px) {
@@ -185,5 +185,16 @@
         &:hover { color: var(--color-text); }
       }
     }
+  }
+}
+
+@media (max-width: 700px) {
+  .footer {
+    margin-top: 32px; padding-top: 40px;
+    .footer-inner { width: 100%; padding-inline: 20px; }
+    .footer-grid { gap: 30px; }
+    .footer-bottom { gap: 18px; padding-top: 24px; }
+    .footer-bottom .bottom-links { flex-wrap: wrap; justify-content: center; gap: 10px 20px; }
+    .footer-contact .contact-item { min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
   }
 }

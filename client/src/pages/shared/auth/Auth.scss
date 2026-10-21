@@ -19,7 +19,7 @@
   }
 
   &[data-theme='light'] {
-    --auth-bg: #f8fafc;
+    --auth-bg: #fffcf9;
     --auth-glass-bg: rgba(255, 255, 255, 0.9);
     --auth-glass-border: rgba(15, 23, 42, 0.1);
     --auth-glass-highlight: rgba(255, 255, 255, 1);
@@ -100,7 +100,7 @@
     z-index: 2;
 
     html[data-theme="light"] & {
-      background: #f8fafc !important;
+      background: #fff8f2 !important;
       border-left: 1px solid rgba(0, 0, 0, 0.05) !important;
     }
   }
@@ -667,4 +667,21 @@
     opacity: 0.5;
     cursor: wait;
   }
+}
+
+@media (max-width: 700px) {
+  .auth-page.liquid-theme {
+    padding: 102px 16px calc(110px + env(safe-area-inset-bottom));
+    min-height: 100svh;
+    .auth-liquid-container { transform: none; min-width: 0; }
+    .liquid-card.main-panel { padding: 28px 20px; border-radius: 24px !important; }
+    .hero-content .title-premium { font-size: 28px; line-height: 1.15; }
+    .hero-content .subtitle-premium { font-size: 13px; line-height: 1.8; }
+    .btn-liquid-primary { min-height: 48px; padding-inline: 12px; font-size: 13px; }
+    .role-choice-grid { grid-template-columns: minmax(0, 1fr); }
+    .role-choice-card { min-width: 0; padding: 18px 14px; }
+  }
+}
+@media (max-height: 600px) {
+  .auth-page.liquid-theme { align-items: flex-start; .auth-liquid-container { transform: none; } }
 }

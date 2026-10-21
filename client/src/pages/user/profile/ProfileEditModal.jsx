@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { X, Camera, User, Phone } from 'lucide-react'
 import { PremiumInput, Button } from '../../../components/ui/PremiumComponents'
+import { useModalDialog } from '../../../hooks/useModalDialog'
 import { userService } from '../../../services/userService'
 import { uploadService } from '../../../services/uploadService'
 import { getErrorMessage } from '../../../utils/auth'
@@ -15,17 +16,15 @@ export function ProfileEditModal({ isOpen, onClose, userData, onUpdate }) {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const dialogRef = useRef(null)
+  const reduceMotion = useReducedMotion()
+  useModalDialog({ open: isOpen, onClose, dialogRef, initialFocus: '.close' })
 
   useEffect(() => {
     if (isOpen) {
       setName(userData?.ism || '')
       setError('')
-      // Prevent body scroll when modal is open
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
     }
-    return () => { document.body.style.overflow = '' }
   }, [isOpen, userData])
 
   const applyUpdate = (updatedUser) => {
@@ -73,21 +72,27 @@ export function ProfileEditModal({ isOpen, onClose, userData, onUpdate }) {
         <div className="modal-overlay-clean">
           <motion.div
             className="backdrop"
-            initial={{ opacity: 0 }}
+            initial={reduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.18 }}
             onClick={onClose}
           />
           <motion.div
             className="edit-modal-minimal"
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Profilni tahrirlash"
+            tabIndex={-1}
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            transition={reduceMotion ? { duration: 0 } : { type: 'spring', damping: 25, stiffness: 350 }}
           >
             <div className="modal-header">
               <h3>Profilni tahrirlash</h3>
-              <button className="close" onClick={onClose}><X size={20}/></button>
+              <button className="close" type="button" aria-label="Yopish" onClick={onClose}><X size={20}/></button>
             </div>
 
             <div className="modal-body">

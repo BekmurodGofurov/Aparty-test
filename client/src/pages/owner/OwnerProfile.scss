@@ -247,3 +247,14 @@
     width: 100%;
   }
 }
+
+@media (max-width: 700px) {
+  .owner-profile-page {
+    padding: 100px 12px calc(110px + env(safe-area-inset-bottom));
+    .owner-profile-page__shell { width: 100%; margin-top: 0; }
+    .owner-profile-page__hero, .owner-profile-panel { padding: 18px; }
+    .owner-profile-field, .owner-profile-info { min-width: 0; }
+    .owner-profile-info strong { overflow-wrap: anywhere; font-size: 16px; }
+    .owner-profile-page__back, .owner-profile-page__primary, .owner-profile-page__danger { min-height: 44px; }
+  }
+}

@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useModalDialog } from '../../hooks/useModalDialog'
 import { useNavigate } from 'react-router-dom'
 import {
   BadgeCheck,
@@ -89,6 +91,8 @@ export function OwnerDashboard() {
   const [loading, setLoading] = useState(!cachedProfile)
   const [activatingId, setActivatingId] = useState(null)
   const [promoListing, setPromoListing] = useState(null)
+  const promoRef = useRef(null)
+  useModalDialog({ open: Boolean(promoListing), onClose: () => setPromoListing(null), dialogRef: promoRef, initialFocus: '.owner-promo-modal__cancel' })
   const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
@@ -472,10 +476,10 @@ export function OwnerDashboard() {
         </section>
       </div>
 
-      {promoListing && (
-        <div className="owner-promo-modal" role="dialog" aria-modal="true">
+      {promoListing && createPortal(
+        <div className="owner-promo-modal">
           <div className="owner-promo-modal__backdrop" onClick={() => setPromoListing(null)} />
-          <div className="owner-promo-modal__card">
+          <div className="owner-promo-modal__card" ref={promoRef} role="dialog" aria-modal="true" aria-label="E’lonni faollashtirish" tabIndex={-1}>
             <p className="owner-eyebrow">Reklama turi</p>
             <h2>{getListingTitle(promoListing)}</h2>
             <p className="owner-promo-modal__copy">
@@ -511,7 +515,7 @@ export function OwnerDashboard() {
               Bekor qilish
             </button>
           </div>
-        </div>
+        </div>, document.body,
       )}
     </main>
   )

@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useModalDialog } from '../../../hooks/useModalDialog'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   BadgeCheck,
   Building2,
@@ -53,6 +55,9 @@ export function Listing() {
   const [activeImage, setActiveImage] = useState(0)
   const [saved, setSaved] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const previewRef = useRef(null)
+  const reduceMotion = useReducedMotion()
+  useModalDialog({ open: previewOpen, onClose: () => setPreviewOpen(false), dialogRef: previewRef, initialFocus: '.preview-close' })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [requestMessage, setRequestMessage] = useState('')
@@ -78,14 +83,6 @@ export function Listing() {
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [id])
-
-  useEffect(() => {
-    if (!previewOpen) return undefined
-    const handleKeyDown = (event) => { if (event.key === 'Escape') setPreviewOpen(false) }
-    document.body.classList.add('listing-preview-lock')
-    window.addEventListener('keydown', handleKeyDown)
-    return () => { document.body.classList.remove('listing-preview-lock'); window.removeEventListener('keydown', handleKeyDown) }
-  }, [previewOpen])
 
   const images = useMemo(() => {
     const gallery = listing?.images?.length ? listing.images : [PLACEHOLDER_IMAGE]
@@ -420,10 +417,12 @@ export function Listing() {
       <SimilarListings listing={listing} />
 
       {/* Fullscreen gallery preview */}
-      <AnimatePresence>
+      {createPortal(<AnimatePresence>
         {previewOpen && (
           <motion.div
             className="fullscreen-gallery"
+            ref={previewRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label={t('listing.fullscreen_preview')}
@@ -443,7 +442,7 @@ export function Listing() {
               </button>
             </div>
             {images.length > 1 && (
-              <button className="preview-nav left" type="button" onClick={(e) => { e.stopPropagation(); prevImage() }}>
+              <button className="preview-nav left" type="button" aria-label={t('listing.previous_image')} onClick={(e) => { e.stopPropagation(); prevImage() }}>
                 <ChevronLeft size={28} />
               </button>
             )}
@@ -455,17 +454,17 @@ export function Listing() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.35 }}
+              transition={{ duration: reduceMotion ? 0 : 0.35 }}
               onClick={(e) => e.stopPropagation()}
             />
             {images.length > 1 && (
-              <button className="preview-nav right" type="button" onClick={(e) => { e.stopPropagation(); nextImage() }}>
+              <button className="preview-nav right" type="button" aria-label={t('listing.next_image')} onClick={(e) => { e.stopPropagation(); nextImage() }}>
                 <ChevronRight size={28} />
               </button>
             )}
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>, document.body)}
 
     </main>
   )

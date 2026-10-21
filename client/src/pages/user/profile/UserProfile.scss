@@ -387,3 +387,38 @@
     }
   }
 }
+
+@media (max-width: 1023px) {
+  .user-profile-premium {
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+    .profile-content-wrapper { width: 100%; padding: 102px 16px 0; }
+    .hero-profile-section { margin-top: 0; margin-bottom: 24px; }
+    .hero-profile-section .unified-profile-card { padding: 24px 18px; border-radius: 24px; }
+    .hero-profile-section .unified-profile-card .card-inner { gap: 20px; }
+    .hero-profile-section .user-identity { width: 100%; min-width: 0; gap: 18px; }
+    .hero-profile-section .user-identity .user-details { min-width: 0; width: 100%; }
+    .hero-profile-section .user-identity .user-details .name-row h1 { max-width: 100%; font-size: clamp(25px, 5vw, 34px); line-height: 1.15; overflow-wrap: anywhere; }
+    .hero-profile-section .user-identity .user-details .meta-grid { gap: 10px 16px; font-size: 12px; .meta-item { min-width: 0; } }
+    .hero-profile-section .user-identity .avatar-container .avatar-ring { width: 100px; height: 100px; padding: 4px; img, .avatar-placeholder { width: 90px; height: 90px; font-size: 34px; border-width: 4px; } }
+    .hero-profile-section .user-identity .user-details .name-row { margin-bottom: 12px; gap: 10px; }
+    .hero-profile-section .user-identity .badges-row { flex-wrap: wrap; justify-content: center; }
+    .main-content-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    .content-primary-col, .sticky-sidebar-col, .session-body { min-width: 0; }
+    .sticky-sidebar-col { position: static; }
+    .content-block { margin-bottom: 28px; .block-header h2 { font-size: 19px; gap: 9px; } }
+    .stats-cards-section { margin-bottom: 28px; }
+    .stats-cards-section .card-glow { display: none; }
+    .stats-cards-section .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .stats-cards-section .premium-stat-card { padding: 16px 12px; gap: 12px; border-radius: 18px; .icon-box { width: 36px; height: 36px; border-radius: 11px; svg { width: 20px; height: 20px; } } .stat-info .number { font-size: 26px; } .stat-info .label { font-size: 9px; line-height: 1.5; letter-spacing: 0; text-transform: none; overflow-wrap: anywhere; } }
+    .session-card { padding: 16px; gap: 12px; border-radius: 18px; align-items: flex-start; .session-icon { flex-shrink: 0; width: 38px; height: 40px; border-radius: 12px; } .session-body .top { flex-wrap: wrap; gap: 5px 8px; .device-name { font-size: 13px; overflow-wrap: anywhere; } .status-badge { font-size: 9px; padding: 3px 6px; } } .session-body .meta { flex-wrap: wrap; font-size: 11px; gap: 4px; } }
+    .sticky-sidebar-col .setting-action-card { padding: 15px; .icon-wrap { flex-shrink: 0; } .text-wrap { min-width: 0; } }
+  }
+}
+@media (min-width: 641px) and (max-width: 1023px) {
+  .user-profile-premium .hero-profile-section .user-identity { justify-content: center; }
+}
+@media (max-width: 380px) {
+  .user-profile-premium .profile-content-wrapper { padding-inline: 12px; }
+  .user-profile-premium .stats-cards-section .stats-grid { gap: 7px; }
+  .user-profile-premium .stats-cards-section .premium-stat-card { padding: 13px 10px; }
+}

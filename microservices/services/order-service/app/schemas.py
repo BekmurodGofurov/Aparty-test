@@ -26,7 +26,20 @@ class PublicProfile(BaseModel):
     id: int
     full_name: str
     phone: Optional[str] = None
+    telegram_username: Optional[str] = None
     is_verified: bool = False
+
+
+class ListingBrief(BaseModel):
+    id: uuid.UUID
+    title: str = ""
+    price: Optional[float] = None
+    address: Optional[str] = None
+    district: Optional[str] = None
+    region: Optional[str] = None
+    rooms_count: Optional[int] = 1
+    image_url: Optional[str] = None
+    rental_type: Optional[str] = None
 
 
 class BookingOut(BaseModel):
@@ -40,6 +53,8 @@ class BookingOut(BaseModel):
     listing_title: Optional[str] = None
     user_id: int
     requester: Optional[PublicProfile] = None
+    host: Optional[PublicProfile] = None
+    listing: Optional[ListingBrief] = None
     start_date: date
     end_date: date
     total_price: float
@@ -61,3 +76,8 @@ class ListingBookingInfo(BaseModel):
     rental_type: str
     available_spaces: int = 1
     parent_listing_id: Optional[uuid.UUID] = None
+    address: Optional[str] = None
+    district: Optional[str] = None
+    region: Optional[str] = None
+    rooms_count: Optional[int] = 1
+    image_url: Optional[str] = None

@@ -32,3 +32,6 @@ yarn-error.log*
 # --- Python caches (all services) ---
 __pycache__/
 .pytest_cache/
+
+# --- Office temporary files ---
+~$*

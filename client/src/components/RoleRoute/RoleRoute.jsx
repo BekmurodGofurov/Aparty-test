@@ -2,10 +2,11 @@ import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 
 export function RoleRoute({ role, children }) {
-  const currentRole = useAuthStore((s) => s.role)
+  const { accessToken, role: currentRole } = useAuthStore()
 
-  if (!currentRole) return <Navigate to="/login" replace />
-  if (currentRole.toLowerCase() !== role) return <Navigate to="/" replace />
+  if (!accessToken) return <Navigate to="/login" replace />
+  if (!currentRole) return <Navigate to="/choose-role" replace />
+  if (currentRole.toLowerCase() !== role.toLowerCase()) return <Navigate to="/" replace />
 
   return children
 }

@@ -33,7 +33,9 @@
 
   .hero {
     position: relative; display: flex; align-items: center;
-    min-height: clamp(640px, 100svh, 880px); overflow: hidden; isolation: isolate;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden; isolation: isolate;
     background: #101c2a;
     .hero-bg, .hero-bg-overlay { position: absolute; inset: 0; pointer-events: none; }
     .hero-bg { z-index: -1; }

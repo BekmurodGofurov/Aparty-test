@@ -103,3 +103,41 @@ async def test_listing_is_served_when_iam_has_no_profile(client, create_listing)
     assert detail["owner_phone"] is None
     assert detail["owner_telegram_url"] is None
     assert detail["owner_verified"] is False
+
+
+async def test_search_text_query(client, create_listing):
+    await create_listing(title="Shinam kvartira metro yonida", description="Tinch joy", district="Yunusobod")
+    await create_listing(title="Arzon xona talabalar uchun", description="Chilonzor metro", district="Chilonzor")
+
+    res1 = (await client.get(SEARCH, params={"q": "shinam"})).json()
+    assert res1["total"] == 1
+    assert "Shinam" in res1["listings"][0]["title"]
+
+    res2 = (await client.get(SEARCH, params={"q": "metro"})).json()
+    assert res2["total"] == 2
+
+    res3 = (await client.get(SEARCH, params={"q": "nomalum joy"})).json()
+    assert res3["total"] == 0
+
+
+async def test_search_case_insensitive_region_district(client, create_listing):
+    await create_listing(region="Toshkent", district="Yunusobod")
+
+    res = (await client.get(SEARCH, params={"region": "toshkent", "district": "yunusobod"})).json()
+    assert res["total"] == 1
+
+
+async def test_search_bounding_box(client, create_listing):
+    await create_listing(title="Toshkent uy", latitude=41.311081, longitude=69.240562)
+    await create_listing(title="Andijon uy", latitude=40.7821, longitude=72.3442)
+
+    # Box around Tashkent only
+    res = (await client.get(SEARCH, params={
+        "min_lat": 41.0,
+        "max_lat": 41.5,
+        "min_lng": 69.0,
+        "max_lng": 69.5,
+    })).json()
+    assert res["total"] == 1
+    assert res["listings"][0]["title"] == "Toshkent uy"
+

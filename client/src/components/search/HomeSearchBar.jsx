@@ -8,7 +8,13 @@ import './HomeSearchBar.scss'
 export function HomeSearchBar() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const [form, setForm] = useState({ region: '', district: '', rooms_count: '', price_min: '', price_max: '' })
+  const [form, setForm] = useState({
+    region: 'Andijon',
+    district: 'Andijon shahri',
+    rooms_count: '',
+    price_min: '',
+    price_max: '',
+  })
   const districts = form.region ? REGIONS_DATA[form.region] || [] : []
 
   const searchParams = () => {

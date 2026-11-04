@@ -18,6 +18,7 @@ from app.constants import API_PREFIX, DEFAULT_LISTING_TITLE, DEFAULT_PAGE_SIZE, 
 from app.database import get_db
 from app.events import LISTING_CREATED, LISTING_UPDATED, publish_listing_event
 from app.mappers import (
+    SHARED_PROPERTY_TYPES,
     STUDENT_SOURCES,
     listing_to_card,
     listing_to_out,
@@ -279,6 +280,7 @@ async def create_roommate_listing(
 
 @router.get("/search", response_model=ListingSearchResponse)
 async def search_listings(
+    q: Optional[str] = Query(None, min_length=1, max_length=100),
     region: Optional[str] = None,
     district: Optional[str] = None,
     target_gender: Optional[ListingTargetGender] = None,
@@ -300,6 +302,10 @@ async def search_listings(
     has_contract: Optional[bool] = None,
     near_metro: Optional[bool] = None,
     near_university: Optional[bool] = None,
+    min_lat: Optional[float] = Query(None, ge=-90.0, le=90.0),
+    max_lat: Optional[float] = Query(None, ge=-90.0, le=90.0),
+    min_lng: Optional[float] = Query(None, ge=-180.0, le=180.0),
+    max_lng: Optional[float] = Query(None, ge=-180.0, le=180.0),
     page: int = Query(1, ge=1),
     limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
     user_id: Optional[int] = Depends(get_optional_user_id),
@@ -311,14 +317,28 @@ async def search_listings(
         or_(Listing.expires_at.is_(None), Listing.expires_at > func.now()),
     ]
 
-    if region:
-        filters.append(Listing.region == region)
-    if district:
-        filters.append(Listing.district == district)
+    if q and q.strip():
+        term = f"%{q.strip()}%"
+        filters.append(
+            or_(
+                Listing.title.ilike(term),
+                Listing.description.ilike(term),
+                Listing.address.ilike(term),
+                Listing.district.ilike(term),
+                Listing.region.ilike(term),
+            )
+        )
+    if region and region.strip():
+        filters.append(func.lower(Listing.region) == region.strip().lower())
+    if district and district.strip():
+        filters.append(func.lower(Listing.district) == district.strip().lower())
     if target_gender:
         filters.append(Listing.target_gender == target_gender)
     if rental_type:
-        filters.append(Listing.property_type == rental_type.value)
+        if rental_type == RentalType.shared_room:
+            filters.append(Listing.property_type.in_(SHARED_PROPERTY_TYPES))
+        else:
+            filters.append(~Listing.property_type.in_(SHARED_PROPERTY_TYPES))
     if owner_role == "makler":
         filters.append(Listing.source == ListingSource.makler)
     elif owner_role == "student":
@@ -333,6 +353,15 @@ async def search_listings(
         filters.append(Listing.rooms_count >= rooms_count)
     if available_spaces is not None:
         filters.append(Listing.available_spaces >= available_spaces)
+
+    if min_lat is not None:
+        filters.append(Listing.latitude >= min_lat)
+    if max_lat is not None:
+        filters.append(Listing.latitude <= max_lat)
+    if min_lng is not None:
+        filters.append(Listing.longitude >= min_lng)
+    if max_lng is not None:
+        filters.append(Listing.longitude <= max_lng)
 
     amenity_values = {
         "wifi": wifi,
@@ -390,6 +419,50 @@ async def get_my_listings(
     return [listing_to_card(item, profiles.get(item.owner_id)) for item in listings]
 
 
+def _primary_image_url(listing: Listing) -> Optional[str]:
+    if not listing.images:
+        return None
+    sorted_images = sorted(listing.images, key=lambda img: (not img.is_primary, str(img.id)))
+    return sorted_images[0].image_url
+
+
+@router.get("/batch/booking-info", response_model=list[ListingBookingInfo])
+async def get_batch_booking_info(
+    ids: str = Query(..., description="Comma-separated listing ids"),
+    db: AsyncSession = Depends(get_db),
+) -> list[ListingBookingInfo]:
+    """Batch listing data for the Order Service."""
+    try:
+        raw_ids = [uuid.UUID(raw.strip()) for raw in ids.split(",") if raw.strip()]
+    except ValueError:
+        return []
+    if not raw_ids:
+        return []
+
+    stmt = select(Listing).options(selectinload(Listing.images)).where(Listing.id.in_(raw_ids))
+    listings = (await db.execute(stmt)).scalars().unique().all()
+
+    return [
+        ListingBookingInfo(
+            id=item.id,
+            owner_id=item.owner_id,
+            title=item.title,
+            price=item.price,
+            status=item.status,
+            is_active=item.is_active and not _ad_expired(item),
+            rental_type=rental_type_from_property_type(item.property_type),
+            available_spaces=item.available_spaces,
+            parent_listing_id=item.parent_listing_id,
+            address=item.address,
+            district=item.district,
+            region=item.region,
+            rooms_count=item.rooms_count,
+            image_url=_primary_image_url(item),
+        )
+        for item in listings
+    ]
+
+
 @router.get("/{id}/booking-info", response_model=ListingBookingInfo)
 async def get_listing_booking_info(id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> ListingBookingInfo:
     """Minimal listing data for the Order Service. Does not count as a view."""
@@ -404,6 +477,11 @@ async def get_listing_booking_info(id: uuid.UUID, db: AsyncSession = Depends(get
         rental_type=rental_type_from_property_type(listing.property_type),
         available_spaces=listing.available_spaces,
         parent_listing_id=listing.parent_listing_id,
+        address=listing.address,
+        district=listing.district,
+        region=listing.region,
+        rooms_count=listing.rooms_count,
+        image_url=_primary_image_url(listing),
     )
 
 

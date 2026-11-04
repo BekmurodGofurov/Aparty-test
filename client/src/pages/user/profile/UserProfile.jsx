@@ -75,7 +75,7 @@ export function UserProfile() {
 
   const [userData, setUserData] = useState(initialData)
   const [sessions] = useState([getCurrentSession()])
-  const [savedHomes, setSavedHomes] = useState(cachedFavorites || [])
+  const [savedHomes, setSavedHomes] = useState(() => (Array.isArray(cachedFavorites) ? cachedFavorites : []))
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(!cachedProfile)
   const [showEditModal, setShowEditModal] = useState(false)

@@ -218,7 +218,7 @@ class UpgradeToPremiumResponse(BaseModel):
 
 
 class ListingBookingInfo(BaseModel):
-    """Minimal listing data the Order Service needs to create a booking."""
+    """Listing data the Order Service needs to create and display a booking."""
 
     id: uuid.UUID
     owner_id: int
@@ -229,6 +229,11 @@ class ListingBookingInfo(BaseModel):
     rental_type: RentalType
     available_spaces: int
     parent_listing_id: Optional[uuid.UUID] = None
+    address: Optional[str] = None
+    district: Optional[str] = None
+    region: Optional[str] = None
+    rooms_count: Optional[int] = 1
+    image_url: Optional[str] = None
 
 
 class RoommateListingCreate(BaseModel):

@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.clients.catalog import CatalogUnavailableError, fetch_booking_info
+from app.clients.catalog import CatalogUnavailableError, fetch_batch_booking_info, fetch_booking_info
 from app.clients.iam import fetch_public_profiles
 from app.constants import (
     ALL_ROLES,
@@ -22,7 +22,7 @@ from app.constants import (
 from app.database import get_db
 from app.events import publish_booking_event
 from app.models import Booking, BookingStatus
-from app.schemas import BookingCreate, BookingOut, BookingStatusUpdate, ListingBookingInfo
+from app.schemas import BookingCreate, BookingOut, BookingStatusUpdate, ListingBookingInfo, ListingBrief
 from app.security import CurrentUser, get_current_user_id, require_roles
 
 router = APIRouter(prefix=f"{API_PREFIX}/bookings", tags=["Bookings"])
@@ -116,13 +116,43 @@ async def _can_view(db: AsyncSession, booking: Booking, user_id: int) -> bool:
     return booking.is_roommate_request and await _is_resident(db, user_id, booking.apartment_listing_id)
 
 
-async def _with_requesters(bookings: list[Booking]) -> list[BookingOut]:
-    """Attach the requester's name and phone (from IAM) so answering a request does not need another lookup."""
-    profiles = await fetch_public_profiles(booking.user_id for booking in bookings)
-    return [
-        BookingOut.model_validate(booking).model_copy(update={"requester": profiles.get(booking.user_id)})
-        for booking in bookings
-    ]
+async def _enrich_bookings(bookings: list[Booking]) -> list[BookingOut]:
+    """Attach host and requester profiles from IAM, and listing info from Catalog."""
+    if not bookings:
+        return []
+
+    user_ids = {b.user_id for b in bookings} | {b.listing_owner_id for b in bookings}
+    profiles = await fetch_public_profiles(user_ids)
+
+    listing_ids = {b.listing_id for b in bookings}
+    listings_info = await fetch_batch_booking_info(listing_ids)
+
+    enriched: list[BookingOut] = []
+    for b in bookings:
+        out = BookingOut.model_validate(b)
+        out.requester = profiles.get(b.user_id)
+        out.host = profiles.get(b.listing_owner_id)
+        info = listings_info.get(b.listing_id)
+        if info:
+            out.listing = ListingBrief(
+                id=info.id,
+                title=info.title or b.listing_title or "",
+                price=info.price,
+                address=info.address,
+                district=info.district,
+                region=info.region,
+                rooms_count=info.rooms_count,
+                image_url=info.image_url,
+                rental_type=info.rental_type,
+            )
+        elif b.listing_title:
+            out.listing = ListingBrief(
+                id=b.listing_id,
+                title=b.listing_title,
+            )
+        enriched.append(out)
+
+    return enriched
 
 
 def _capacity(listing: ListingBookingInfo) -> int:
@@ -203,10 +233,10 @@ async def create_booking(
 async def list_my_bookings(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-) -> list[Booking]:
+) -> list[BookingOut]:
     """Bookings requested by the authenticated user."""
     result = await db.execute(select(Booking).where(Booking.user_id == user_id).order_by(Booking.created_at.desc()))
-    return list(result.scalars().all())
+    return await _enrich_bookings(list(result.scalars().all()))
 
 
 @router.get("/incoming", response_model=list[BookingOut])
@@ -229,7 +259,7 @@ async def list_incoming_bookings(
     if listing_id:
         stmt = stmt.where(Booking.listing_id == listing_id)
     result = await db.execute(stmt.order_by(Booking.created_at.desc()))
-    return await _with_requesters(list(result.scalars().all()))
+    return await _enrich_bookings(list(result.scalars().all()))
 
 
 @router.get("/{id}", response_model=BookingOut)
@@ -241,7 +271,7 @@ async def get_booking(
     booking = await _get_booking(id, db)
     if not await _can_view(db, booking, user_id):
         raise _error(status.HTTP_403_FORBIDDEN, "You do not have access to this booking.")
-    return (await _with_requesters([booking]))[0]
+    return (await _enrich_bookings([booking]))[0]
 
 
 @router.patch("/{id}/status", response_model=BookingOut)
@@ -250,7 +280,7 @@ async def update_booking_status(
     payload: BookingStatusUpdate,
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-) -> Booking:
+) -> BookingOut:
     """Confirm, reject or cancel a booking, depending on who is asking."""
     booking = await _get_booking(id, db)
 
@@ -274,4 +304,4 @@ async def update_booking_status(
     await db.refresh(booking)
 
     await _publish(db, EVENT_BOOKING_UPDATED, booking, user_id)
-    return booking
+    return (await _enrich_bookings([booking]))[0]

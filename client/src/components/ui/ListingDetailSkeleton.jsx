@@ -119,7 +119,7 @@ export function ListingDetailSkeleton() {
         </div>
 
         <aside className="right-col">
-          <div className="booking-card sticky-booking space-y-5 rounded-[28px] !bg-gray-200 px-6 py-6 dark:!bg-slate-800">
+          <div className="listing-sidebar-card booking-card sticky-booking space-y-5 rounded-[28px] !bg-gray-200 px-6 py-6 dark:!bg-slate-800">
             <div className="space-y-3 border-b border-transparent pb-5">
               <span className="block h-10 w-32 rounded-full !bg-gray-200 dark:!bg-slate-700/70" />
               <span className="block h-4 w-24 rounded-full !bg-gray-200 dark:!bg-slate-700/70" />

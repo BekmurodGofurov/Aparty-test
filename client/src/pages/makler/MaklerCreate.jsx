@@ -73,6 +73,7 @@ const regionCenters = {
   Andijon: [40.7821, 72.3442],
   Bukhara: [39.7747, 64.4286],
   Fergana: [40.3734, 71.7978],
+  Jizzax: [40.1158, 67.8422],
   Jizzakh: [40.1158, 67.8422],
   Kashkadarya: [38.861, 65.7847],
   Khorezm: [41.3565, 60.8567],
@@ -83,6 +84,8 @@ const regionCenters = {
   Surkhandarya: [37.2242, 67.2783],
   'Tashkent Region': [41.1102, 69.0476],
   Namangan: [41.0011, 71.6726],
+  'Qoraqalpog‘iston': [42.4619, 59.6166],
+  Qoraqalpogiston: [42.4619, 59.6166],
 }
 
 function LocationClickHandler({ onPick }) {
@@ -230,6 +233,7 @@ export function MaklerCreate() {
     setLoading(true)
     try {
       const payload = {
+        title: form.title.trim(),
         region: form.region,
         district: form.district,
         address: form.address || null,

@@ -62,8 +62,14 @@ export function MaklerDashboard() {
   // instead of a blank "yuklanmoqda" screen.
   const cachedProfile = peekCache('/users/me')
   const [broker, setBroker] = useState(() => (cachedProfile ? normalizeUser(cachedProfile) : null))
-  const [listings, setListings] = useState(() => peekCache('/listings/me') || [])
-  const [bookings, setBookings] = useState(() => peekCache('/bookings/incoming') || [])
+  const [listings, setListings] = useState(() => {
+    const cached = peekCache('/listings/me')
+    return Array.isArray(cached) ? cached : []
+  })
+  const [bookings, setBookings] = useState(() => {
+    const cached = peekCache('/bookings/incoming')
+    return Array.isArray(cached) ? cached : []
+  })
   const [loading, setLoading] = useState(!cachedProfile)
   const [activatingId, setActivatingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)

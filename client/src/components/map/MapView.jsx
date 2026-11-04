@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CircleMarker, MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -11,6 +11,19 @@ function MapCenter({ center }) {
   useEffect(() => {
     map.flyTo([center.lat, center.lng], 14, { duration: 0.8 })
   }, [center, map])
+
+  return null
+}
+
+function MapResizeHandler() {
+  const map = useMap()
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize()
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [map])
 
   return null
 }
@@ -38,9 +51,15 @@ export function MapView({
   theme,
   onToggleTheme,
   mapOptions,
+  onBoundsChange,
 }) {
   const [bounds, setBounds] = useState(null)
   const [markerLimit, setMarkerLimit] = useState(10)
+
+  const handleBoundsChange = useCallback((newBounds) => {
+    setBounds(newBounds)
+    onBoundsChange?.(newBounds)
+  }, [onBoundsChange])
 
   useEffect(() => {
     setMarkerLimit(10)
@@ -63,7 +82,8 @@ export function MapView({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <MapCenter center={center} />
-      <VisibleBoundsTracker onBoundsChange={setBounds} />
+      <MapResizeHandler />
+      <VisibleBoundsTracker onBoundsChange={handleBoundsChange} />
       <MapControls
         onLocate={onLocate}
         onToggleFullscreen={onToggleFullscreen}

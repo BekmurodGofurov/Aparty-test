@@ -21,7 +21,7 @@ export default function ListingCard({ listing }) {
   const phoneLink = listing.owner_phone ? 'tel:' + String(listing.owner_phone).replace(/\s/g, '') : null
   const telegramLink = listing.owner_telegram_url || null
   const detailLink = '/listing/' + listing.id
-  const title = listing.address || listing.rooms_count + ' ' + t('card.rooms')
+  const title = listing.title || listing.address || listing.rooms_count + ' ' + t('card.rooms')
 
   const handleSave = async () => {
     if (!accessToken || saving) return

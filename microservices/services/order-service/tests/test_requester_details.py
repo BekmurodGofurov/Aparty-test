@@ -10,7 +10,7 @@ async def test_incoming_bookings_include_requester_and_listing_title(client, cre
     incoming = (await client.get(f"{BASE}/incoming", headers=auth_headers(OWNER_ID))).json()[0]
     assert incoming["listing_title"] == "Test flat"
     assert incoming["requester"] == {
-        "id": GUEST_ID, "full_name": "Malika Karimova", "phone": "+998901112233", "is_verified": True,
+        "id": GUEST_ID, "full_name": "Malika Karimova", "phone": "+998901112233", "telegram_username": None, "is_verified": True,
     }
 
 

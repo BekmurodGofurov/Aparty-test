@@ -39,7 +39,45 @@ npm install
 npm run dev
 ```
 
-To let other people open your local copy (and to test Telegram login, which needs HTTPS), share it through a tunnel such as ngrok; see [docs/frontend.md](docs/frontend.md#sharing-through-a-tunnel-ngrok).
+### Running with ngrok (for Telegram Login)
+
+Telegram OAuth requires a public HTTPS address. Vite automatically proxies `/api` calls to the API gateway (`localhost:8080`), so ngrok must point to the frontend port (`5173`) to keep cookies first-party.
+
+1. **Configure @BotFather**: Under `/mybots` → Bot Settings → Domain / Web Login, set the allowed redirect URI:
+   ```text
+   https://<your-ngrok-domain>/auth/telegram/callback
+   ```
+2. **Configure environment variables**:
+   - In root `.env`:
+     ```env
+     TELEGRAM_REDIRECT_URI=https://<your-ngrok-domain>/auth/telegram/callback
+     SITE_URL=https://<your-ngrok-domain>
+     CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,https://<your-ngrok-domain>
+     ```
+   - In `client/.env`:
+     ```env
+     DEV_ALLOWED_HOSTS=<your-ngrok-domain>
+     DEV_API_PROXY_TARGET=http://localhost:8080
+     VITE_BACKEND_API=
+     ```
+3. **Start backend services**:
+   ```bash
+   docker compose up -d
+   ```
+4. **Start the frontend**:
+   ```bash
+   cd client
+   npm run dev        # live reload during development
+   # or: npm run share  (builds and serves production bundle; saves tunnel quota and loads faster)
+   ```
+5. **Start ngrok tunnel**:
+   ```bash
+   ngrok http 5173 --url=<your-ngrok-domain>
+   # example:
+   # ngrok http 5173 --url=embellish-flattered-underpaid.ngrok-free.dev
+   ```
+
+See [docs/frontend.md](docs/frontend.md#sharing-through-a-tunnel-ngrok) for more tunnel and caching details.
 
 ## Tests
 

@@ -111,17 +111,20 @@ async def test_booking_info_does_not_count_a_view(client, create_listing):
     listing = await create_listing(owner_id=5, price=900000)
     info = await client.get(f"{BASE}/{listing['id']}/booking-info")
     assert info.status_code == 200
-    assert info.json() == {
-        "id": listing["id"],
-        "owner_id": 5,
-        "title": listing["title"],
-        "price": 900000,
-        "status": "active",
-        "is_active": True,
-        "rental_type": "full_unit",
-        "available_spaces": 1,
-        "parent_listing_id": None,
-    }
+    data = info.json()
+    assert data["id"] == listing["id"]
+    assert data["owner_id"] == 5
+    assert data["title"] == listing["title"]
+    assert data["price"] == 900000
+    assert data["status"] == "active"
+    assert data["is_active"] is True
+    assert data["rental_type"] == "full_unit"
+    assert data["available_spaces"] == 1
+    assert data["parent_listing_id"] is None
+    assert data["district"] == "Yunusobod"
+    assert data["region"] == "Toshkent shahri"
+    assert data["address"] == "Amir Temur 1"
+    assert data["rooms_count"] == 2
     assert (await client.get(f"{BASE}/{listing['id']}")).json()["views_count"] == 1
 
 

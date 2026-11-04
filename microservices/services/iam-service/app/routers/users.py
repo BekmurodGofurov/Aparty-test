@@ -38,14 +38,22 @@ async def update_current_user(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Synthetic admin profile cannot be updated.")
 
     data = payload.model_dump(exclude_unset=True)
-    updates = {
-        "full_name": data.get("full_name") or data.get("ism"),
-        "university": data.get("university") or data.get("universitet"),
-        "profile_picture_url": data.get("profile_picture_url") or data.get("rasm_url"),
-    }
-    for key, value in updates.items():
-        if value is not None:
-            setattr(current_user, key, value)
+
+    # Update full_name if provided and non-empty
+    full_name_val = data.get("full_name") if "full_name" in data else data.get("ism")
+    if full_name_val is not None and full_name_val.strip():
+        current_user.full_name = full_name_val.strip()
+
+    # Update university (allows clearing with empty string or null)
+    if "university" in data or "universitet" in data:
+        univ_val = data.get("university") if "university" in data else data.get("universitet")
+        current_user.university = univ_val.strip() if (univ_val and univ_val.strip()) else None
+
+    # Update profile_picture_url (allows clearing with empty string or null)
+    if "profile_picture_url" in data or "rasm_url" in data:
+        pic_val = data.get("profile_picture_url") if "profile_picture_url" in data else data.get("rasm_url")
+        current_user.profile_picture_url = pic_val.strip() if (pic_val and pic_val.strip()) else None
+
     await db.commit()
     await db.refresh(current_user)
     return current_user

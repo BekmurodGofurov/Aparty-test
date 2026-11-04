@@ -7,7 +7,7 @@ import uuid
 from datetime import date, datetime
 from typing import List, Optional
 
-from sqlalchemy import BigInteger, Boolean, Date, DateTime, Enum as SQLEnum, Float, ForeignKey, Integer, String, Text, func
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, Enum as SQLEnum, Float, ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -37,6 +37,11 @@ class ListingSource(str, enum.Enum):
 
 class Listing(Base):
     __tablename__ = "listings"
+    __table_args__ = (
+        Index("ix_listings_search_composite", "status", "is_active", "region", "district", "price"),
+        Index("ix_listings_ordering", "is_premium", "created_at"),
+        Index("ix_listings_geo", "latitude", "longitude"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4

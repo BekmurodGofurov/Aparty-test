@@ -4,6 +4,7 @@ import { emptyAmenities } from '../utils/amenities'
 import { getErrorMessage } from '../utils/auth'
 
 const initialFilters = {
+  q: '',
   region: '',
   district: '',
   price_min: '',

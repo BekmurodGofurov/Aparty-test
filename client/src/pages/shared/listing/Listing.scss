@@ -575,7 +575,7 @@ html[data-theme="light"] .listing-hero-bg {
 .property-intro,
 .overview-panel,
 .panel-card,
-.booking-card,
+.listing-sidebar-card,
 .similar-section {
   border: 1px solid var(--listing-gallery-border);
   border-radius: var(--listing-radius);
@@ -803,10 +803,15 @@ html[data-theme="light"] .listing-hero-bg {
   }
 }
 
-.booking-card {
-  display: grid;
+.listing-page .booking-card,
+.listing-sidebar-card {
+  display: flex !important;
+  flex-direction: column !important;
+  grid-template-columns: none !important;
   gap: 12px;
   padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .booking-price {
@@ -883,7 +888,7 @@ html[data-theme="light"] .listing-hero-bg {
 
 .booking-mini-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 
   span {
@@ -973,11 +978,45 @@ html[data-theme="light"] .listing-hero-bg {
   line-height: 1.45;
 }
 
+.owner-listing-management {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+
+  .booking-primary,
+  .booking-secondary {
+    width: 100%;
+    text-decoration: none;
+    box-sizing: border-box;
+  }
+}
+
+.owner-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  color: #10b981;
+  font-size: 0.88rem;
+  font-weight: 700;
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
 .booking-primary,
 .booking-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  text-decoration: none;
   gap: 9px;
   min-height: 46px;
   border-radius: 16px;

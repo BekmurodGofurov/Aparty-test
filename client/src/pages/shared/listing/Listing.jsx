@@ -12,10 +12,12 @@ import {
   ChevronRight,
   ChefHat,
   Droplets,
+  Edit3,
   Eye,
   Flame,
   Heart,
   Home,
+  LayoutDashboard,
   MapPin,
   Maximize2,
   MessageCircle,
@@ -123,9 +125,9 @@ export function Listing() {
     )
   }
 
-  const isSharedRoom = listing.rooms_count === 1
+  const isSharedRoom = listing.rental_type === 'shared_room' || Boolean(listing.parent_listing_id) || listing.property_type === 'shared_room'
   const activeSrc = images[activeImage] || PLACEHOLDER_IMAGE
-  const title = listing.address || `${listing.rooms_count} ${t('listing.rooms_count')} uy`
+  const title = listing.title || listing.address || `${listing.rooms_count} ${t('listing.rooms_count')} uy`
   const fullAddress = `${listing.district}, ${listing.region}`
   const today = todayLocalIso()
 
@@ -156,6 +158,9 @@ export function Listing() {
   // Tenants (not the apartment's owner) can look for roommates for an apartment on the platform.
   const canPostRoommateAd =
     Boolean(accessToken) && ['student', 'makler'].includes(role) && !listing.parent_listing_id && String(listing.owner_id) !== String(userId)
+  const isOwnerOfListing = Boolean(
+    accessToken && userId && listing?.owner_id && String(listing.owner_id) === String(userId)
+  )
   const ownerPhoneLink = listing.owner_phone ? `tel:${String(listing.owner_phone).replace(/\s/g, '')}` : null
   const ownerTelegramLink = listing.owner_telegram_url || null
 
@@ -220,6 +225,16 @@ export function Listing() {
                     )}
                   </div>
                   <div className="hero-actions">
+                    {isOwnerOfListing && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(role === 'makler' ? `/makler/listing/${listing.id}/edit` : `/owner/listing/${listing.id}/edit`)}
+                        aria-label={t('listing.edit_listing', "E'lonni tahrirlash")}
+                        title={t('listing.edit_listing', "E'lonni tahrirlash")}
+                      >
+                        <Edit3 size={16} />
+                      </button>
+                    )}
                     <button type="button" aria-label={t('listing.share')}><Share2 size={16} /></button>
                     <button type="button" onClick={handleSave} className={saved ? 'saved' : ''}>
                       <Heart size={16} fill={saved ? 'currentColor' : 'none'} />
@@ -343,7 +358,7 @@ export function Listing() {
         {/* ───── RIGHT COLUMN: sticky booking card ───── */}
         <aside className="right-col">
           <motion.div
-            className="booking-card sticky-booking"
+            className="listing-sidebar-card booking-card sticky-booking"
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={spring}
@@ -372,42 +387,67 @@ export function Listing() {
               <span><ShieldCheck size={17} /> {listing.source === 'makler' ? t('listing.makler_notice') : t('listing.owner_notice')}</span>
             </div>
 
-            {(!role || role === 'student') && (
-              <>
-                <div className="booking-dates">
-                  <label>
-                    Kirish
-                    <input type="date" value={startDate} min={today} onChange={(e) => setStartDate(e.target.value)} />
-                  </label>
-                  <label>
-                    Chiqish
-                    <input type="date" value={endDate} min={startDate || today} onChange={(e) => setEndDate(e.target.value)} />
-                  </label>
+            {isOwnerOfListing ? (
+              <div className="owner-listing-management">
+                <div className="owner-status-banner">
+                  <BadgeCheck size={18} />
+                  <span>{t('listing.your_listing', "Bu sizning e'loningiz")}</span>
                 </div>
-                <textarea
-                  className="booking-request-text"
-                  value={requestMessage}
-                  onChange={(e) => setRequestMessage(e.target.value)}
-                  placeholder="Egasi yoki brokerga qisqa xabar..."
-                  rows={3}
-                />
-                <button className="booking-primary" type="button" onClick={handleBookingRequest} disabled={requestLoading}>
-                  <MessageCircle size={18} />
-                  {requestLoading ? 'Yuborilmoqda...' : "Band qilish so'rovi"}
+                <Link
+                  to={role === 'makler' ? `/makler/listing/${listing.id}/edit` : `/owner/listing/${listing.id}/edit`}
+                  className="booking-primary"
+                >
+                  <Edit3 size={17} />
+                  {t('listing.edit_listing', "E'lonni tahrirlash")}
+                </Link>
+                <Link
+                  to={role === 'makler' ? '/makler' : '/owner'}
+                  className="booking-secondary"
+                >
+                  <LayoutDashboard size={17} />
+                  {t('listing.dashboard_btn', 'Boshqaruv paneli')}
+                </Link>
+              </div>
+            ) : (
+              <>
+                {(!role || role === 'student') && (
+                  <>
+                    <div className="booking-dates">
+                      <label>
+                        Kirish
+                        <input type="date" value={startDate} min={today} onChange={(e) => setStartDate(e.target.value)} />
+                      </label>
+                      <label>
+                        Chiqish
+                        <input type="date" value={endDate} min={startDate || today} onChange={(e) => setEndDate(e.target.value)} />
+                      </label>
+                    </div>
+                    <textarea
+                      className="booking-request-text"
+                      value={requestMessage}
+                      onChange={(e) => setRequestMessage(e.target.value)}
+                      placeholder="Egasi yoki brokerga qisqa xabar..."
+                      rows={3}
+                    />
+                    <button className="booking-primary" type="button" onClick={handleBookingRequest} disabled={requestLoading}>
+                      <MessageCircle size={18} />
+                      {requestLoading ? 'Yuborilmoqda...' : "Band qilish so'rovi"}
+                    </button>
+                    {requestStatus && <p className="booking-request-status">{requestStatus}</p>}
+                  </>
+                )}
+                <button className="booking-secondary" type="button"
+                  onClick={() => ownerPhoneLink && window.location.assign(ownerPhoneLink)}
+                  disabled={!ownerPhoneLink}>
+                  {t('listing.contact')}
                 </button>
-                {requestStatus && <p className="booking-request-status">{requestStatus}</p>}
+                {ownerTelegramLink && (
+                  <button className="booking-secondary" type="button"
+                    onClick={() => window.open(ownerTelegramLink, '_blank', 'noopener,noreferrer')}>
+                    {t('listing.telegram')}
+                  </button>
+                )}
               </>
-            )}
-            <button className="booking-secondary" type="button"
-              onClick={() => ownerPhoneLink && window.location.assign(ownerPhoneLink)}
-              disabled={!ownerPhoneLink}>
-              {t('listing.contact')}
-            </button>
-            {ownerTelegramLink && (
-              <button className="booking-secondary" type="button"
-                onClick={() => window.open(ownerTelegramLink, '_blank', 'noopener,noreferrer')}>
-                {t('listing.telegram')}
-              </button>
             )}
           </motion.div>
         </aside>

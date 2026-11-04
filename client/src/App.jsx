@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { NavBar } from './components/NavBar/NavBar'
 import { RoleRoute } from './components/RoleRoute/RoleRoute'
+import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute'
 import { ProtectedAuthRoute } from './components/ProtectedAuthRoute/ProtectedAuthRoute'
 import { useThemeStore } from './store/themeStore'
 import { useAuthStore } from './store/authStore'
@@ -83,8 +84,8 @@ function AppContent() {
               <Route path="/choose-role" element={<ChooseRolePage />} />
 
               {/* Student Routes */}
-              <Route path="/profile" element={<UserProfile />} />
-              <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+              <Route path="/my-bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
 
               {/* Owner Routes */}
               <Route path="/owner" element={<RoleRoute role="owner"><OwnerDashboard /></RoleRoute>} />

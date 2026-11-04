@@ -39,7 +39,9 @@ def get_current_user(authorization: Optional[str] = Header(None, alias="Authoriz
         )
         if claims.get("type") != ACCESS_TOKEN_TYPE:
             raise jwt.InvalidTokenError("Not an access token")
-        return CurrentUser(id=int(claims["sub"]), role=claims.get("role"))
+        sub = claims["sub"]
+        user_id = 0 if sub == "admin" else int(sub)
+        return CurrentUser(id=user_id, role=claims.get("role"))
     except (jwt.InvalidTokenError, ValueError) as exc:
         raise _error(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token.") from exc
 

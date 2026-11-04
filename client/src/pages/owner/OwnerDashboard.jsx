@@ -52,17 +52,30 @@ const getNextPaymentDate = (startDate) => {
   if (!startDate) return '-'
 
   const start = new Date(startDate)
+  if (Number.isNaN(start.getTime())) return '-'
+
   const today = new Date()
-  const next = new Date(today.getFullYear(), today.getMonth(), start.getDate())
+  const targetDay = start.getDate()
+  let year = today.getFullYear()
+  let month = today.getMonth()
+
+  const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate()
+  let next = new Date(year, month, Math.min(targetDay, daysInMonth(year, month)))
 
   if (next < today) {
-    next.setMonth(next.getMonth() + 1)
+    month += 1
+    if (month > 11) {
+      month = 0
+      year += 1
+    }
+    next = new Date(year, month, Math.min(targetDay, daysInMonth(year, month)))
   }
 
   return formatDate(next)
 }
 
 const getListingTitle = (listing = {}) => {
+  if (listing.title) return listing.title
   const location = [
     listing.address,
     listing.district,
@@ -86,8 +99,14 @@ export function OwnerDashboard() {
   // known profile, listings and requests straight away instead of a blank "yuklanmoqda" screen.
   const cachedProfile = peekCache('/users/me')
   const [owner, setOwner] = useState(() => (cachedProfile ? normalizeUser(cachedProfile) : null))
-  const [listings, setListings] = useState(() => peekCache('/listings/me') || [])
-  const [bookings, setBookings] = useState(() => peekCache('/bookings/incoming') || [])
+  const [listings, setListings] = useState(() => {
+    const cached = peekCache('/listings/me')
+    return Array.isArray(cached) ? cached : []
+  })
+  const [bookings, setBookings] = useState(() => {
+    const cached = peekCache('/bookings/incoming')
+    return Array.isArray(cached) ? cached : []
+  })
   const [loading, setLoading] = useState(!cachedProfile)
   const [activatingId, setActivatingId] = useState(null)
   const [promoListing, setPromoListing] = useState(null)

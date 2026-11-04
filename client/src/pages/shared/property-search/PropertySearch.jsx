@@ -10,7 +10,7 @@ import { useListingStore } from '../../../store/listingStore'
 import { AMENITY_KEYS } from '../../../utils/amenities'
 import './PropertySearch.scss'
 
-const FILTER_KEYS = ['region', 'district', 'price_min', 'price_max', 'target_gender', 'rental_type', 'rooms_count', 'available_spaces', 'move_in_ready', 'owner_role']
+const FILTER_KEYS = ['q', 'region', 'district', 'price_min', 'price_max', 'target_gender', 'rental_type', 'rooms_count', 'available_spaces', 'move_in_ready', 'owner_role']
 const AMENITY_LABELS = { air_conditioner: 'ac', washing_machine: 'washer' }
 
 function parseFilters(params) {
@@ -74,25 +74,102 @@ export function PropertySearch() {
   const { filters, results, total, page, pages, loading, loadingMore, error, setFilter, setAmenity, clearFilters, replaceFilters, fetchResults, loadMore } = useListingStore()
   const searchString = searchParams.toString()
 
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('q') || '')
+  const searchDebounce = useRef(null)
+  const filterDebounce = useRef(null)
+
+  useEffect(() => {
+    setSearchTerm(searchParams.get('q') || '')
+  }, [searchParams])
+
   useEffect(() => {
     const nextFilters = parseFilters(new URLSearchParams(searchString))
     replaceFilters(nextFilters)
     void fetchResults(1, nextFilters)
   }, [searchString, replaceFilters, fetchResults])
 
-  const applyFilters = () => {
+  const syncFiltersToParams = useCallback((targetFilters) => {
     const params = new URLSearchParams()
-    Object.entries(filters).forEach(([key, value]) => {
+    Object.entries(targetFilters).forEach(([key, value]) => {
       if (key === 'amenities') {
-        Object.entries(value).forEach(([amenityKey, enabled]) => { if (enabled) params.set(amenityKey, 'true') })
-      } else if (value !== '' && value !== false && value != null) params.set(key, String(value))
+        Object.entries(value || {}).forEach(([amenityKey, enabled]) => { if (enabled) params.set(amenityKey, 'true') })
+      } else if (value !== '' && value !== false && value != null) {
+        params.set(key, String(value))
+      }
     })
+    return params
+  }, [])
+
+  const applyFilters = () => {
+    clearTimeout(filterDebounce.current)
+    const params = syncFiltersToParams(filters)
     if (params.toString() === searchString) void fetchResults(1, filters)
     else setSearchParams(params)
     closeFilters()
   }
 
+  const handleFilterChange = useCallback((key, value) => {
+    setFilter(key, value)
+    if (!filterOpen) {
+      clearTimeout(filterDebounce.current)
+      filterDebounce.current = setTimeout(() => {
+        const next = { ...useListingStore.getState().filters, [key]: value }
+        if (key === 'region') next.district = ''
+        const params = syncFiltersToParams(next)
+        setSearchParams(params)
+      }, 400)
+    }
+  }, [filterOpen, setFilter, syncFiltersToParams, setSearchParams])
+
+  const handleAmenityChange = useCallback((key, value) => {
+    setAmenity(key, value)
+    if (!filterOpen) {
+      clearTimeout(filterDebounce.current)
+      filterDebounce.current = setTimeout(() => {
+        const current = useListingStore.getState().filters
+        const next = {
+          ...current,
+          amenities: { ...current.amenities, [key]: value },
+        }
+        const params = syncFiltersToParams(next)
+        setSearchParams(params)
+      }, 400)
+    }
+  }, [filterOpen, setAmenity, syncFiltersToParams, setSearchParams])
+
+  const handleSearchChange = (event) => {
+    const value = event.target.value
+    setSearchTerm(value)
+    clearTimeout(searchDebounce.current)
+    searchDebounce.current = setTimeout(() => {
+      const next = new URLSearchParams(searchParams)
+      if (value.trim()) next.set('q', value.trim())
+      else next.delete('q')
+      setSearchParams(next)
+    }, 350)
+  }
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault()
+    clearTimeout(searchDebounce.current)
+    const next = new URLSearchParams(searchParams)
+    if (searchTerm.trim()) next.set('q', searchTerm.trim())
+    else next.delete('q')
+    setSearchParams(next)
+  }
+
+  const clearSearchTerm = () => {
+    setSearchTerm('')
+    clearTimeout(searchDebounce.current)
+    const next = new URLSearchParams(searchParams)
+    next.delete('q')
+    setSearchParams(next)
+  }
+
   const clearAll = () => {
+    clearTimeout(filterDebounce.current)
+    clearTimeout(searchDebounce.current)
+    setSearchTerm('')
     clearFilters()
     if (!searchString) void fetchResults(1, {})
     else setSearchParams({})
@@ -103,6 +180,7 @@ export function PropertySearch() {
     if (key === 'price') { next.delete('price_min'); next.delete('price_max') }
     else next.delete(key)
     if (key === 'region') next.delete('district')
+    if (key === 'q') setSearchTerm('')
     setSearchParams(next)
   }
 
@@ -116,7 +194,8 @@ export function PropertySearch() {
   for (const [key, value] of searchParams) {
     if (!value || value === 'false' || key === 'price_max' && searchParams.has('price_min')) continue
     let label
-    if (key === 'region' || key === 'district') label = value
+    if (key === 'q') label = `"${value}"`
+    else if (key === 'region' || key === 'district') label = value
     else if (key === 'price_min' || key === 'price_max') {
       const min = searchParams.get('price_min')
       const max = searchParams.get('price_max')
@@ -131,7 +210,14 @@ export function PropertySearch() {
     if (label) appliedFilters.push({ key: key.startsWith('price_') ? 'price' : key, label })
   }
 
-  const panelProps = { filters, setFilter, setAmenity, applyFilters, clearAll, activeFilterCount }
+  const panelProps = {
+    filters,
+    setFilter: handleFilterChange,
+    setAmenity: handleAmenityChange,
+    applyFilters,
+    clearAll,
+    activeFilterCount,
+  }
 
   return (
     <div className="search-page page">
@@ -147,6 +233,28 @@ export function PropertySearch() {
       <div className="search-layout">
         <aside className="search-desktop-filters" aria-label={t('search.filters')}><FilterPanel {...panelProps} /></aside>
         <section className="results-area" aria-labelledby={titleId} aria-busy={loading}>
+          <form className="search-query-form" onSubmit={handleSearchSubmit}>
+            <Search size={18} className="search-query-icon" aria-hidden="true" />
+            <input
+              type="search"
+              className="search-query-input"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              placeholder={t('search.search_input_placeholder', "Ko'cha, mahalla yoki uy nomini qidiring...")}
+              aria-label={t('search.search_input_placeholder', 'Qidiruv')}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                className="search-query-clear"
+                onClick={clearSearchTerm}
+                aria-label={t('search.clear', 'Tozalash')}
+              >
+                <X size={15} />
+              </button>
+            )}
+          </form>
+
           <div className="search-results-toolbar">
             <div className="search-results-count">
               <span className="search-result-icon"><House size={18} /></span>

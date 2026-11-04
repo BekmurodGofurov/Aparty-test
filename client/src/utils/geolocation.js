@@ -1,7 +1,7 @@
 const ERROR_STATUS = { 1: 'denied', 2: 'unavailable', 3: 'timeout' }
 
 // Native geolocation cannot be aborted, so cancelled and late callbacks are ignored.
-export function locateBrowser({ geolocation, onSuccess, onError, timeoutMs = 9000 }) {
+export function locateBrowser({ geolocation, onSuccess, onError, timeoutMs = 15000 }) {
   let active = true
   let timer
   const finish = callback => {

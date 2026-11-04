@@ -96,11 +96,13 @@ export const createHttpCache = ({ storage, now = Date.now }) => {
     },
 
     invalidateForWrite: (url) => {
+      if (!url) return
       const rule = INVALIDATIONS.find((item) => url.startsWith(item.prefix))
       if (!rule) return
       for (const key of keys()) {
-        const path = key.split('|')[1]
-        if (rule.stale.some((stalePath) => path.startsWith(stalePath))) remove(key)
+        const parts = key.split('|')
+        const path = parts[1]
+        if (path && rule.stale.some((stalePath) => path.startsWith(stalePath))) remove(key)
       }
     },
 

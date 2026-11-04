@@ -44,6 +44,9 @@ export const api = axios.create({
   baseURL: apiBaseUrl,
   withCredentials: true,
   timeout: 15000,
+  headers: {
+    'ngrok-skip-browser-warning': 'true',
+  },
 })
 
 const networkAdapter = axios.getAdapter(api.defaults.adapter)
@@ -75,7 +78,10 @@ api.interceptors.request.use((config) => {
         key,
         networkAdapter(adapterConfig)
           .then((response) => {
-            browserCache.set(key, response.data, rule.ttl)
+            const isHtml = typeof response.data === 'string' && /^\s*</.test(response.data)
+            if (!isHtml) {
+              browserCache.set(key, response.data, rule.ttl)
+            }
             return response
           })
           .finally(() => inFlight.delete(key)),

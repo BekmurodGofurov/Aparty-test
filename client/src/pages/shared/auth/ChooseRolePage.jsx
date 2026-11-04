@@ -28,13 +28,14 @@ export function ChooseRolePage() {
     userService
       .getCurrentUser()
       .then((user) => {
-        if (active && user.rol) setAuth(accessToken, user.rol, user.id)
+        const userRole = user?.rol || user?.role
+        if (active && userRole) setAuth(accessToken, userRole, user?.id || userId)
       })
       .catch(() => {})
     return () => {
       active = false
     }
-  }, [accessToken, role, setAuth])
+  }, [accessToken, role, setAuth, userId])
 
   if (!accessToken) return <Navigate to="/login" replace />
   if (role) return <Navigate to={getHomePath(role)} replace />
@@ -44,15 +45,19 @@ export function ChooseRolePage() {
     setSavingRole(value)
     try {
       const data = await authService.chooseRole(value)
-      setAuth(data.access_token, data.user.role, userId)
-      navigate(getHomePath(data.user.role), { replace: true })
+      const assignedRole = data?.user?.role || data?.user?.rol || value
+      const targetUserId = data?.user?.id || userId
+      setAuth(data.access_token, assignedRole, targetUserId)
+      navigate(getHomePath(assignedRole), { replace: true })
     } catch (requestError) {
       if (requestError.response?.status === 409) {
         // The server already has a role for this account: use it.
         try {
           const user = await userService.getCurrentUser()
-          setAuth(accessToken, user.rol, user.id)
-          navigate(getHomePath(user.rol), { replace: true })
+          const existingRole = user?.rol || user?.role || value
+          const existingId = user?.id || userId
+          setAuth(accessToken, existingRole, existingId)
+          navigate(getHomePath(existingRole), { replace: true })
           return
         } catch {
           // fall through to the error message

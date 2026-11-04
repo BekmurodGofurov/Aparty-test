@@ -33,6 +33,10 @@ def get_current_user_id(authorization: Optional[str] = Header(None, alias="Autho
         if claims.get("type") != ACCESS_TOKEN_TYPE:
             raise jwt.InvalidTokenError("Not an access token")
         sub = claims["sub"]
-        return 0 if sub == "admin" else int(sub)
+        if sub == "admin":
+            if claims.get("role") != "admin":
+                raise _unauthorized("Invalid or expired token.")
+            return 0
+        return int(sub)
     except (jwt.InvalidTokenError, ValueError) as exc:
         raise _unauthorized("Invalid or expired token.") from exc
